@@ -1,23 +1,60 @@
 name: scrape
 on:
   schedule:
-    # Cada 1 min, no cada 5 — medido en vivo que el pool de 51 kills más recientes de la API
-    # (gameinfo) rota completo en ~30-40s en horas activas de Américas; con 5 min de por medio se
-    # perdía la enorme mayoría de las kills entre corridas. Repo público = minutos ilimitados, no
-    # hay costo por subir la frecuencia. GitHub no garantiza el segundo exacto bajo carga, pero a
-    # este intervalo la demora real es mínima.
-    - cron: '* * * * *'
+    # Red de seguridad, NO el mecanismo principal — ver abajo. Cada 4h por si la cadena de
+    # auto-relanzamiento se corta (fallo de red al re-disparar, runner caído, etc.).
+    - cron: '0 */4 * * *'
   workflow_dispatch: {}
+
+concurrency:
+  group: scrape-loop
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: read
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    # El límite duro de GitHub-hosted runners es 360 min (6h). Dejamos margen para
+    # checkout/install/el paso final de re-disparo.
+    timeout-minutes: 345
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm install
-      - run: npm start
+
+      # Por qué esto reemplaza al `schedule` de cada 1 min: medido en vivo que un cron de GitHub
+      # a ese intervalo queda encolado con baja prioridad y puede demorar minutos u horas bajo
+      # carga (confirmado: gaps reales de ~1h45m entre corridas con `* * * * *`, sin ningún error
+      # en el workflow). Un `sleep` DENTRO de un job ya corriendo no depende de esa cola — una vez
+      # que el runner arrancó, el timing lo controla este loop, no el scheduler de GitHub.
+      - name: Scrape cada 60s durante ~5h40m
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          END=$((SECONDS + 20400))
+          while [ "$SECONDS" -lt "$END" ]; do
+            START_ITER=$SECONDS
+            npm start || echo "scrape falló esta vuelta, se sigue con la siguiente"
+            ELAPSED=$((SECONDS - START_ITER))
+            SLEEP_FOR=$((60 - ELAPSED))
+            if [ "$SLEEP_FOR" -gt 0 ]; then
+              sleep "$SLEEP_FOR"
+            fi
+          done
+
+      # Re-dispara este mismo workflow antes de que el runner llegue al límite de 6h, para
+      # continuidad 24/7 sin depender del cron de GitHub. `always()` para que la cadena no se
+      # corte aunque alguna vuelta de scrape haya fallado.
+      - name: Encadenar siguiente ciclo
+        if: always()
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/scrape.yml/dispatches" \
+            -d '{"ref":"${{ github.ref_name }}"}'
