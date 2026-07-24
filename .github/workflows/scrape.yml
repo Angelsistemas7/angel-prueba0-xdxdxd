@@ -1,7 +1,12 @@
 name: scrape
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    # Cada 1 min, no cada 5 — medido en vivo que el pool de 51 kills más recientes de la API
+    # (gameinfo) rota completo en ~30-40s en horas activas de Américas; con 5 min de por medio se
+    # perdía la enorme mayoría de las kills entre corridas. Repo público = minutos ilimitados, no
+    # hay costo por subir la frecuencia. GitHub no garantiza el segundo exacto bajo carga, pero a
+    # este intervalo la demora real es mínima.
+    - cron: '* * * * *'
   workflow_dispatch: {}
 
 jobs:
