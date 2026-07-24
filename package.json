@@ -1,0 +1,12 @@
+{
+  "name": "relay-cache",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scrape.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
