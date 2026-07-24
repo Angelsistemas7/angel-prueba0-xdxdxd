@@ -6,6 +6,37 @@ const REGION_HOSTS = {
   asia: 'https://gameinfo-sgp.albiononline.com',
 };
 
+/** Mismos hosts que usa la app (`src/services/albion-data.ts`) para AODP. */
+const AODP_HOSTS = {
+  americas: 'https://west.albion-online-data.com',
+  asia: 'https://east.albion-online-data.com',
+  europe: 'https://europe.albion-online-data.com',
+};
+
+const CITIES = ['Caerleon', 'Bridgewatch', 'Fort Sterling', 'Lymhurst', 'Martlock', 'Thetford', 'Brecilien', 'Black Market'];
+
+/** Copiado de `MARKET_WATCHLIST_IDS` en `src/utils/radar-dashboard.ts` (repo de la app) — repo
+ * separado, sin build compartido, así que se mantiene a mano. Si el watchlist de la app cambia,
+ * actualizar acá también. Objetivo: guardar un snapshot de precios cada 5 min para que "Mejor
+ * mercado/transporte" no pierdan una comparación válida solo porque una llamada puntual a AODP no
+ * trajo todos los ítems (pasa, la API no siempre devuelve el pool completo pedido). */
+const PRICE_WATCHLIST_IDS = [
+  'T4_BAG',
+  'T5_BAG',
+  'T4_MAIN_SWORD',
+  'T4_2H_BOW',
+  'T4_2H_WARBOW',
+  'T4_OFF_SHIELD',
+  'T4_ARMOR_LEATHER_SET1',
+  'T4_HEAD_PLATE_SET1',
+  'T4_SHOES_CLOTH_SET1',
+  'T4_POTION_HEAL',
+  'T4_MOUNT_HORSE',
+  'T4_2H_CLERICSTAFF',
+  'T4_MAIN_AXE',
+  'T4_ARMOR_PLATE_SET1',
+];
+
 const EVENTS_LIMIT = 51;
 const BATTLES_LIMIT = 20;
 const RETENTION_DAYS = 30;
@@ -75,6 +106,39 @@ async function scrapeRegion(region) {
   console.log(`[${region}] ${events.length} kills, ${battles.length} peleas guardadas.`);
 }
 
+async function scrapePrices(region) {
+  const base = AODP_HOSTS[region];
+  const ids = PRICE_WATCHLIST_IDS.join(',');
+  const locations = CITIES.map(encodeURIComponent).join(',');
+  const prices = await fetchJson(`${base}/api/v2/stats/prices/${ids}.json?locations=${locations}&qualities=1`);
+
+  const batch = db.batch();
+  const expire = expireAt();
+  for (const p of prices) {
+    // Doc id determinístico por item+ciudad+región: cada snapshot nuevo pisa al anterior (no
+    // acumula un doc por corrida) — lo que importa es el ÚLTIMO precio bueno visto, no el historial
+    // completo de cada 5 min (eso infla Firestore sin necesidad para este caso de uso).
+    const ref = db.collection('prices').doc(`${region}_${p.item_id}_${p.city}`);
+    batch.set(
+      ref,
+      {
+        itemId: p.item_id,
+        region,
+        city: p.city,
+        sellPriceMin: p.sell_price_min,
+        sellPriceMinDate: p.sell_price_min_date,
+        buyPriceMax: p.buy_price_max,
+        buyPriceMaxDate: p.buy_price_max_date,
+        updatedAt: admin.firestore.Timestamp.now(),
+        expireAt: expire,
+      },
+      { merge: true },
+    );
+  }
+  await batch.commit();
+  console.log(`[${region}] ${prices.length} precios guardados.`);
+}
+
 async function main() {
   for (const region of Object.keys(REGION_HOSTS)) {
     try {
@@ -82,6 +146,11 @@ async function main() {
     } catch (err) {
       // Una región caída no debe tumbar el resto — cada región es independiente.
       console.error(`[${region}] error:`, err.message);
+    }
+    try {
+      await scrapePrices(region);
+    } catch (err) {
+      console.error(`[${region}] precios error:`, err.message);
     }
   }
 }
