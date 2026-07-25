@@ -205,3 +205,10 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47492,"sellPriceMinDate":"2026-07-25T20:10:00","buyPriceMax":38948,"buyPriceMaxDate":"2026-07-25T19:20:00","updatedAt":"2026-07-25T20:11:16.387Z"}
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5495,"sellPriceMinDate":"2026-07-25T20:10:00","buyPriceMax":3092,"buyPriceMaxDate":"2026-07-25T20:00:00","updatedAt":"2026-07-25T20:14:16.167Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":50960,"sellPriceMinDate":"2026-07-25T20:10:00","buyPriceMax":40086,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T20:14:16.167Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47491,"sellPriceMinDate":"2026-07-25T20:20:00","buyPriceMax":38951,"buyPriceMaxDate":"2026-07-25T20:20:00","updatedAt":"2026-07-25T20:22:29.265Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Bridgewatch","sellPriceMin":1896,"sellPriceMinDate":"2026-07-25T20:25:00","buyPriceMax":1028,"buyPriceMaxDate":"2026-07-25T20:25:00","updatedAt":"2026-07-25T20:28:32.117Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Lymhurst","sellPriceMin":8996,"sellPriceMinDate":"2026-07-25T20:25:00","buyPriceMax":4620,"buyPriceMaxDate":"2026-07-25T20:25:00","updatedAt":"2026-07-25T20:29:16.491Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Fort Sterling","sellPriceMin":5111,"sellPriceMinDate":"2026-07-25T20:30:00","buyPriceMax":3660,"buyPriceMaxDate":"2026-07-25T18:55:00","updatedAt":"2026-07-25T20:32:16.805Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Brecilien","sellPriceMin":1649,"sellPriceMinDate":"2026-07-25T20:30:00","buyPriceMax":473,"buyPriceMaxDate":"2026-07-25T20:00:00","updatedAt":"2026-07-25T20:33:37.530Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Lymhurst","sellPriceMin":6568,"sellPriceMinDate":"2026-07-25T20:30:00","buyPriceMax":3259,"buyPriceMaxDate":"2026-07-25T15:35:00","updatedAt":"2026-07-25T20:35:16.280Z"}
+{"itemId":"T4_MAIN_AXE","city":"Lymhurst","sellPriceMin":5000,"sellPriceMinDate":"2026-07-25T20:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:35:16.280Z"}
