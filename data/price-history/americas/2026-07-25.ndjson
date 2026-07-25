@@ -160,3 +160,4 @@
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Caerleon","sellPriceMin":9000,"sellPriceMinDate":"2026-07-25T21:10:00","buyPriceMax":2000,"buyPriceMaxDate":"2026-07-25T21:10:00","updatedAt":"2026-07-25T21:11:17.295Z"}
 {"itemId":"T4_HEAD_PLATE_SET1","city":"Caerleon","sellPriceMin":3176,"sellPriceMinDate":"2026-07-25T21:10:00","buyPriceMax":2003,"buyPriceMaxDate":"2026-07-25T21:10:00","updatedAt":"2026-07-25T21:11:17.295Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Thetford","sellPriceMin":2194,"sellPriceMinDate":"2026-07-25T21:15:00","buyPriceMax":1113,"buyPriceMaxDate":"2026-07-25T21:15:00","updatedAt":"2026-07-25T21:20:23.035Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":14976,"sellPriceMinDate":"2026-07-25T21:25:00","buyPriceMax":10210,"buyPriceMaxDate":"2026-07-25T21:25:00","updatedAt":"2026-07-25T21:29:26.306Z"}
