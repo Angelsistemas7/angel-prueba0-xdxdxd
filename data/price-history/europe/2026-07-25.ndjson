@@ -167,3 +167,6 @@
 {"itemId":"T4_2H_BOW","city":"Black Market","sellPriceMin":5688,"sellPriceMinDate":"2026-07-25T19:10:00","buyPriceMax":4108,"buyPriceMaxDate":"2026-07-25T19:10:00","updatedAt":"2026-07-25T19:12:16.914Z"}
 {"itemId":"T4_2H_WARBOW","city":"Black Market","sellPriceMin":4997,"sellPriceMinDate":"2026-07-25T19:10:00","buyPriceMax":1896,"buyPriceMaxDate":"2026-07-25T19:10:00","updatedAt":"2026-07-25T19:12:16.914Z"}
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":10998,"sellPriceMinDate":"2026-07-25T19:15:00","buyPriceMax":9911,"buyPriceMaxDate":"2026-07-25T17:25:00","updatedAt":"2026-07-25T19:15:16.247Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Brecilien","sellPriceMin":2500,"sellPriceMinDate":"2026-07-25T19:15:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:19:16.696Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47482,"sellPriceMinDate":"2026-07-25T19:20:00","buyPriceMax":38948,"buyPriceMaxDate":"2026-07-25T19:20:00","updatedAt":"2026-07-25T19:21:16.941Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:25:16.144Z"}
