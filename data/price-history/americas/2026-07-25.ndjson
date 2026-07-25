@@ -139,3 +139,4 @@
 {"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":1747,"sellPriceMinDate":"2026-07-25T18:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:58:17.762Z"}
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":17087,"sellPriceMinDate":"2026-07-25T18:55:00","buyPriceMax":12463,"buyPriceMaxDate":"2026-07-25T17:00:00","updatedAt":"2026-07-25T18:58:17.762Z"}
 {"itemId":"T5_BAG","city":"Thetford","sellPriceMin":17070,"sellPriceMinDate":"2026-07-25T02:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:00:17.156Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Brecilien","sellPriceMin":616,"sellPriceMinDate":"2026-07-25T19:00:00","buyPriceMax":505,"buyPriceMaxDate":"2026-07-25T01:40:00","updatedAt":"2026-07-25T19:05:46.954Z"}
