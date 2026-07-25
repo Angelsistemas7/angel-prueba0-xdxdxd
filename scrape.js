@@ -47,11 +47,12 @@ const DATA_DIR = 'data';
  * deduplicados por id en NDJSON diario por región; precios/oro son snapshot + histórico de
  * cambios; el índice de gremios/jugadores se acumula incrementalmente, solo con peleas nuevas.
  *
- * Límite real confirmado (no un dato que falte agregar): la API de GameInfo NO expone daño hecho
- * ni curación por jugador en ninguna parte (`battle.players`/`battle.guilds` solo traen
- * kills/deaths/killFame) — eso solo existe vía sniffing del protocolo del cliente del juego
- * (packet capture en la misma PC donde se juega), arquitectónicamente incompatible con una app de
- * teléfono. No reabrir esto sin una fuente de datos nueva y real. */
+ * CORRECCIÓN 2026-07-25 (mismo día, el usuario lo confirmó con albionbb.com/battles/...): daño
+ * hecho y curación SÍ existen en la API pública — estaban en el lugar equivocado. `/battles` (el
+ * endpoint agregado) NO los trae, pero cada kill individual de `/events` sí: `event.Participants[]`
+ * trae `DamageDone`/`SupportHealingDone` por jugador, y `event.BattleId` asocia esa kill a su
+ * pelea. Verificado con la API real antes de este cambio (`Participants` con `DamageDone`>0 y
+ * `SupportHealingDone`>0 en el pool en vivo). No repetir la afirmación de que esto no existe. */
 
 async function fetchJson(url) {
   const res = await fetch(url);
@@ -127,13 +128,24 @@ function extractBattleEntry(battle) {
   };
 }
 
-/** Índice acumulado por gremio (victorias/derrotas/fama/participación de jugadores), actualizado
- * SOLO con peleas recién agregadas (nunca se reprocesa una pelea ya vista, así no se duplica el
- * conteo si sigue apareciendo en el pool de /battles). "Victoria/derrota" es una heurística
- * honesta (kills > deaths del gremio EN ESA pelea puntual), no un resultado oficial del juego —
- * mismo criterio "observado" ya usado para el ranking de gremios en el resto del proyecto. */
-async function updateGuildStats(region, newBattles) {
-  if (newBattles.length === 0) return;
+function emptyGuildEntry(name) {
+  return { name, battles: 0, wins: 0, losses: 0, kills: 0, deaths: 0, fameGained: 0, players: {} };
+}
+
+function emptyPlayerEntry(name) {
+  return { name, participations: 0, kills: 0, deaths: 0, fame: 0, damageDone: 0, healingDone: 0 };
+}
+
+/** Índice acumulado por gremio: victorias/derrotas/fama/participación vienen de `/battles` (dato
+ * agregado por el propio servidor del juego, más completo que lo que alcanzamos a capturar del
+ * pool de 51 kills), daño/curación vienen de `/events` (único lugar donde existen, ver nota de
+ * arriba). Ambos se actualizan SOLO con entradas recién agregadas (nunca se reprocesa una kill o
+ * pelea ya vista), así el conteo no se duplica si sigue apareciendo en el pool de la API.
+ * "Victoria/derrota" es una heurística honesta (kills > deaths del gremio EN ESA pelea puntual),
+ * no un resultado oficial del juego — mismo criterio "observado" ya usado para el ranking de
+ * gremios en el resto del proyecto. */
+async function updateGuildStats(region, { newBattles, newKills }) {
+  if (newBattles.length === 0 && newKills.length === 0) return;
   const filePath = path.join(DATA_DIR, 'guild-stats', `${region}.json`);
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const stats = await readJson(filePath, {});
@@ -141,16 +153,7 @@ async function updateGuildStats(region, newBattles) {
   for (const battle of newBattles) {
     for (const g of battle.guilds) {
       if (!g.id) continue;
-      const entry = stats[g.id] ?? {
-        name: g.name,
-        battles: 0,
-        wins: 0,
-        losses: 0,
-        kills: 0,
-        deaths: 0,
-        fameGained: 0,
-        players: {},
-      };
+      const entry = stats[g.id] ?? emptyGuildEntry(g.name);
       entry.name = g.name || entry.name;
       entry.battles += 1;
       if (g.kills > g.deaths) entry.wins += 1;
@@ -161,15 +164,29 @@ async function updateGuildStats(region, newBattles) {
       stats[g.id] = entry;
     }
     for (const p of battle.players) {
-      const guildEntry = stats[p.guildId];
-      if (!guildEntry) continue;
-      const playerEntry = guildEntry.players[p.id] ?? { name: p.name, participations: 0, kills: 0, deaths: 0, fame: 0 };
+      if (!p.guildId) continue;
+      const guildEntry = stats[p.guildId] ?? emptyGuildEntry(p.guildName);
+      const playerEntry = guildEntry.players[p.id] ?? emptyPlayerEntry(p.name);
       playerEntry.name = p.name || playerEntry.name;
       playerEntry.participations += 1;
       playerEntry.kills += p.kills;
       playerEntry.deaths += p.deaths;
       playerEntry.fame += p.killFame;
       guildEntry.players[p.id] = playerEntry;
+      stats[p.guildId] = guildEntry;
+    }
+  }
+
+  for (const kill of newKills) {
+    for (const p of kill.participants) {
+      if (!p.guildId) continue;
+      const guildEntry = stats[p.guildId] ?? emptyGuildEntry(p.guildName);
+      const playerEntry = guildEntry.players[p.id] ?? emptyPlayerEntry(p.name);
+      playerEntry.name = p.name || playerEntry.name;
+      playerEntry.damageDone += p.damageDone;
+      playerEntry.healingDone += p.healingDone;
+      guildEntry.players[p.id] = playerEntry;
+      stats[p.guildId] = guildEntry;
     }
   }
 
@@ -187,6 +204,7 @@ async function scrapeRegion(region) {
 
   const kills = events.map((event) => ({
     eventId: event.EventId,
+    battleId: event.BattleId ?? null,
     timestamp: event.TimeStamp,
     killerName: event.Killer?.Name ?? '',
     killerGuild: event.Killer?.GuildName ?? '',
@@ -194,13 +212,24 @@ async function scrapeRegion(region) {
     victimGuild: event.Victim?.GuildName ?? '',
     totalFame: event.TotalVictimKillFame ?? 0,
     participantsCount: event.numberOfParticipants ?? 1,
+    // Daño/curación por jugador en ESTA kill puntual (no de la pelea completa) — sumando esto a
+    // través de todas las kills con el mismo battleId se arma el total por pelea, igual que hace
+    // albionbb.com.
+    participants: (event.Participants ?? []).map((p) => ({
+      id: p.Id,
+      name: p.Name,
+      guildId: p.GuildId ?? '',
+      guildName: p.GuildName ?? '',
+      damageDone: p.DamageDone ?? 0,
+      healingDone: p.SupportHealingDone ?? 0,
+    })),
   }));
 
   const battleEntries = battles.map(extractBattleEntry);
 
   const newKills = await appendUniqueNdjson(path.join(DATA_DIR, 'kills', region, `${date}.ndjson`), kills, 'eventId');
   const newBattles = await appendUniqueNdjson(path.join(DATA_DIR, 'battles', region, `${date}.ndjson`), battleEntries, 'battleId');
-  await updateGuildStats(region, newBattles);
+  await updateGuildStats(region, { newBattles, newKills });
   console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas (vistas: ${events.length}/${battles.length}).`);
 }
 
