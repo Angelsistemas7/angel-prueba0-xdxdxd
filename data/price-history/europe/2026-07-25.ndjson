@@ -152,3 +152,12 @@
 {"itemId":"T4_POTION_HEAL","city":"Brecilien","sellPriceMin":1782,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":1449,"buyPriceMaxDate":"2026-07-25T16:55:00","updatedAt":"2026-07-25T18:46:23.757Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":21976,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":12640,"buyPriceMaxDate":"2026-07-25T18:45:00","updatedAt":"2026-07-25T18:46:23.757Z"}
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":10994,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":9911,"buyPriceMaxDate":"2026-07-25T17:25:00","updatedAt":"2026-07-25T18:46:23.757Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":21972,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":13588,"buyPriceMaxDate":"2026-07-25T18:45:00","updatedAt":"2026-07-25T18:47:16.780Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Fort Sterling","sellPriceMin":4679,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":3651,"buyPriceMaxDate":"2026-07-24T23:05:00","updatedAt":"2026-07-25T18:48:16.796Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5928,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":4564,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T18:48:16.796Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":20625,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":10024,"buyPriceMaxDate":"2026-07-25T16:55:00","updatedAt":"2026-07-25T18:48:16.797Z"}
+{"itemId":"T4_2H_WARBOW","city":"Lymhurst","sellPriceMin":3094,"sellPriceMinDate":"2026-07-25T18:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:51:16.698Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":13998,"sellPriceMinDate":"2026-07-25T18:50:00","buyPriceMax":10024,"buyPriceMaxDate":"2026-07-25T16:55:00","updatedAt":"2026-07-25T18:53:24.470Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Caerleon","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:55:16.847Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Fort Sterling","sellPriceMin":4679,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":3660,"buyPriceMaxDate":"2026-07-25T18:55:00","updatedAt":"2026-07-25T18:56:16.002Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":40000,"sellPriceMinDate":"2026-07-25T19:00:00","buyPriceMax":35621,"buyPriceMaxDate":"2026-07-25T10:45:00","updatedAt":"2026-07-25T19:01:16.194Z"}

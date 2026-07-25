@@ -135,3 +135,7 @@
 {"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:25:17.011Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":18372,"sellPriceMinDate":"2026-07-25T18:25:00","buyPriceMax":16116,"buyPriceMaxDate":"2026-07-25T18:25:00","updatedAt":"2026-07-25T18:26:34.722Z"}
 {"itemId":"T4_POTION_HEAL","city":"Martlock","sellPriceMin":3280,"sellPriceMinDate":"2026-07-25T18:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:32:17.613Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4988,"sellPriceMinDate":"2026-07-25T18:55:00","buyPriceMax":3170,"buyPriceMaxDate":"2026-07-25T16:15:00","updatedAt":"2026-07-25T18:58:17.762Z"}
+{"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":1747,"sellPriceMinDate":"2026-07-25T18:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:58:17.762Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":17087,"sellPriceMinDate":"2026-07-25T18:55:00","buyPriceMax":12463,"buyPriceMaxDate":"2026-07-25T17:00:00","updatedAt":"2026-07-25T18:58:17.762Z"}
+{"itemId":"T5_BAG","city":"Thetford","sellPriceMin":17070,"sellPriceMinDate":"2026-07-25T02:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:00:17.156Z"}
