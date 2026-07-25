@@ -276,3 +276,7 @@
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":12897,"sellPriceMinDate":"2026-07-25T22:50:00","buyPriceMax":12004,"buyPriceMaxDate":"2026-07-25T20:05:00","updatedAt":"2026-07-25T22:52:24.218Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Martlock","sellPriceMin":4812,"sellPriceMinDate":"2026-07-25T22:50:00","buyPriceMax":3539,"buyPriceMaxDate":"2026-07-25T15:45:00","updatedAt":"2026-07-25T22:53:16.214Z"}
 {"itemId":"T4_BAG","city":"Martlock","sellPriceMin":6958,"sellPriceMinDate":"2026-07-25T22:50:00","buyPriceMax":2754,"buyPriceMaxDate":"2026-07-25T17:25:00","updatedAt":"2026-07-25T22:54:16.096Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6529,"sellPriceMinDate":"2026-07-25T23:00:00","buyPriceMax":3659,"buyPriceMaxDate":"2026-07-25T13:50:00","updatedAt":"2026-07-25T23:03:16.939Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":45000,"sellPriceMinDate":"2026-07-25T23:00:00","buyPriceMax":12004,"buyPriceMaxDate":"2026-07-25T20:05:00","updatedAt":"2026-07-25T23:03:16.939Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6530,"sellPriceMinDate":"2026-07-25T23:05:00","buyPriceMax":3659,"buyPriceMaxDate":"2026-07-25T13:50:00","updatedAt":"2026-07-25T23:06:16.669Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":1972,"sellPriceMinDate":"2026-07-25T23:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T23:06:16.669Z"}
