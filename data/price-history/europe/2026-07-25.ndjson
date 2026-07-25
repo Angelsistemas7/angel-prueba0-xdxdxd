@@ -138,3 +138,10 @@
 {"itemId":"T4_POTION_HEAL","city":"Caerleon","sellPriceMin":3007,"sellPriceMinDate":"2026-07-25T05:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:10:16.082Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":50959,"sellPriceMinDate":"2026-07-25T18:10:00","buyPriceMax":40086,"buyPriceMaxDate":"2026-07-25T16:50:00","updatedAt":"2026-07-25T18:12:16.153Z"}
 {"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2111,"sellPriceMinDate":"2026-07-25T18:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:13:28.838Z"}
+{"itemId":"T5_BAG","city":"Thetford","sellPriceMin":15096,"sellPriceMinDate":"2026-07-25T15:05:00","buyPriceMax":9353,"buyPriceMaxDate":"2026-07-25T18:10:00","updatedAt":"2026-07-25T18:15:17.039Z"}
+{"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2111,"sellPriceMinDate":"2026-07-25T18:15:00","buyPriceMax":1813,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T18:16:30.191Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5940,"sellPriceMinDate":"2026-07-25T17:35:00","buyPriceMax":4564,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T18:20:16.354Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:20:16.354Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":41650,"sellPriceMinDate":"2026-07-25T18:15:00","buyPriceMax":34071,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T18:20:16.354Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5494,"sellPriceMinDate":"2026-07-25T16:40:00","buyPriceMax":3079,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T18:21:16.218Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":50963,"sellPriceMinDate":"2026-07-25T18:20:00","buyPriceMax":40086,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T18:21:16.219Z"}
