@@ -174,3 +174,20 @@
 {"itemId":"T4_MAIN_AXE","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:35:24.326Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:35:24.326Z"}
 {"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":8476,"sellPriceMinDate":"2026-07-25T19:40:00","buyPriceMax":4791,"buyPriceMaxDate":"2026-07-24T21:50:00","updatedAt":"2026-07-25T19:41:34.137Z"}
+{"itemId":"T4_MAIN_AXE","city":"Caerleon","sellPriceMin":50000,"sellPriceMinDate":"2026-07-25T19:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:52:28.628Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Caerleon","sellPriceMin":36882,"sellPriceMinDate":"2026-07-25T19:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:52:28.628Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":8216,"buyPriceMaxDate":"2026-07-25T19:50:00","updatedAt":"2026-07-25T19:53:17.156Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Brecilien","sellPriceMin":1650,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":473,"buyPriceMaxDate":"2026-07-25T20:00:00","updatedAt":"2026-07-25T20:01:16.156Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5490,"sellPriceMinDate":"2026-07-25T18:35:00","buyPriceMax":3092,"buyPriceMaxDate":"2026-07-25T20:00:00","updatedAt":"2026-07-25T20:02:36.179Z"}
+{"itemId":"T4_POTION_HEAL","city":"Caerleon","sellPriceMin":4194,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:02:36.179Z"}
+{"itemId":"T4_2H_BOW","city":"Caerleon","sellPriceMin":10950,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:03:16.215Z"}
+{"itemId":"T4_2H_WARBOW","city":"Caerleon","sellPriceMin":10000,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:04:20.079Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Caerleon","sellPriceMin":11091,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:04:20.079Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Caerleon","sellPriceMin":11000,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:04:20.079Z"}
+{"itemId":"T4_MAIN_AXE","city":"Caerleon","sellPriceMin":6996,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:04:20.079Z"}
+{"itemId":"T4_MAIN_AXE","city":"Martlock","sellPriceMin":3498,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":3009,"buyPriceMaxDate":"2026-07-25T20:00:00","updatedAt":"2026-07-25T20:04:20.079Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Caerleon","sellPriceMin":34884,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:04:20.079Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Caerleon","sellPriceMin":7700,"sellPriceMinDate":"2026-07-25T20:00:00","buyPriceMax":1176,"buyPriceMaxDate":"2026-07-25T08:10:00","updatedAt":"2026-07-25T20:04:20.079Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Caerleon","sellPriceMin":11098,"sellPriceMinDate":"2026-07-25T20:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:05:42.912Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Caerleon","sellPriceMin":12902,"sellPriceMinDate":"2026-07-25T20:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T20:05:42.912Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":15552,"sellPriceMinDate":"2026-07-25T20:05:00","buyPriceMax":10024,"buyPriceMaxDate":"2026-07-25T16:55:00","updatedAt":"2026-07-25T20:05:42.913Z"}
