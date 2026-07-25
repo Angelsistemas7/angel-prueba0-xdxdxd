@@ -259,3 +259,9 @@
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5928,"sellPriceMinDate":"2026-07-25T22:15:00","buyPriceMax":4562,"buyPriceMaxDate":"2026-07-25T22:15:00","updatedAt":"2026-07-25T22:17:16.169Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":54470,"sellPriceMinDate":"2026-07-25T22:15:00","buyPriceMax":38951,"buyPriceMaxDate":"2026-07-25T20:20:00","updatedAt":"2026-07-25T22:17:16.170Z"}
 {"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2111,"sellPriceMinDate":"2026-07-25T22:20:00","buyPriceMax":1813,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T22:24:16.827Z"}
+{"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2112,"sellPriceMinDate":"2026-07-25T22:30:00","buyPriceMax":1813,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T22:34:42.736Z"}
+{"itemId":"T4_2H_WARBOW","city":"Thetford","sellPriceMin":3200,"sellPriceMinDate":"2026-07-25T22:35:00","buyPriceMax":2055,"buyPriceMaxDate":"2026-07-25T14:50:00","updatedAt":"2026-07-25T22:37:42.797Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49993,"sellPriceMinDate":"2026-07-25T22:35:00","buyPriceMax":40092,"buyPriceMaxDate":"2026-07-25T21:25:00","updatedAt":"2026-07-25T22:37:42.798Z"}
+{"itemId":"T5_BAG","city":"Fort Sterling","sellPriceMin":13184,"sellPriceMinDate":"2026-07-25T22:35:00","buyPriceMax":9558,"buyPriceMaxDate":"2026-07-25T21:35:00","updatedAt":"2026-07-25T22:37:42.798Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":11482,"sellPriceMinDate":"2026-07-25T22:35:00","buyPriceMax":9930,"buyPriceMaxDate":"2026-07-25T21:25:00","updatedAt":"2026-07-25T22:39:16.123Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Fort Sterling","sellPriceMin":1594,"sellPriceMinDate":"2026-07-25T18:40:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T22:40:38.417Z"}
