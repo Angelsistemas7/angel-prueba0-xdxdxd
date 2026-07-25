@@ -145,3 +145,10 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":41650,"sellPriceMinDate":"2026-07-25T18:15:00","buyPriceMax":34071,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T18:20:16.354Z"}
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5494,"sellPriceMinDate":"2026-07-25T16:40:00","buyPriceMax":3079,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T18:21:16.218Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":50963,"sellPriceMinDate":"2026-07-25T18:20:00","buyPriceMax":40086,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T18:21:16.219Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":40098,"sellPriceMinDate":"2026-07-25T18:30:00","buyPriceMax":34071,"buyPriceMaxDate":"2026-07-25T18:30:00","updatedAt":"2026-07-25T18:33:16.649Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5490,"sellPriceMinDate":"2026-07-25T18:35:00","buyPriceMax":3079,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T18:39:15.951Z"}
+{"itemId":"T4_MAIN_AXE","city":"Black Market","sellPriceMin":5491,"sellPriceMinDate":"2026-07-24T19:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:45:16.120Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47494,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":38948,"buyPriceMaxDate":"2026-07-25T18:45:00","updatedAt":"2026-07-25T18:46:23.757Z"}
+{"itemId":"T4_POTION_HEAL","city":"Brecilien","sellPriceMin":1782,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":1449,"buyPriceMaxDate":"2026-07-25T16:55:00","updatedAt":"2026-07-25T18:46:23.757Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":21976,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":12640,"buyPriceMaxDate":"2026-07-25T18:45:00","updatedAt":"2026-07-25T18:46:23.757Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":10994,"sellPriceMinDate":"2026-07-25T18:45:00","buyPriceMax":9911,"buyPriceMaxDate":"2026-07-25T17:25:00","updatedAt":"2026-07-25T18:46:23.757Z"}
