@@ -153,3 +153,4 @@
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4989,"sellPriceMinDate":"2026-07-25T19:55:00","buyPriceMax":3167,"buyPriceMaxDate":"2026-07-25T19:55:00","updatedAt":"2026-07-25T19:55:37.537Z"}
 {"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":1745,"sellPriceMinDate":"2026-07-25T19:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T19:55:37.537Z"}
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":5379,"sellPriceMinDate":"2026-07-25T16:05:00","buyPriceMax":3090,"buyPriceMaxDate":"2026-07-25T19:55:00","updatedAt":"2026-07-25T19:57:17.734Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":31498,"sellPriceMinDate":"2026-07-25T20:05:00","buyPriceMax":26058,"buyPriceMaxDate":"2026-07-25T20:05:00","updatedAt":"2026-07-25T20:10:23.078Z"}
