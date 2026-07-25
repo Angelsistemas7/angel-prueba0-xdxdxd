@@ -12,7 +12,7 @@ concurrency:
 
 permissions:
   actions: write
-  contents: read
+  contents: write
 
 jobs:
   scrape:
@@ -27,25 +27,42 @@ jobs:
           node-version: 20
       - run: npm install
 
-      # Por qué esto reemplaza al `schedule` de cada 1 min: medido en vivo que un cron de GitHub
-      # a ese intervalo queda encolado con baja prioridad y puede demorar minutos u horas bajo
-      # carga (confirmado: gaps reales de ~1h45m entre corridas con `* * * * *`, sin ningún error
-      # en el workflow). Un `sleep` DENTRO de un job ya corriendo no depende de esa cola — una vez
-      # que el runner arrancó, el timing lo controla este loop, no el scheduler de GitHub.
-      - name: Scrape cada 60s durante ~5h40m
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Configurar identidad de git para los commits automáticos
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # 2026-07-25: Firestore se descartó — a 60s de intervalo real (una vez arreglado el cron)
+      # la cuota gratis de 20.000 escrituras/día se agotaba a media tarde y todo lo demás del día
+      # se perdía (RESOURCE_EXHAUSTED). Ahora `scrape.js` escribe LOCAL (archivos dentro de este
+      # checkout, sin red, sin cuota) y este loop los sube a git cada ~15 min, no cada 60s — así
+      # el historial de commits no se infla y el push no compite por tiempo con el scrape.
+      - name: Scrape cada 60s, commit+push cada ~15 min, durante ~5h40m
         run: |
           END=$((SECONDS + 20400))
+          LAST_PUSH=$SECONDS
+          push_if_dirty() {
+            if [ -n "$(git status --porcelain -- data)" ]; then
+              git add data
+              git commit -m "Scraper snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)" -q
+              git pull --rebase --autostash -q origin "${{ github.ref_name }}" || true
+              git push -q origin "HEAD:${{ github.ref_name }}" || echo "push falló, se reintenta en el próximo ciclo"
+            fi
+          }
           while [ "$SECONDS" -lt "$END" ]; do
             START_ITER=$SECONDS
             npm start || echo "scrape falló esta vuelta, se sigue con la siguiente"
+            if [ $((SECONDS - LAST_PUSH)) -ge 900 ]; then
+              push_if_dirty
+              LAST_PUSH=$SECONDS
+            fi
             ELAPSED=$((SECONDS - START_ITER))
             SLEEP_FOR=$((60 - ELAPSED))
             if [ "$SLEEP_FOR" -gt 0 ]; then
               sleep "$SLEEP_FOR"
             fi
           done
+          push_if_dirty
 
       # Re-dispara este mismo workflow antes de que el runner llegue al límite de 6h, para
       # continuidad 24/7 sin depender del cron de GitHub. `always()` para que la cadena no se

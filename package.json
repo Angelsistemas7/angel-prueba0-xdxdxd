@@ -5,8 +5,5 @@
   "type": "module",
   "scripts": {
     "start": "node scrape.js"
-  },
-  "dependencies": {
-    "firebase-admin": "^13.0.0"
   }
 }
