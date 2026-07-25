@@ -287,3 +287,10 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47492,"sellPriceMinDate":"2026-07-25T23:30:00","buyPriceMax":38952,"buyPriceMaxDate":"2026-07-25T23:30:00","updatedAt":"2026-07-25T23:34:39.500Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49993,"sellPriceMinDate":"2026-07-25T23:35:00","buyPriceMax":40092,"buyPriceMaxDate":"2026-07-25T21:25:00","updatedAt":"2026-07-25T23:37:39.455Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49993,"sellPriceMinDate":"2026-07-25T23:35:00","buyPriceMax":40083,"buyPriceMaxDate":"2026-07-25T23:35:00","updatedAt":"2026-07-25T23:39:06.091Z"}
+{"itemId":"T4_2H_BOW","city":"Black Market","sellPriceMin":5688,"sellPriceMinDate":"2026-07-25T19:10:00","buyPriceMax":5372,"buyPriceMaxDate":"2026-07-25T23:45:00","updatedAt":"2026-07-25T23:46:39.644Z"}
+{"itemId":"T4_2H_WARBOW","city":"Black Market","sellPriceMin":4997,"sellPriceMinDate":"2026-07-25T19:10:00","buyPriceMax":3476,"buyPriceMaxDate":"2026-07-25T23:45:00","updatedAt":"2026-07-25T23:46:39.644Z"}
+{"itemId":"T4_MAIN_AXE","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":2133,"buyPriceMaxDate":"2026-07-25T23:45:00","updatedAt":"2026-07-25T23:46:39.645Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Black Market","sellPriceMin":9796,"sellPriceMinDate":"2026-07-25T10:15:00","buyPriceMax":9717,"buyPriceMaxDate":"2026-07-25T23:45:00","updatedAt":"2026-07-25T23:46:39.645Z"}
+{"itemId":"T4_2H_BOW","city":"Caerleon","sellPriceMin":10096,"sellPriceMinDate":"2026-07-25T23:45:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T23:47:39.526Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Black Market","sellPriceMin":3993,"sellPriceMinDate":"2026-07-25T13:40:00","buyPriceMax":3950,"buyPriceMaxDate":"2026-07-25T23:50:00","updatedAt":"2026-07-25T23:54:39.119Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Caerleon","sellPriceMin":6886,"sellPriceMinDate":"2026-07-25T23:50:00","buyPriceMax":1176,"buyPriceMaxDate":"2026-07-25T08:10:00","updatedAt":"2026-07-25T23:54:39.119Z"}

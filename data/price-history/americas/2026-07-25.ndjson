@@ -195,3 +195,5 @@
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13500,"sellPriceMinDate":"2026-07-25T23:15:00","buyPriceMax":10211,"buyPriceMaxDate":"2026-07-25T23:15:00","updatedAt":"2026-07-25T23:19:40.362Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Martlock","sellPriceMin":27990,"sellPriceMinDate":"2026-07-25T23:30:00","buyPriceMax":21561,"buyPriceMaxDate":"2026-07-25T15:30:00","updatedAt":"2026-07-25T23:33:48.620Z"}
 {"itemId":"T5_BAG","city":"Fort Sterling","sellPriceMin":13994,"sellPriceMinDate":"2026-07-25T23:30:00","buyPriceMax":10502,"buyPriceMaxDate":"2026-07-25T22:15:00","updatedAt":"2026-07-25T23:35:40.267Z"}
+{"itemId":"T4_2H_WARBOW","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T23:45:51.589Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4948,"sellPriceMinDate":"2026-07-25T23:50:00","buyPriceMax":3168,"buyPriceMaxDate":"2026-07-25T23:15:00","updatedAt":"2026-07-25T23:54:39.875Z"}
