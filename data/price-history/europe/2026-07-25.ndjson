@@ -218,3 +218,8 @@
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":11485,"sellPriceMinDate":"2026-07-25T20:55:00","buyPriceMax":9911,"buyPriceMaxDate":"2026-07-25T17:25:00","updatedAt":"2026-07-25T20:58:17.934Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Lymhurst","sellPriceMin":6491,"sellPriceMinDate":"2026-07-25T21:00:00","buyPriceMax":3259,"buyPriceMaxDate":"2026-07-25T15:35:00","updatedAt":"2026-07-25T21:01:16.400Z"}
 {"itemId":"T4_MAIN_AXE","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":5688,"buyPriceMaxDate":"2026-07-25T21:00:00","updatedAt":"2026-07-25T21:03:16.651Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":50929,"sellPriceMinDate":"2026-07-25T21:15:00","buyPriceMax":40086,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T21:16:28.930Z"}
+{"itemId":"T4_MAIN_AXE","city":"Lymhurst","sellPriceMin":5000,"sellPriceMinDate":"2026-07-25T20:30:00","buyPriceMax":2071,"buyPriceMaxDate":"2026-07-25T21:15:00","updatedAt":"2026-07-25T21:17:17.326Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Lymhurst","sellPriceMin":8996,"sellPriceMinDate":"2026-07-25T21:05:00","buyPriceMax":4618,"buyPriceMaxDate":"2026-07-25T21:15:00","updatedAt":"2026-07-25T21:17:17.326Z"}
+{"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2112,"sellPriceMinDate":"2026-07-25T21:15:00","buyPriceMax":1813,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-25T21:17:17.326Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":50982,"sellPriceMinDate":"2026-07-25T21:20:00","buyPriceMax":40086,"buyPriceMaxDate":"2026-07-25T18:20:00","updatedAt":"2026-07-25T21:21:16.082Z"}

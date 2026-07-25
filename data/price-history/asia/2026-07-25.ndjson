@@ -117,3 +117,6 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":61087,"sellPriceMinDate":"2026-07-25T19:35:00","buyPriceMax":34011,"buyPriceMaxDate":"2026-07-25T19:35:00","updatedAt":"2026-07-25T19:36:18.057Z"}
 {"itemId":"T4_MAIN_SWORD","city":"Thetford","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T21:00:21.342Z"}
 {"itemId":"T5_BAG","city":"Thetford","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T21:00:21.342Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":3671,"sellPriceMinDate":"2026-07-25T21:05:00","buyPriceMax":2007,"buyPriceMaxDate":"2026-07-25T21:05:00","updatedAt":"2026-07-25T21:09:36.803Z"}
+{"itemId":"T4_POTION_HEAL","city":"Thetford","sellPriceMin":2186,"sellPriceMinDate":"2026-07-24T21:15:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T21:15:45.797Z"}
+{"itemId":"T4_POTION_HEAL","city":"Thetford","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T21:20:23.987Z"}
