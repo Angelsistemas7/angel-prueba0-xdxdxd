@@ -185,3 +185,7 @@
 {"itemId":"T4_MAIN_SWORD","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T22:35:17.759Z"}
 {"itemId":"T4_MAIN_SWORD","city":"Thetford","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T22:35:17.759Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Thetford","sellPriceMin":29877,"sellPriceMinDate":"2026-07-25T22:35:00","buyPriceMax":25156,"buyPriceMaxDate":"2026-07-25T22:35:00","updatedAt":"2026-07-25T22:40:39.504Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5770,"sellPriceMinDate":"2026-07-25T16:15:00","buyPriceMax":4041,"buyPriceMaxDate":"2026-07-25T22:40:00","updatedAt":"2026-07-25T22:43:39.139Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":33872,"sellPriceMinDate":"2026-07-25T22:50:00","buyPriceMax":25169,"buyPriceMaxDate":"2026-07-25T16:40:00","updatedAt":"2026-07-25T22:55:17.313Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4949,"sellPriceMinDate":"2026-07-25T22:55:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-25T22:55:00","updatedAt":"2026-07-25T22:57:17.301Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4949,"sellPriceMinDate":"2026-07-25T22:55:00","buyPriceMax":3168,"buyPriceMaxDate":"2026-07-25T22:55:00","updatedAt":"2026-07-25T22:58:42.024Z"}
