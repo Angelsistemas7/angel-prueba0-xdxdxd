@@ -44,8 +44,14 @@ const DATA_DIR = 'data';
 /** 2026-07-25: se cayó Firestore (cuota gratis de 20.000 escrituras/día se agotaba a mitad de
  * día corriendo cada 60s, ver `docs/handoff.md` de la app). Reemplazado por archivos dentro de
  * este mismo repo git — commit/push periódico en `scrape.yml`, no acá. Kills/peleas se acumulan
- * deduplicados por id en NDJSON diario por región; precios son un snapshot único por región que
- * se pisa (no hace falta historial, es solo el último precio bueno visto como fallback). */
+ * deduplicados por id en NDJSON diario por región; precios/oro son snapshot + histórico de
+ * cambios; el índice de gremios/jugadores se acumula incrementalmente, solo con peleas nuevas.
+ *
+ * Límite real confirmado (no un dato que falte agregar): la API de GameInfo NO expone daño hecho
+ * ni curación por jugador en ninguna parte (`battle.players`/`battle.guilds` solo traen
+ * kills/deaths/killFame) — eso solo existe vía sniffing del protocolo del cliente del juego
+ * (packet capture en la misma PC donde se juega), arquitectónicamente incompatible con una app de
+ * teléfono. No reabrir esto sin una fuente de datos nueva y real. */
 
 async function fetchJson(url) {
   const res = await fetch(url);
@@ -70,17 +76,104 @@ async function readNdjson(filePath) {
   }
 }
 
+async function readJson(filePath, fallback) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, 'utf8'));
+  } catch (err) {
+    if (err.code === 'ENOENT') return fallback;
+    throw err;
+  }
+}
+
 /** Agrega solo las entradas cuyo `idKey` todavía no está en el archivo — evita duplicar la misma
- * kill/pelea si sigue apareciendo en el pool de la API en la siguiente corrida. */
+ * kill/pelea/precio de oro si sigue apareciendo en el pool de la API en la siguiente corrida.
+ * Devuelve las entradas realmente nuevas (no solo el conteo) para poder encadenar agregados. */
 async function appendUniqueNdjson(filePath, newEntries, idKey) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const existing = await readNdjson(filePath);
   const seen = new Set(existing.map((e) => e[idKey]));
   const toAppend = newEntries.filter((e) => !seen.has(e[idKey]));
-  if (toAppend.length === 0) return 0;
+  if (toAppend.length === 0) return [];
   const lines = toAppend.map((e) => JSON.stringify(e)).join('\n') + '\n';
   await fs.appendFile(filePath, lines, 'utf8');
-  return toAppend.length;
+  return toAppend;
+}
+
+function extractBattleEntry(battle) {
+  const guilds = Object.values(battle.guilds ?? {}).map((g) => ({
+    id: g.id,
+    name: g.name,
+    kills: g.kills ?? 0,
+    deaths: g.deaths ?? 0,
+    killFame: g.killFame ?? 0,
+    alliance: g.alliance ?? '',
+  }));
+  const players = Object.values(battle.players ?? {}).map((p) => ({
+    id: p.id,
+    name: p.name,
+    guildId: p.guildId ?? '',
+    guildName: p.guildName ?? '',
+    kills: p.kills ?? 0,
+    deaths: p.deaths ?? 0,
+    killFame: p.killFame ?? 0,
+  }));
+  return {
+    battleId: battle.id,
+    startTime: battle.startTime,
+    totalKills: battle.totalKills ?? 0,
+    totalFame: battle.totalFame ?? 0,
+    guilds,
+    players,
+  };
+}
+
+/** Índice acumulado por gremio (victorias/derrotas/fama/participación de jugadores), actualizado
+ * SOLO con peleas recién agregadas (nunca se reprocesa una pelea ya vista, así no se duplica el
+ * conteo si sigue apareciendo en el pool de /battles). "Victoria/derrota" es una heurística
+ * honesta (kills > deaths del gremio EN ESA pelea puntual), no un resultado oficial del juego —
+ * mismo criterio "observado" ya usado para el ranking de gremios en el resto del proyecto. */
+async function updateGuildStats(region, newBattles) {
+  if (newBattles.length === 0) return;
+  const filePath = path.join(DATA_DIR, 'guild-stats', `${region}.json`);
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const stats = await readJson(filePath, {});
+
+  for (const battle of newBattles) {
+    for (const g of battle.guilds) {
+      if (!g.id) continue;
+      const entry = stats[g.id] ?? {
+        name: g.name,
+        battles: 0,
+        wins: 0,
+        losses: 0,
+        kills: 0,
+        deaths: 0,
+        fameGained: 0,
+        players: {},
+      };
+      entry.name = g.name || entry.name;
+      entry.battles += 1;
+      if (g.kills > g.deaths) entry.wins += 1;
+      else if (g.kills < g.deaths) entry.losses += 1;
+      entry.kills += g.kills;
+      entry.deaths += g.deaths;
+      entry.fameGained += g.killFame;
+      stats[g.id] = entry;
+    }
+    for (const p of battle.players) {
+      const guildEntry = stats[p.guildId];
+      if (!guildEntry) continue;
+      const playerEntry = guildEntry.players[p.id] ?? { name: p.name, participations: 0, kills: 0, deaths: 0, fame: 0 };
+      playerEntry.name = p.name || playerEntry.name;
+      playerEntry.participations += 1;
+      playerEntry.kills += p.kills;
+      playerEntry.deaths += p.deaths;
+      playerEntry.fame += p.killFame;
+      guildEntry.players[p.id] = playerEntry;
+    }
+  }
+
+  await fs.writeFile(filePath, JSON.stringify(stats));
 }
 
 async function scrapeRegion(region) {
@@ -103,17 +196,12 @@ async function scrapeRegion(region) {
     participantsCount: event.numberOfParticipants ?? 1,
   }));
 
-  const battleEntries = battles.map((battle) => ({
-    battleId: battle.id,
-    startTime: battle.startTime,
-    totalKills: battle.totalKills ?? 0,
-    totalFame: battle.totalFame ?? 0,
-    guildNames: Object.values(battle.guilds ?? {}).map((g) => g.name),
-  }));
+  const battleEntries = battles.map(extractBattleEntry);
 
-  const killsAdded = await appendUniqueNdjson(path.join(DATA_DIR, 'kills', region, `${date}.ndjson`), kills, 'eventId');
-  const battlesAdded = await appendUniqueNdjson(path.join(DATA_DIR, 'battles', region, `${date}.ndjson`), battleEntries, 'battleId');
-  console.log(`[${region}] +${killsAdded} kills nuevas, +${battlesAdded} peleas nuevas (vistas: ${events.length}/${battles.length}).`);
+  const newKills = await appendUniqueNdjson(path.join(DATA_DIR, 'kills', region, `${date}.ndjson`), kills, 'eventId');
+  const newBattles = await appendUniqueNdjson(path.join(DATA_DIR, 'battles', region, `${date}.ndjson`), battleEntries, 'battleId');
+  await updateGuildStats(region, newBattles);
+  console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas (vistas: ${events.length}/${battles.length}).`);
 }
 
 async function scrapePrices(region) {
@@ -122,19 +210,19 @@ async function scrapePrices(region) {
   const locations = CITIES.map(encodeURIComponent).join(',');
   const prices = await fetchJson(`${base}/api/v2/stats/prices/${ids}.json?locations=${locations}&qualities=1`);
 
-  const filePath = path.join(DATA_DIR, 'prices', `${region}.json`);
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const snapshotPath = path.join(DATA_DIR, 'prices', `${region}.json`);
+  await fs.mkdir(path.dirname(snapshotPath), { recursive: true });
+  const snapshot = await readJson(snapshotPath, {});
 
-  let snapshot = {};
-  try {
-    snapshot = JSON.parse(await fs.readFile(filePath, 'utf8'));
-  } catch (err) {
-    if (err.code !== 'ENOENT') throw err;
-  }
-
+  // Histórico de precios: solo se agrega una línea cuando el precio REALMENTE cambió respecto al
+  // último snapshot guardado — a diferencia de kills/peleas (donde casi todo es nuevo cada
+  // corrida), la mayoría de los precios no cambian minuto a minuto, así que registrar cada
+  // corrida sin filtrar infla el archivo sin aportar nada para el análisis de tendencia futuro.
+  const changed = [];
   for (const p of prices) {
     const key = `${p.item_id}_${p.city}`;
-    snapshot[key] = {
+    const prev = snapshot[key];
+    const updated = {
       itemId: p.item_id,
       city: p.city,
       sellPriceMin: p.sell_price_min,
@@ -143,17 +231,39 @@ async function scrapePrices(region) {
       buyPriceMaxDate: p.buy_price_max_date,
       updatedAt: new Date().toISOString(),
     };
+    if (!prev || prev.sellPriceMin !== updated.sellPriceMin || prev.buyPriceMax !== updated.buyPriceMax) {
+      changed.push(updated);
+    }
+    snapshot[key] = updated;
   }
+  await fs.writeFile(snapshotPath, JSON.stringify(snapshot));
 
-  await fs.writeFile(filePath, JSON.stringify(snapshot));
-  console.log(`[${region}] ${prices.length} precios actualizados en el snapshot.`);
+  if (changed.length > 0) {
+    const historyPath = path.join(DATA_DIR, 'price-history', region, `${todayStr()}.ndjson`);
+    await fs.mkdir(path.dirname(historyPath), { recursive: true });
+    const lines = changed.map((e) => JSON.stringify(e)).join('\n') + '\n';
+    await fs.appendFile(historyPath, lines, 'utf8');
+  }
+  console.log(`[${region}] ${prices.length} precios revisados, ${changed.length} cambios registrados en histórico.`);
 }
 
-/** Reemplaza el TTL de Firestore (`expireAt`) — borra archivos NDJSON de días fuera de la
- * ventana de retención. Los snapshots de precio no tienen fecha en el nombre, no aplica. */
+/** Precio del oro (`/api/v2/stats/gold.json`, endpoint documentado de AODP nunca usado hasta
+ * ahora — ver `plan-accion-2026-07-23.md` Bajo costo #16). Granularidad horaria propia de la API,
+ * dedupe por timestamp evita repetir la misma hora en corridas sucesivas. */
+async function scrapeGold(region) {
+  const base = AODP_HOSTS[region];
+  const entries = await fetchJson(`${base}/api/v2/stats/gold.json?count=24`);
+  const filePath = path.join(DATA_DIR, 'gold', `${region}.ndjson`);
+  const added = await appendUniqueNdjson(filePath, entries, 'timestamp');
+  console.log(`[${region}] +${added.length} precios de oro nuevos.`);
+}
+
+/** Reemplaza el TTL de Firestore (`expireAt`) — borra archivos de días fuera de la ventana de
+ * retención. Los snapshots/índices que se pisan en el lugar (precios, guild-stats) y el archivo
+ * de oro (chico, ~24 líneas/día, se deja crecer) no tienen fecha en el nombre, no aplica. */
 async function pruneOldFiles() {
   const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  for (const kind of ['kills', 'battles']) {
+  for (const kind of ['kills', 'battles', 'price-history']) {
     const kindDir = path.join(DATA_DIR, kind);
     let regions = [];
     try {
@@ -188,6 +298,11 @@ async function main() {
       await scrapePrices(region);
     } catch (err) {
       console.error(`[${region}] precios error:`, err.message);
+    }
+    try {
+      await scrapeGold(region);
+    } catch (err) {
+      console.error(`[${region}] oro error:`, err.message);
     }
   }
   await pruneOldFiles();
