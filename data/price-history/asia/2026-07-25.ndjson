@@ -110,3 +110,4 @@
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":14996,"sellPriceMinDate":"2026-07-25T08:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T17:27:18.389Z"}
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":12490,"sellPriceMinDate":"2026-07-25T10:45:00","buyPriceMax":10049,"buyPriceMaxDate":"2026-07-25T13:50:00","updatedAt":"2026-07-25T17:27:18.389Z"}
 {"itemId":"T5_BAG","city":"Thetford","sellPriceMin":13988,"sellPriceMinDate":"2026-07-24T20:55:00","buyPriceMax":11001,"buyPriceMaxDate":"2026-07-24T20:55:00","updatedAt":"2026-07-25T17:27:18.389Z"}
+{"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2190,"sellPriceMinDate":"2026-07-25T18:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:04:19.240Z"}

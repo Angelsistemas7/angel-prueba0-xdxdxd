@@ -124,3 +124,11 @@
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":1027,"buyPriceMaxDate":"2026-07-25T17:40:00","updatedAt":"2026-07-25T17:45:42.890Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":18360,"sellPriceMinDate":"2026-07-25T17:30:00","buyPriceMax":15484,"buyPriceMaxDate":"2026-07-25T17:45:00","updatedAt":"2026-07-25T17:46:17.501Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":18360,"sellPriceMinDate":"2026-07-25T17:30:00","buyPriceMax":16116,"buyPriceMaxDate":"2026-07-25T17:45:00","updatedAt":"2026-07-25T17:49:17.791Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Caerleon","sellPriceMin":27980,"sellPriceMinDate":"2026-07-25T17:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T17:59:23.314Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":1602,"buyPriceMaxDate":"2026-07-25T10:50:00","updatedAt":"2026-07-25T18:05:32.611Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":31534,"sellPriceMinDate":"2026-07-25T18:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-25T18:05:32.611Z"}
+{"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":8589,"sellPriceMinDate":"2026-07-25T18:05:00","buyPriceMax":3004,"buyPriceMaxDate":"2026-07-25T01:45:00","updatedAt":"2026-07-25T18:09:17.383Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Martlock","sellPriceMin":27997,"sellPriceMinDate":"2026-07-25T18:05:00","buyPriceMax":21561,"buyPriceMaxDate":"2026-07-25T15:30:00","updatedAt":"2026-07-25T18:10:17.022Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":18360,"sellPriceMinDate":"2026-07-25T17:30:00","buyPriceMax":11692,"buyPriceMaxDate":"2026-07-25T18:10:00","updatedAt":"2026-07-25T18:11:45.980Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":4069,"sellPriceMinDate":"2026-07-25T14:15:00","buyPriceMax":3950,"buyPriceMaxDate":"2026-07-25T18:10:00","updatedAt":"2026-07-25T18:13:29.770Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Black Market","sellPriceMin":5987,"sellPriceMinDate":"2026-07-25T04:20:00","buyPriceMax":4740,"buyPriceMaxDate":"2026-07-25T18:10:00","updatedAt":"2026-07-25T18:13:29.770Z"}
