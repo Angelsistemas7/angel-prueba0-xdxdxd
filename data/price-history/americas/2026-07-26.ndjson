@@ -143,3 +143,4 @@
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":14000,"sellPriceMinDate":"2026-07-26T09:45:00","buyPriceMax":12900,"buyPriceMaxDate":"2026-07-26T09:45:00","updatedAt":"2026-07-26T09:48:25.752Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Martlock","sellPriceMin":1949,"sellPriceMinDate":"2026-07-26T09:45:00","buyPriceMax":952,"buyPriceMaxDate":"2026-07-26T09:45:00","updatedAt":"2026-07-26T09:50:06.654Z"}
 {"itemId":"T4_POTION_HEAL","city":"Brecilien","sellPriceMin":1654,"sellPriceMinDate":"2026-07-26T02:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:50:06.654Z"}
+{"itemId":"T4_OFF_SHIELD","city":"Martlock","sellPriceMin":33333,"sellPriceMinDate":"2026-07-26T10:35:00","buyPriceMax":952,"buyPriceMaxDate":"2026-07-26T09:45:00","updatedAt":"2026-07-26T10:39:25.461Z"}
