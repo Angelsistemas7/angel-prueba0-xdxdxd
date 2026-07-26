@@ -33,3 +33,4 @@
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5000,"sellPriceMinDate":"2026-07-26T06:35:00","buyPriceMax":1699,"buyPriceMaxDate":"2026-07-26T06:35:00","updatedAt":"2026-07-26T06:36:00.050Z"}
 {"itemId":"T4_MAIN_AXE","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":7699,"buyPriceMaxDate":"2026-07-26T06:55:00","updatedAt":"2026-07-26T06:58:00.118Z"}
 {"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2188,"sellPriceMinDate":"2026-07-26T07:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T07:13:00.148Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":5610977,"sellPriceMinDate":"2026-07-26T04:55:00","buyPriceMax":12000,"buyPriceMaxDate":"2026-07-26T07:50:00","updatedAt":"2026-07-26T07:55:14.019Z"}

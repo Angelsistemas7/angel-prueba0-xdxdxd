@@ -121,3 +121,7 @@
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4298,"sellPriceMinDate":"2026-07-26T06:55:00","buyPriceMax":3089,"buyPriceMaxDate":"2026-07-26T07:30:00","updatedAt":"2026-07-26T07:34:00.416Z"}
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":14927,"sellPriceMinDate":"2026-07-26T07:30:00","buyPriceMax":10211,"buyPriceMaxDate":"2026-07-26T07:30:00","updatedAt":"2026-07-26T07:35:02.846Z"}
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5662,"sellPriceMinDate":"2026-07-26T07:35:00","buyPriceMax":2340,"buyPriceMaxDate":"2026-07-26T04:50:00","updatedAt":"2026-07-26T07:36:00.283Z"}
+{"itemId":"T5_BAG","city":"Thetford","sellPriceMin":16979,"sellPriceMinDate":"2026-07-26T07:40:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T07:43:59.985Z"}
+{"itemId":"T4_MAIN_AXE","city":"Thetford","sellPriceMin":3898,"sellPriceMinDate":"2026-07-26T07:40:00","buyPriceMax":1060,"buyPriceMaxDate":"2026-07-25T22:30:00","updatedAt":"2026-07-26T07:45:17.280Z"}
+{"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":19982,"sellPriceMinDate":"2026-07-26T07:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T07:52:59.654Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":15485,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":17064,"buyPriceMaxDate":"2026-07-26T07:50:00","updatedAt":"2026-07-26T07:53:59.905Z"}

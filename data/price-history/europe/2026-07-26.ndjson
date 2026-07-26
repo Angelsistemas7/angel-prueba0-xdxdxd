@@ -89,3 +89,4 @@
 {"itemId":"T4_POTION_HEAL","city":"Caerleon","sellPriceMin":2577,"sellPriceMinDate":"2026-07-26T07:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T07:30:59.451Z"}
 {"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":1816,"sellPriceMinDate":"2026-07-26T07:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T07:39:02.139Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":41303,"sellPriceMinDate":"2026-07-26T07:35:00","buyPriceMax":34073,"buyPriceMaxDate":"2026-07-26T07:35:00","updatedAt":"2026-07-26T07:39:59.599Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13456,"sellPriceMinDate":"2026-07-26T07:45:00","buyPriceMax":10030,"buyPriceMaxDate":"2026-07-26T01:30:00","updatedAt":"2026-07-26T07:45:58.934Z"}
