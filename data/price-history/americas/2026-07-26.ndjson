@@ -188,3 +188,4 @@
 {"itemId":"T4_POTION_HEAL","city":"Bridgewatch","sellPriceMin":2026,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":1506,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:42:25.590Z"}
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Martlock","sellPriceMin":1096,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":654,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:44:25.209Z"}
 {"itemId":"T4_MAIN_AXE","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:50:26.386Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T16:15:54.800Z"}
