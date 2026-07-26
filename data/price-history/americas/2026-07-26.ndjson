@@ -97,3 +97,6 @@
 {"itemId":"T4_HEAD_PLATE_SET1","city":"Fort Sterling","sellPriceMin":1368,"sellPriceMinDate":"2026-07-26T05:25:00","buyPriceMax":801,"buyPriceMaxDate":"2026-07-26T05:25:00","updatedAt":"2026-07-26T05:27:59.391Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Fort Sterling","sellPriceMin":1959,"sellPriceMinDate":"2026-07-26T05:25:00","buyPriceMax":354,"buyPriceMaxDate":"2026-07-26T05:25:00","updatedAt":"2026-07-26T05:28:59.604Z"}
 {"itemId":"T4_HEAD_PLATE_SET1","city":"Fort Sterling","sellPriceMin":1361,"sellPriceMinDate":"2026-07-26T05:30:00","buyPriceMax":801,"buyPriceMaxDate":"2026-07-26T05:30:00","updatedAt":"2026-07-26T05:33:29.920Z"}
+{"itemId":"T4_BAG","city":"Black Market","sellPriceMin":2999,"sellPriceMinDate":"2026-07-26T03:25:00","buyPriceMax":3792,"buyPriceMaxDate":"2026-07-26T06:00:00","updatedAt":"2026-07-26T06:00:59.737Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":15485,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":15800,"buyPriceMaxDate":"2026-07-26T06:00:00","updatedAt":"2026-07-26T06:00:59.738Z"}
+{"itemId":"T4_2H_BOW","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":5688,"buyPriceMaxDate":"2026-07-26T06:00:00","updatedAt":"2026-07-26T06:03:18.276Z"}

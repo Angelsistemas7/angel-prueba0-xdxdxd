@@ -74,3 +74,5 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":41833,"sellPriceMinDate":"2026-07-26T05:40:00","buyPriceMax":34073,"buyPriceMaxDate":"2026-07-26T05:40:00","updatedAt":"2026-07-26T05:43:09.603Z"}
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6500,"sellPriceMinDate":"2026-07-26T05:45:00","buyPriceMax":3659,"buyPriceMaxDate":"2026-07-25T13:50:00","updatedAt":"2026-07-26T05:46:07.561Z"}
 {"itemId":"T4_2H_WARBOW","city":"Lymhurst","sellPriceMin":3073,"sellPriceMinDate":"2026-07-26T05:45:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T05:49:59.358Z"}
+{"itemId":"T4_2H_BOW","city":"Lymhurst","sellPriceMin":3846,"sellPriceMinDate":"2026-07-26T05:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T05:57:16.377Z"}
+{"itemId":"T4_2H_BOW","city":"Brecilien","sellPriceMin":2945,"sellPriceMinDate":"2026-07-26T06:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T06:05:59.266Z"}
