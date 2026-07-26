@@ -64,3 +64,10 @@
 {"itemId":"T4_2H_BOW","city":"Fort Sterling","sellPriceMin":3694,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":1202,"buyPriceMaxDate":"2026-07-26T03:35:00","updatedAt":"2026-07-26T03:40:10.339Z"}
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5673,"sellPriceMinDate":"2026-07-26T02:35:00","buyPriceMax":2340,"buyPriceMaxDate":"2026-07-26T03:35:00","updatedAt":"2026-07-26T03:40:10.339Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Fort Sterling","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T03:46:09.907Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Thetford","sellPriceMin":1191,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":906,"buyPriceMaxDate":"2026-07-25T11:15:00","updatedAt":"2026-07-26T03:53:01.350Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Thetford","sellPriceMin":1163,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":500,"buyPriceMaxDate":"2026-07-26T03:50:00","updatedAt":"2026-07-26T03:53:01.350Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Thetford","sellPriceMin":4100,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T03:53:01.350Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":14985,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":12800,"buyPriceMaxDate":"2026-07-26T01:45:00","updatedAt":"2026-07-26T03:53:01.351Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":567,"buyPriceMaxDate":"2026-07-26T02:50:00","updatedAt":"2026-07-26T03:56:00.850Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":14990,"sellPriceMinDate":"2026-07-26T03:55:00","buyPriceMax":12800,"buyPriceMaxDate":"2026-07-26T01:45:00","updatedAt":"2026-07-26T03:57:42.958Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Brecilien","sellPriceMin":1991,"sellPriceMinDate":"2026-07-26T03:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:00:39.993Z"}

@@ -61,3 +61,5 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":48888,"sellPriceMinDate":"2026-07-26T02:55:00","buyPriceMax":40104,"buyPriceMaxDate":"2026-07-26T02:55:00","updatedAt":"2026-07-26T02:56:38.986Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Martlock","sellPriceMin":44369,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":31655,"buyPriceMaxDate":"2026-07-26T00:15:00","updatedAt":"2026-07-26T03:36:39.607Z"}
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Martlock","sellPriceMin":3730,"sellPriceMinDate":"2026-07-26T03:40:00","buyPriceMax":3038,"buyPriceMaxDate":"2026-07-25T15:45:00","updatedAt":"2026-07-26T03:42:39.705Z"}
+{"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":7500,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T03:51:42.873Z"}
+{"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":22000,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":11576,"buyPriceMaxDate":"2026-07-25T08:10:00","updatedAt":"2026-07-26T03:51:42.874Z"}
