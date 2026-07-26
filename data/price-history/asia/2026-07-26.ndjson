@@ -39,3 +39,7 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":61331,"sellPriceMinDate":"2026-07-26T08:20:00","buyPriceMax":41913,"buyPriceMaxDate":"2026-07-26T08:25:00","updatedAt":"2026-07-26T08:26:00.414Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":61331,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":50000,"buyPriceMaxDate":"2026-07-26T08:25:00","updatedAt":"2026-07-26T08:27:02.002Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":61330,"sellPriceMinDate":"2026-07-26T08:55:00","buyPriceMax":50000,"buyPriceMaxDate":"2026-07-26T08:25:00","updatedAt":"2026-07-26T08:58:22.474Z"}
+{"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:05:00.584Z"}
+{"itemId":"T4_MAIN_AXE","city":"Thetford","sellPriceMin":5500,"sellPriceMinDate":"2026-07-26T09:10:00","buyPriceMax":3717,"buyPriceMaxDate":"2026-07-26T09:10:00","updatedAt":"2026-07-26T09:14:00.461Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":6462,"sellPriceMinDate":"2026-07-26T09:10:00","buyPriceMax":1106,"buyPriceMaxDate":"2026-07-26T09:10:00","updatedAt":"2026-07-26T09:15:01.644Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":18989,"sellPriceMinDate":"2026-07-26T09:15:00","buyPriceMax":16432,"buyPriceMaxDate":"2026-07-26T09:15:00","updatedAt":"2026-07-26T09:16:01.188Z"}

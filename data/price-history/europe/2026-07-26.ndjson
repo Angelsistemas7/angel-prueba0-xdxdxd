@@ -109,3 +109,11 @@
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Caerleon","sellPriceMin":11000,"sellPriceMinDate":"2026-07-26T08:45:00","buyPriceMax":2507,"buyPriceMaxDate":"2026-07-26T08:45:00","updatedAt":"2026-07-26T08:49:29.046Z"}
 {"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2106,"sellPriceMinDate":"2026-07-26T08:45:00","buyPriceMax":1817,"buyPriceMaxDate":"2026-07-26T08:45:00","updatedAt":"2026-07-26T08:49:29.046Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Martlock","sellPriceMin":4814,"sellPriceMinDate":"2026-07-26T08:55:00","buyPriceMax":3539,"buyPriceMaxDate":"2026-07-25T15:45:00","updatedAt":"2026-07-26T08:59:59.631Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Martlock","sellPriceMin":2892,"sellPriceMinDate":"2026-07-26T09:00:00","buyPriceMax":1205,"buyPriceMaxDate":"2026-07-26T00:10:00","updatedAt":"2026-07-26T09:01:20.860Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49989,"sellPriceMinDate":"2026-07-26T07:10:00","buyPriceMax":40134,"buyPriceMaxDate":"2026-07-26T09:00:00","updatedAt":"2026-07-26T09:03:25.491Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":19970,"sellPriceMinDate":"2026-07-26T09:00:00","buyPriceMax":10000,"buyPriceMaxDate":"2026-07-26T07:05:00","updatedAt":"2026-07-26T09:03:25.491Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5923,"sellPriceMinDate":"2026-07-26T09:00:00","buyPriceMax":4562,"buyPriceMaxDate":"2026-07-25T22:15:00","updatedAt":"2026-07-26T09:04:59.445Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Martlock","sellPriceMin":44374,"sellPriceMinDate":"2026-07-26T09:05:00","buyPriceMax":31655,"buyPriceMaxDate":"2026-07-26T00:15:00","updatedAt":"2026-07-26T09:07:06.164Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Bridgewatch","sellPriceMin":5950,"sellPriceMinDate":"2026-07-26T09:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:07:59.230Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5340,"sellPriceMinDate":"2026-07-26T09:05:00","buyPriceMax":3115,"buyPriceMaxDate":"2026-07-26T01:30:00","updatedAt":"2026-07-26T09:09:17.907Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5365,"sellPriceMinDate":"2026-07-26T09:10:00","buyPriceMax":3115,"buyPriceMaxDate":"2026-07-26T01:30:00","updatedAt":"2026-07-26T09:14:59.851Z"}
