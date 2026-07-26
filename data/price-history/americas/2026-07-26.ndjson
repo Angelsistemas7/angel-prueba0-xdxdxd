@@ -78,3 +78,4 @@
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":698,"sellPriceMinDate":"2026-07-26T04:15:00","buyPriceMax":567,"buyPriceMaxDate":"2026-07-26T02:50:00","updatedAt":"2026-07-26T04:19:40.426Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:20:40.077Z"}
 {"itemId":"T5_BAG","city":"Fort Sterling","sellPriceMin":16915,"sellPriceMinDate":"2026-07-26T04:20:00","buyPriceMax":10505,"buyPriceMaxDate":"2026-07-26T04:15:00","updatedAt":"2026-07-26T04:20:40.077Z"}
+{"itemId":"T5_BAG","city":"Bridgewatch","sellPriceMin":13996,"sellPriceMinDate":"2026-07-26T04:35:00","buyPriceMax":12258,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T04:36:40.507Z"}

@@ -64,3 +64,5 @@
 {"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":7500,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T03:51:42.873Z"}
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":22000,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":11576,"buyPriceMaxDate":"2026-07-25T08:10:00","updatedAt":"2026-07-26T03:51:42.874Z"}
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Black Market","sellPriceMin":6653,"sellPriceMinDate":"2026-07-25T23:05:00","buyPriceMax":6636,"buyPriceMaxDate":"2026-07-26T04:05:00","updatedAt":"2026-07-26T04:06:39.794Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":8699,"sellPriceMinDate":"2026-07-26T04:25:00","buyPriceMax":8690,"buyPriceMaxDate":"2026-07-26T04:25:00","updatedAt":"2026-07-26T04:25:39.070Z"}
+{"itemId":"T4_BAG","city":"Black Market","sellPriceMin":5969,"sellPriceMinDate":"2026-07-26T04:30:00","buyPriceMax":4108,"buyPriceMaxDate":"2026-07-26T04:30:00","updatedAt":"2026-07-26T04:30:39.040Z"}
