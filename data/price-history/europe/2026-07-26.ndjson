@@ -97,3 +97,11 @@
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":22000,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T08:15:59.178Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47491,"sellPriceMinDate":"2026-07-26T08:20:00","buyPriceMax":40002,"buyPriceMaxDate":"2026-07-26T08:20:00","updatedAt":"2026-07-26T08:24:11.452Z"}
 {"itemId":"T5_BAG","city":"Thetford","sellPriceMin":15073,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":9353,"buyPriceMaxDate":"2026-07-25T18:10:00","updatedAt":"2026-07-26T08:27:00.470Z"}
+{"itemId":"T4_BAG","city":"Black Market","sellPriceMin":5969,"sellPriceMinDate":"2026-07-26T04:30:00","buyPriceMax":5846,"buyPriceMaxDate":"2026-07-26T08:25:00","updatedAt":"2026-07-26T08:28:59.457Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6449,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":3803,"buyPriceMaxDate":"2026-07-26T08:25:00","updatedAt":"2026-07-26T08:29:59.575Z"}
+{"itemId":"T4_POTION_HEAL","city":"Fort Sterling","sellPriceMin":2106,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":1813,"buyPriceMaxDate":"2026-07-25T18:15:00","updatedAt":"2026-07-26T08:29:59.575Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":8450,"sellPriceMinDate":"2026-07-26T08:30:00","buyPriceMax":6952,"buyPriceMaxDate":"2026-07-26T08:30:00","updatedAt":"2026-07-26T08:31:17.529Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Black Market","sellPriceMin":6656,"sellPriceMinDate":"2026-07-26T08:30:00","buyPriceMax":2212,"buyPriceMaxDate":"2026-07-26T08:30:00","updatedAt":"2026-07-26T08:32:59.184Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Black Market","sellPriceMin":2971,"sellPriceMinDate":"2026-07-26T08:30:00","buyPriceMax":1027,"buyPriceMaxDate":"2026-07-26T08:30:00","updatedAt":"2026-07-26T08:35:17.822Z"}
+{"itemId":"T4_MAIN_AXE","city":"Thetford","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T08:35:17.822Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Black Market","sellPriceMin":3465,"sellPriceMinDate":"2026-07-26T08:30:00","buyPriceMax":2449,"buyPriceMaxDate":"2026-07-26T08:30:00","updatedAt":"2026-07-26T08:35:17.822Z"}
