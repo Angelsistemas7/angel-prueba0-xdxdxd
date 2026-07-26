@@ -37,3 +37,10 @@
 {"itemId":"T4_2H_WARBOW","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":2100,"buyPriceMaxDate":"2026-07-26T01:50:00","updatedAt":"2026-07-26T01:52:40.409Z"}
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4500,"sellPriceMinDate":"2026-07-26T01:50:00","buyPriceMax":3165,"buyPriceMaxDate":"2026-07-26T01:50:00","updatedAt":"2026-07-26T01:52:40.409Z"}
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13600,"sellPriceMinDate":"2026-07-26T01:05:00","buyPriceMax":10214,"buyPriceMaxDate":"2026-07-26T02:00:00","updatedAt":"2026-07-26T02:00:59.265Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4499,"sellPriceMinDate":"2026-07-26T02:00:00","buyPriceMax":3165,"buyPriceMaxDate":"2026-07-26T02:00:00","updatedAt":"2026-07-26T02:04:08.020Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":14937,"sellPriceMinDate":"2026-07-26T02:05:00","buyPriceMax":10214,"buyPriceMaxDate":"2026-07-26T02:00:00","updatedAt":"2026-07-26T02:08:40.522Z"}
+{"itemId":"T4_POTION_HEAL","city":"Brecilien","sellPriceMin":1650,"sellPriceMinDate":"2026-07-26T02:10:00","buyPriceMax":949,"buyPriceMaxDate":"2026-07-25T09:45:00","updatedAt":"2026-07-26T02:12:40.046Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":14938,"sellPriceMinDate":"2026-07-26T02:10:00","buyPriceMax":10214,"buyPriceMaxDate":"2026-07-26T02:10:00","updatedAt":"2026-07-26T02:12:40.046Z"}
+{"itemId":"T4_BAG","city":"Thetford","sellPriceMin":5395,"sellPriceMinDate":"2026-07-26T02:10:00","buyPriceMax":3522,"buyPriceMaxDate":"2026-07-25T23:10:00","updatedAt":"2026-07-26T02:14:54.175Z"}
+{"itemId":"T5_BAG","city":"Thetford","sellPriceMin":16995,"sellPriceMinDate":"2026-07-26T02:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T02:14:54.175Z"}
+{"itemId":"T4_BAG","city":"Bridgewatch","sellPriceMin":4977,"sellPriceMinDate":"2026-07-25T22:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T02:15:42.461Z"}
