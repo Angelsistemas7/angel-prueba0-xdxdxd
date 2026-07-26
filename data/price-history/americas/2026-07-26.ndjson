@@ -32,3 +32,8 @@
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4500,"sellPriceMinDate":"2026-07-26T01:40:00","buyPriceMax":3165,"buyPriceMaxDate":"2026-07-26T01:40:00","updatedAt":"2026-07-26T01:44:40.271Z"}
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4500,"sellPriceMinDate":"2026-07-26T01:45:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-26T01:45:00","updatedAt":"2026-07-26T01:46:05.652Z"}
 {"itemId":"T4_HEAD_PLATE_SET1","city":"Brecilien","sellPriceMin":616,"sellPriceMinDate":"2026-07-25T19:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T01:46:05.652Z"}
+{"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":8589,"sellPriceMinDate":"2026-07-25T18:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T01:50:02.407Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":14981,"sellPriceMinDate":"2026-07-26T01:45:00","buyPriceMax":12800,"buyPriceMaxDate":"2026-07-26T01:45:00","updatedAt":"2026-07-26T01:50:02.407Z"}
+{"itemId":"T4_2H_WARBOW","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":2100,"buyPriceMaxDate":"2026-07-26T01:50:00","updatedAt":"2026-07-26T01:52:40.409Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4500,"sellPriceMinDate":"2026-07-26T01:50:00","buyPriceMax":3165,"buyPriceMaxDate":"2026-07-26T01:50:00","updatedAt":"2026-07-26T01:52:40.409Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13600,"sellPriceMinDate":"2026-07-26T01:05:00","buyPriceMax":10214,"buyPriceMaxDate":"2026-07-26T02:00:00","updatedAt":"2026-07-26T02:00:59.265Z"}
