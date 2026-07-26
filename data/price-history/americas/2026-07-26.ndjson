@@ -17,3 +17,10 @@
 {"itemId":"T4_HEAD_PLATE_SET1","city":"Lymhurst","sellPriceMin":1560,"sellPriceMinDate":"2026-07-26T01:10:00","buyPriceMax":957,"buyPriceMaxDate":"2026-07-25T16:10:00","updatedAt":"2026-07-26T01:13:39.448Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":37726,"sellPriceMinDate":"2026-07-26T01:10:00","buyPriceMax":26173,"buyPriceMaxDate":"2026-07-25T19:25:00","updatedAt":"2026-07-26T01:13:39.448Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Thetford","sellPriceMin":29878,"sellPriceMinDate":"2026-07-26T01:10:00","buyPriceMax":25156,"buyPriceMaxDate":"2026-07-25T22:35:00","updatedAt":"2026-07-26T01:13:39.448Z"}
+{"itemId":"T5_BAG","city":"Fort Sterling","sellPriceMin":13999,"sellPriceMinDate":"2026-07-26T00:50:00","buyPriceMax":10505,"buyPriceMaxDate":"2026-07-26T01:15:00","updatedAt":"2026-07-26T01:19:40.193Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T01:20:40.132Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Brecilien","sellPriceMin":2186,"sellPriceMinDate":"2026-07-26T01:25:00","buyPriceMax":1890,"buyPriceMaxDate":"2026-07-25T03:30:00","updatedAt":"2026-07-26T01:28:09.902Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4948,"sellPriceMinDate":"2026-07-26T01:00:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-26T01:25:00","updatedAt":"2026-07-26T01:28:09.902Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":37722,"sellPriceMinDate":"2026-07-26T01:25:00","buyPriceMax":26173,"buyPriceMaxDate":"2026-07-25T19:25:00","updatedAt":"2026-07-26T01:28:09.902Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Fort Sterling","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":459,"buyPriceMaxDate":"2026-07-26T01:25:00","updatedAt":"2026-07-26T01:28:09.902Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5672,"sellPriceMinDate":"2026-07-26T01:25:00","buyPriceMax":4041,"buyPriceMaxDate":"2026-07-25T22:40:00","updatedAt":"2026-07-26T01:28:39.691Z"}
