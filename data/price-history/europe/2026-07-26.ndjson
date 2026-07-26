@@ -205,3 +205,8 @@
 {"itemId":"T4_BAG","city":"Thetford","sellPriceMin":5798,"sellPriceMinDate":"2026-07-25T18:00:00","buyPriceMax":4192,"buyPriceMaxDate":"2026-07-26T11:35:00","updatedAt":"2026-07-26T11:37:25.110Z"}
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Fort Sterling","sellPriceMin":3283,"sellPriceMinDate":"2026-07-26T11:40:00","buyPriceMax":3001,"buyPriceMaxDate":"2026-07-25T14:15:00","updatedAt":"2026-07-26T11:44:53.984Z"}
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":7388,"sellPriceMinDate":"2026-07-26T11:45:00","buyPriceMax":3810,"buyPriceMaxDate":"2026-07-26T09:45:00","updatedAt":"2026-07-26T11:45:38.788Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15962,"sellPriceMinDate":"2026-07-26T11:50:00","buyPriceMax":12004,"buyPriceMaxDate":"2026-07-25T20:05:00","updatedAt":"2026-07-26T11:54:24.258Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Thetford","sellPriceMin":4364,"sellPriceMinDate":"2026-07-25T13:50:00","buyPriceMax":3034,"buyPriceMaxDate":"2026-07-26T11:50:00","updatedAt":"2026-07-26T11:55:32.177Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":7388,"sellPriceMinDate":"2026-07-26T11:45:00","buyPriceMax":3812,"buyPriceMaxDate":"2026-07-26T11:55:00","updatedAt":"2026-07-26T11:58:24.218Z"}
+{"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":2800,"sellPriceMinDate":"2026-07-26T12:00:00","buyPriceMax":1821,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T12:00:48.238Z"}
+{"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26260,"sellPriceMinDate":"2026-07-26T12:00:00","buyPriceMax":11582,"buyPriceMaxDate":"2026-07-26T12:00:00","updatedAt":"2026-07-26T12:00:48.238Z"}
