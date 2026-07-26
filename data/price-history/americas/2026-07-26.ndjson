@@ -114,3 +114,10 @@
 {"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":20000000,"sellPriceMinDate":"2026-07-25T16:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T07:15:17.930Z"}
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":996,"sellPriceMinDate":"2026-07-26T07:15:00","buyPriceMax":567,"buyPriceMaxDate":"2026-07-26T02:50:00","updatedAt":"2026-07-26T07:18:59.739Z"}
 {"itemId":"T4_BAG","city":"Martlock","sellPriceMin":4996,"sellPriceMinDate":"2026-07-26T01:35:00","buyPriceMax":2972,"buyPriceMaxDate":"2026-07-26T07:15:00","updatedAt":"2026-07-26T07:20:00.005Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":37747,"sellPriceMinDate":"2026-07-26T07:25:00","buyPriceMax":26171,"buyPriceMaxDate":"2026-07-26T07:25:00","updatedAt":"2026-07-26T07:27:29.838Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Lymhurst","sellPriceMin":1552,"sellPriceMinDate":"2026-07-26T03:30:00","buyPriceMax":964,"buyPriceMaxDate":"2026-07-26T07:25:00","updatedAt":"2026-07-26T07:29:07.462Z"}
+{"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":8592,"sellPriceMinDate":"2026-07-26T07:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T07:30:59.996Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":15485,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":16116,"buyPriceMaxDate":"2026-07-26T07:30:00","updatedAt":"2026-07-26T07:30:59.996Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4298,"sellPriceMinDate":"2026-07-26T06:55:00","buyPriceMax":3089,"buyPriceMaxDate":"2026-07-26T07:30:00","updatedAt":"2026-07-26T07:34:00.416Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":14927,"sellPriceMinDate":"2026-07-26T07:30:00","buyPriceMax":10211,"buyPriceMaxDate":"2026-07-26T07:30:00","updatedAt":"2026-07-26T07:35:02.846Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5662,"sellPriceMinDate":"2026-07-26T07:35:00","buyPriceMax":2340,"buyPriceMaxDate":"2026-07-26T04:50:00","updatedAt":"2026-07-26T07:36:00.283Z"}
