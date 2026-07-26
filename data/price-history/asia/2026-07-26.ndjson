@@ -21,3 +21,4 @@
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":5610977,"sellPriceMinDate":"2026-07-26T04:55:00","buyPriceMax":11050,"buyPriceMaxDate":"2026-07-25T10:05:00","updatedAt":"2026-07-26T04:58:00.796Z"}
 {"itemId":"T4_BAG","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":4424,"buyPriceMaxDate":"2026-07-26T05:00:00","updatedAt":"2026-07-26T05:02:00.404Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":1580,"buyPriceMaxDate":"2026-07-26T05:00:00","updatedAt":"2026-07-26T05:02:00.405Z"}
+{"itemId":"T4_2H_WARBOW","city":"Black Market","sellPriceMin":15743,"sellPriceMinDate":"2026-07-26T05:10:00","buyPriceMax":1896,"buyPriceMaxDate":"2026-07-26T05:10:00","updatedAt":"2026-07-26T05:12:08.582Z"}
