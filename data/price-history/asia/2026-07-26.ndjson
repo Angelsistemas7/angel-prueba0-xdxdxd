@@ -52,3 +52,6 @@
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":4989,"sellPriceMinDate":"2026-07-26T09:25:00","buyPriceMax":1702,"buyPriceMaxDate":"2026-07-26T09:25:00","updatedAt":"2026-07-26T09:27:21.988Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":59983,"sellPriceMinDate":"2026-07-26T09:25:00","buyPriceMax":34011,"buyPriceMaxDate":"2026-07-25T19:35:00","updatedAt":"2026-07-26T09:27:21.988Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Bridgewatch","sellPriceMin":4996,"sellPriceMinDate":"2026-07-26T09:30:00","buyPriceMax":2249,"buyPriceMaxDate":"2026-07-26T09:30:00","updatedAt":"2026-07-26T09:31:00.429Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:50:07.417Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Thetford","sellPriceMin":5594,"sellPriceMinDate":"2026-07-26T09:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:54:00.033Z"}
+{"itemId":"T4_POTION_HEAL","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T10:00:00.390Z"}
