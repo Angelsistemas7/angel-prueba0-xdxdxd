@@ -85,3 +85,8 @@
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":4000,"sellPriceMinDate":"2026-07-26T04:45:00","buyPriceMax":3111,"buyPriceMaxDate":"2026-07-26T04:45:00","updatedAt":"2026-07-26T04:45:44.967Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Fort Sterling","sellPriceMin":1899,"sellPriceMinDate":"2026-07-26T04:40:00","buyPriceMax":354,"buyPriceMaxDate":"2026-07-26T04:45:00","updatedAt":"2026-07-26T04:45:44.967Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:45:44.967Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Caerleon","sellPriceMin":6080,"sellPriceMinDate":"2026-07-26T04:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:51:59.334Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Caerleon","sellPriceMin":3176,"sellPriceMinDate":"2026-07-26T04:50:00","buyPriceMax":2002,"buyPriceMaxDate":"2026-07-26T04:50:00","updatedAt":"2026-07-26T04:54:59.657Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":37731,"sellPriceMinDate":"2026-07-26T04:55:00","buyPriceMax":26230,"buyPriceMaxDate":"2026-07-26T04:55:00","updatedAt":"2026-07-26T04:56:00.043Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":4987,"sellPriceMinDate":"2026-07-26T04:55:00","buyPriceMax":3111,"buyPriceMaxDate":"2026-07-26T04:55:00","updatedAt":"2026-07-26T04:57:25.762Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":37729,"sellPriceMinDate":"2026-07-26T04:55:00","buyPriceMax":26230,"buyPriceMaxDate":"2026-07-26T04:55:00","updatedAt":"2026-07-26T04:57:25.762Z"}
