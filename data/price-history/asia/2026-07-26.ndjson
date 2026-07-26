@@ -14,3 +14,4 @@
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":13998,"sellPriceMinDate":"2026-07-26T03:40:00","buyPriceMax":11015,"buyPriceMaxDate":"2026-07-26T02:10:00","updatedAt":"2026-07-26T03:44:40.979Z"}
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":12943,"sellPriceMinDate":"2026-07-26T04:30:00","buyPriceMax":11016,"buyPriceMaxDate":"2026-07-26T04:30:00","updatedAt":"2026-07-26T04:34:40.873Z"}
 {"itemId":"T4_2H_WARBOW","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:35:40.413Z"}
+{"itemId":"T4_POTION_HEAL","city":"Martlock","sellPriceMin":2400,"sellPriceMinDate":"2026-07-25T09:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:40:41.570Z"}

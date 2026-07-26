@@ -66,3 +66,5 @@
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Black Market","sellPriceMin":6653,"sellPriceMinDate":"2026-07-25T23:05:00","buyPriceMax":6636,"buyPriceMaxDate":"2026-07-26T04:05:00","updatedAt":"2026-07-26T04:06:39.794Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":8699,"sellPriceMinDate":"2026-07-26T04:25:00","buyPriceMax":8690,"buyPriceMaxDate":"2026-07-26T04:25:00","updatedAt":"2026-07-26T04:25:39.070Z"}
 {"itemId":"T4_BAG","city":"Black Market","sellPriceMin":5969,"sellPriceMinDate":"2026-07-26T04:30:00","buyPriceMax":4108,"buyPriceMaxDate":"2026-07-26T04:30:00","updatedAt":"2026-07-26T04:30:39.040Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49889,"sellPriceMinDate":"2026-07-26T04:40:00","buyPriceMax":40104,"buyPriceMaxDate":"2026-07-26T04:00:00","updatedAt":"2026-07-26T04:42:39.410Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13492,"sellPriceMinDate":"2026-07-26T04:40:00","buyPriceMax":10030,"buyPriceMaxDate":"2026-07-26T01:30:00","updatedAt":"2026-07-26T04:42:39.410Z"}
