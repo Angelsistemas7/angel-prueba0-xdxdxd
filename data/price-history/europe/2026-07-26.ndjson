@@ -224,3 +224,10 @@
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":7381,"sellPriceMinDate":"2026-07-26T12:30:00","buyPriceMax":3812,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T12:31:25.076Z"}
 {"itemId":"T4_BAG","city":"Martlock","sellPriceMin":6990,"sellPriceMinDate":"2026-07-26T12:25:00","buyPriceMax":2764,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T12:31:25.076Z"}
 {"itemId":"T4_BAG","city":"Black Market","sellPriceMin":5969,"sellPriceMinDate":"2026-07-26T04:30:00","buyPriceMax":5056,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T12:32:34.717Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Black Market","sellPriceMin":2971,"sellPriceMinDate":"2026-07-26T08:30:00","buyPriceMax":2844,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T12:35:24.870Z"}
+{"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26886,"sellPriceMinDate":"2026-07-26T12:30:00","buyPriceMax":11599,"buyPriceMaxDate":"2026-07-26T12:35:00","updatedAt":"2026-07-26T12:35:24.871Z"}
+{"itemId":"T4_2H_WARBOW","city":"Black Market","sellPriceMin":5657,"sellPriceMinDate":"2026-07-26T12:35:00","buyPriceMax":4740,"buyPriceMaxDate":"2026-07-26T00:30:00","updatedAt":"2026-07-26T12:36:24.509Z"}
+{"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":8198,"sellPriceMinDate":"2026-07-26T11:10:00","buyPriceMax":4795,"buyPriceMaxDate":"2026-07-26T12:35:00","updatedAt":"2026-07-26T12:36:24.509Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Bridgewatch","sellPriceMin":1940,"sellPriceMinDate":"2026-07-26T12:40:00","buyPriceMax":1028,"buyPriceMaxDate":"2026-07-25T20:25:00","updatedAt":"2026-07-26T12:42:24.562Z"}
+{"itemId":"T5_BAG","city":"Fort Sterling","sellPriceMin":13999,"sellPriceMinDate":"2026-07-26T12:40:00","buyPriceMax":9568,"buyPriceMaxDate":"2026-07-26T07:15:00","updatedAt":"2026-07-26T12:42:24.562Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":44990,"sellPriceMinDate":"2026-07-26T12:40:00","buyPriceMax":38952,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T12:43:25.261Z"}

@@ -78,3 +78,4 @@
 {"itemId":"T4_OFF_SHIELD","city":"Caerleon","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T12:25:27.103Z"}
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T12:25:27.103Z"}
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":3671,"sellPriceMinDate":"2026-07-25T21:05:00","buyPriceMax":2012,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T12:26:31.356Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":4949,"sellPriceMinDate":"2026-07-25T21:40:00","buyPriceMax":2781,"buyPriceMaxDate":"2026-07-26T12:45:00","updatedAt":"2026-07-26T12:49:26.970Z"}
