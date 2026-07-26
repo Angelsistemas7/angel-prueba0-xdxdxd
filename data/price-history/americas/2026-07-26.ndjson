@@ -100,3 +100,4 @@
 {"itemId":"T4_BAG","city":"Black Market","sellPriceMin":2999,"sellPriceMinDate":"2026-07-26T03:25:00","buyPriceMax":3792,"buyPriceMaxDate":"2026-07-26T06:00:00","updatedAt":"2026-07-26T06:00:59.737Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":15485,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":15800,"buyPriceMaxDate":"2026-07-26T06:00:00","updatedAt":"2026-07-26T06:00:59.738Z"}
 {"itemId":"T4_2H_BOW","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":5688,"buyPriceMaxDate":"2026-07-26T06:00:00","updatedAt":"2026-07-26T06:03:18.276Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Bridgewatch","sellPriceMin":1257,"sellPriceMinDate":"2026-07-26T06:25:00","buyPriceMax":940,"buyPriceMaxDate":"2026-07-25T11:50:00","updatedAt":"2026-07-26T06:28:17.199Z"}
