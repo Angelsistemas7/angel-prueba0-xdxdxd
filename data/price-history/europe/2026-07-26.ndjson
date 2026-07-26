@@ -234,3 +234,15 @@
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Bridgewatch","sellPriceMin":5952,"sellPriceMinDate":"2026-07-26T12:50:00","buyPriceMax":4043,"buyPriceMaxDate":"2026-07-26T12:50:00","updatedAt":"2026-07-26T12:55:24.676Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Bridgewatch","sellPriceMin":5951,"sellPriceMinDate":"2026-07-26T12:55:00","buyPriceMax":4043,"buyPriceMaxDate":"2026-07-26T12:50:00","updatedAt":"2026-07-26T12:56:42.297Z"}
 {"itemId":"T4_POTION_HEAL","city":"Thetford","sellPriceMin":1996,"sellPriceMinDate":"2026-07-26T13:00:00","buyPriceMax":402,"buyPriceMaxDate":"2026-07-26T13:00:00","updatedAt":"2026-07-26T13:02:54.204Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":41139,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":35651,"buyPriceMaxDate":"2026-07-26T13:05:00","updatedAt":"2026-07-26T13:07:38.344Z"}
+{"itemId":"T4_2H_BOW","city":"Caerleon","sellPriceMin":9997,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":2512,"buyPriceMaxDate":"2026-07-26T13:10:00","updatedAt":"2026-07-26T13:11:24.868Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Thetford","sellPriceMin":1826,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:11:24.869Z"}
+{"itemId":"T4_2H_WARBOW","city":"Lymhurst","sellPriceMin":2999,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":2000,"buyPriceMaxDate":"2026-07-26T09:55:00","updatedAt":"2026-07-26T13:12:24.523Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15959,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":9170,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T13:12:24.523Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47487,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":38952,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T13:13:43.019Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Thetford","sellPriceMin":56999,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":36754,"buyPriceMaxDate":"2026-07-26T10:55:00","updatedAt":"2026-07-26T13:13:43.019Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15958,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":9170,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T13:13:43.019Z"}
+{"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":8477,"sellPriceMinDate":"2026-07-26T13:15:00","buyPriceMax":4795,"buyPriceMaxDate":"2026-07-26T12:35:00","updatedAt":"2026-07-26T13:17:34.575Z"}
+{"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26884,"sellPriceMinDate":"2026-07-26T13:15:00","buyPriceMax":11599,"buyPriceMaxDate":"2026-07-26T13:15:00","updatedAt":"2026-07-26T13:17:34.576Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Thetford","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:20:37.553Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":11498,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":9170,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T13:22:25.244Z"}

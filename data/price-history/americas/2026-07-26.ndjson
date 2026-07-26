@@ -154,3 +154,7 @@
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":814018,"sellPriceMinDate":"2026-07-26T08:00:00","buyPriceMax":2671,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T12:11:28.586Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":4069,"sellPriceMinDate":"2026-07-25T14:15:00","buyPriceMax":4108,"buyPriceMaxDate":"2026-07-26T12:50:00","updatedAt":"2026-07-26T12:51:25.716Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":15485,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":17696,"buyPriceMaxDate":"2026-07-26T13:05:00","updatedAt":"2026-07-26T13:06:26.075Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Black Market","sellPriceMin":5989,"sellPriceMinDate":"2026-07-25T22:25:00","buyPriceMax":1106,"buyPriceMaxDate":"2026-07-26T13:05:00","updatedAt":"2026-07-26T13:07:39.575Z"}
+{"itemId":"T4_2H_WARBOW","city":"Bridgewatch","sellPriceMin":4698,"sellPriceMinDate":"2026-07-26T13:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:09:25.373Z"}
+{"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":99009,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:14:34.547Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:20:39.174Z"}
