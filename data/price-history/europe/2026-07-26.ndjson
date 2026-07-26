@@ -330,3 +330,16 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47294,"sellPriceMinDate":"2026-07-26T15:20:00","buyPriceMax":38952,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T15:24:41.917Z"}
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6000,"sellPriceMinDate":"2026-07-26T15:25:00","buyPriceMax":3812,"buyPriceMaxDate":"2026-07-26T15:25:00","updatedAt":"2026-07-26T15:25:29.306Z"}
 {"itemId":"T4_HEAD_PLATE_SET1","city":"Lymhurst","sellPriceMin":2579,"sellPriceMinDate":"2026-07-25T18:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:25:29.306Z"}
+{"itemId":"T4_2H_WARBOW","city":"Brecilien","sellPriceMin":4297,"sellPriceMinDate":"2026-07-26T11:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:30:25.851Z"}
+{"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":8470,"sellPriceMinDate":"2026-07-26T15:30:00","buyPriceMax":4796,"buyPriceMaxDate":"2026-07-26T15:30:00","updatedAt":"2026-07-26T15:34:54.521Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5928,"sellPriceMinDate":"2026-07-26T15:30:00","buyPriceMax":4571,"buyPriceMaxDate":"2026-07-26T15:30:00","updatedAt":"2026-07-26T15:34:54.521Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6493,"sellPriceMinDate":"2026-07-26T15:35:00","buyPriceMax":3811,"buyPriceMaxDate":"2026-07-26T15:35:00","updatedAt":"2026-07-26T15:36:25.020Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Lymhurst","sellPriceMin":4999,"sellPriceMinDate":"2026-07-26T15:35:00","buyPriceMax":4622,"buyPriceMaxDate":"2026-07-26T15:35:00","updatedAt":"2026-07-26T15:36:25.020Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":14142,"sellPriceMinDate":"2026-07-26T13:40:00","buyPriceMax":12008,"buyPriceMaxDate":"2026-07-26T15:35:00","updatedAt":"2026-07-26T15:36:25.020Z"}
+{"itemId":"T4_POTION_HEAL","city":"Thetford","sellPriceMin":1997,"sellPriceMinDate":"2026-07-26T15:35:00","buyPriceMax":402,"buyPriceMaxDate":"2026-07-26T13:00:00","updatedAt":"2026-07-26T15:37:53.330Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":16656,"sellPriceMinDate":"2026-07-26T15:35:00","buyPriceMax":10097,"buyPriceMaxDate":"2026-07-26T15:35:00","updatedAt":"2026-07-26T15:37:53.330Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Fort Sterling","sellPriceMin":1769,"sellPriceMinDate":"2026-07-26T15:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:38:24.865Z"}
+{"itemId":"T4_POTION_HEAL","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:40:30.764Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5928,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":4573,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:43:31.958Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5927,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":4573,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:44:24.223Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15954,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":9175,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:44:24.223Z"}

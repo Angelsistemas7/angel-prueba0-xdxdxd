@@ -182,3 +182,8 @@
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13439,"sellPriceMinDate":"2026-07-26T15:10:00","buyPriceMax":10211,"buyPriceMaxDate":"2026-07-26T07:35:00","updatedAt":"2026-07-26T15:11:25.776Z"}
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":12360,"sellPriceMinDate":"2026-07-26T14:55:00","buyPriceMax":11612,"buyPriceMaxDate":"2026-07-26T15:15:00","updatedAt":"2026-07-26T15:18:40.934Z"}
 {"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":3111,"sellPriceMinDate":"2026-07-26T15:20:00","buyPriceMax":1064,"buyPriceMaxDate":"2026-07-26T15:05:00","updatedAt":"2026-07-26T15:22:25.789Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:30:28.206Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Martlock","sellPriceMin":27990,"sellPriceMinDate":"2026-07-25T23:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:35:25.982Z"}
+{"itemId":"T4_2H_WARBOW","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:40:32.153Z"}
+{"itemId":"T4_POTION_HEAL","city":"Bridgewatch","sellPriceMin":2026,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":1506,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:42:25.590Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Martlock","sellPriceMin":1096,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":654,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:44:25.209Z"}
