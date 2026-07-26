@@ -246,3 +246,24 @@
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26884,"sellPriceMinDate":"2026-07-26T13:15:00","buyPriceMax":11599,"buyPriceMaxDate":"2026-07-26T13:15:00","updatedAt":"2026-07-26T13:17:34.576Z"}
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Thetford","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:20:37.553Z"}
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":11498,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":9170,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T13:22:25.244Z"}
+{"itemId":"T4_BAG","city":"Black Market","sellPriceMin":5969,"sellPriceMinDate":"2026-07-26T04:30:00","buyPriceMax":2370,"buyPriceMaxDate":"2026-07-26T13:20:00","updatedAt":"2026-07-26T13:23:38.314Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5928,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":3953,"buyPriceMaxDate":"2026-07-26T13:15:00","updatedAt":"2026-07-26T13:23:38.314Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Black Market","sellPriceMin":9790,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":9480,"buyPriceMaxDate":"2026-07-26T13:20:00","updatedAt":"2026-07-26T13:23:38.315Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":21920,"sellPriceMinDate":"2026-07-25T22:50:00","buyPriceMax":23068,"buyPriceMaxDate":"2026-07-26T13:20:00","updatedAt":"2026-07-26T13:23:38.315Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5351,"sellPriceMinDate":"2026-07-26T11:35:00","buyPriceMax":3127,"buyPriceMaxDate":"2026-07-26T13:20:00","updatedAt":"2026-07-26T13:24:24.995Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":12999,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":10040,"buyPriceMaxDate":"2026-07-26T13:20:00","updatedAt":"2026-07-26T13:24:24.995Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Brecilien","sellPriceMin":2297,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":2027,"buyPriceMaxDate":"2026-07-25T23:10:00","updatedAt":"2026-07-26T13:25:24.577Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5350,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":3127,"buyPriceMaxDate":"2026-07-26T13:20:00","updatedAt":"2026-07-26T13:25:24.577Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49998,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":40133,"buyPriceMaxDate":"2026-07-26T10:30:00","updatedAt":"2026-07-26T13:25:24.577Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":12998,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":10040,"buyPriceMaxDate":"2026-07-26T13:20:00","updatedAt":"2026-07-26T13:25:24.577Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":12998,"sellPriceMinDate":"2026-07-26T13:20:00","buyPriceMax":10039,"buyPriceMaxDate":"2026-07-26T13:25:00","updatedAt":"2026-07-26T13:26:34.263Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15958,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":9175,"buyPriceMaxDate":"2026-07-26T13:25:00","updatedAt":"2026-07-26T13:26:34.263Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Brecilien","sellPriceMin":2299,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":2027,"buyPriceMaxDate":"2026-07-25T23:10:00","updatedAt":"2026-07-26T13:27:24.947Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Brecilien","sellPriceMin":1292,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":473,"buyPriceMaxDate":"2026-07-25T20:00:00","updatedAt":"2026-07-26T13:27:24.947Z"}
+{"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":2796,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":1821,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T13:27:24.947Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49997,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":40133,"buyPriceMaxDate":"2026-07-26T10:30:00","updatedAt":"2026-07-26T13:27:24.947Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":12997,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":10039,"buyPriceMaxDate":"2026-07-26T13:25:00","updatedAt":"2026-07-26T13:27:24.947Z"}
+{"itemId":"T4_OFF_SHIELD","city":"Brecilien","sellPriceMin":1374,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:28:24.981Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Fort Sterling","sellPriceMin":5354,"sellPriceMinDate":"2026-07-26T13:30:00","buyPriceMax":3660,"buyPriceMaxDate":"2026-07-25T18:55:00","updatedAt":"2026-07-26T13:35:30.975Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:35:30.975Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47491,"sellPriceMinDate":"2026-07-26T13:35:00","buyPriceMax":38952,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T13:37:24.644Z"}

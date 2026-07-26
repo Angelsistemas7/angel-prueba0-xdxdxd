@@ -158,3 +158,7 @@
 {"itemId":"T4_2H_WARBOW","city":"Bridgewatch","sellPriceMin":4698,"sellPriceMinDate":"2026-07-26T13:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:09:25.373Z"}
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":99009,"sellPriceMinDate":"2026-07-26T13:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:14:34.547Z"}
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:20:39.174Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":31497,"sellPriceMinDate":"2026-07-26T07:00:00","buyPriceMax":25202,"buyPriceMaxDate":"2026-07-26T13:25:00","updatedAt":"2026-07-26T13:26:35.916Z"}
+{"itemId":"T4_2H_BOW","city":"Caerleon","sellPriceMin":5295,"sellPriceMinDate":"2026-07-25T16:40:00","buyPriceMax":2082,"buyPriceMaxDate":"2026-07-26T13:25:00","updatedAt":"2026-07-26T13:27:26.342Z"}
+{"itemId":"T4_2H_WARBOW","city":"Caerleon","sellPriceMin":7983,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":2005,"buyPriceMaxDate":"2026-07-26T13:25:00","updatedAt":"2026-07-26T13:28:26.382Z"}
+{"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":1735,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:28:26.382Z"}
