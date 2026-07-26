@@ -103,3 +103,6 @@
 {"itemId":"T4_OFF_SHIELD","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":1504,"buyPriceMaxDate":"2026-07-26T15:00:00","updatedAt":"2026-07-26T15:05:26.615Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Caerleon","sellPriceMin":4950,"sellPriceMinDate":"2026-07-26T15:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:10:39.933Z"}
 {"itemId":"T5_BAG","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:10:39.933Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:15:28.745Z"}
+{"itemId":"T4_MAIN_AXE","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:20:26.689Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":16956,"sellPriceMinDate":"2026-07-26T15:25:00","buyPriceMax":16748,"buyPriceMaxDate":"2026-07-26T15:25:00","updatedAt":"2026-07-26T15:27:41.903Z"}
