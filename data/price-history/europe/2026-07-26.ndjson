@@ -180,3 +180,15 @@
 {"itemId":"T4_POTION_HEAL","city":"Caerleon","sellPriceMin":2575,"sellPriceMinDate":"2026-07-26T11:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:12:25.009Z"}
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Caerleon","sellPriceMin":7700,"sellPriceMinDate":"2026-07-26T11:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:12:25.009Z"}
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26262,"sellPriceMinDate":"2026-07-26T11:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:12:25.009Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Martlock","sellPriceMin":44373,"sellPriceMinDate":"2026-07-26T11:15:00","buyPriceMax":31700,"buyPriceMaxDate":"2026-07-26T10:00:00","updatedAt":"2026-07-26T11:17:25.098Z"}
+{"itemId":"T4_2H_BOW","city":"Lymhurst","sellPriceMin":3838,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":2605,"buyPriceMaxDate":"2026-07-26T11:20:00","updatedAt":"2026-07-26T11:20:35.101Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5337,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":3141,"buyPriceMaxDate":"2026-07-26T11:00:00","updatedAt":"2026-07-26T11:21:24.515Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49897,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":40133,"buyPriceMaxDate":"2026-07-26T10:30:00","updatedAt":"2026-07-26T11:22:24.219Z"}
+{"itemId":"T4_2H_WARBOW","city":"Brecilien","sellPriceMin":4297,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":1409,"buyPriceMaxDate":"2026-07-25T15:25:00","updatedAt":"2026-07-26T11:25:40.831Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Brecilien","sellPriceMin":2646,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":2001,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T11:25:40.831Z"}
+{"itemId":"T4_BAG","city":"Bridgewatch","sellPriceMin":5645,"sellPriceMinDate":"2026-07-26T11:25:00","buyPriceMax":3093,"buyPriceMaxDate":"2026-07-26T09:55:00","updatedAt":"2026-07-26T11:25:40.831Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":49896,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":40133,"buyPriceMaxDate":"2026-07-26T10:30:00","updatedAt":"2026-07-26T11:25:40.831Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":41139,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":35641,"buyPriceMaxDate":"2026-07-26T09:50:00","updatedAt":"2026-07-26T11:25:40.831Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":1799,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:25:40.831Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13415,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":10040,"buyPriceMaxDate":"2026-07-26T11:05:00","updatedAt":"2026-07-26T11:25:40.831Z"}
+{"itemId":"T4_2H_WARBOW","city":"Lymhurst","sellPriceMin":3066,"sellPriceMinDate":"2026-07-26T11:25:00","buyPriceMax":2000,"buyPriceMaxDate":"2026-07-26T09:55:00","updatedAt":"2026-07-26T11:29:24.671Z"}

@@ -61,3 +61,14 @@
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":10049,"buyPriceMaxDate":"2026-07-25T13:50:00","updatedAt":"2026-07-26T10:50:27.253Z"}
 {"itemId":"T4_MAIN_SWORD","city":"Fort Sterling","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:05:27.280Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":52407,"sellPriceMinDate":"2026-07-26T11:10:00","buyPriceMax":36198,"buyPriceMaxDate":"2026-07-26T11:10:00","updatedAt":"2026-07-26T11:14:27.768Z"}
+{"itemId":"T4_MAIN_AXE","city":"Caerleon","sellPriceMin":14193,"sellPriceMinDate":"2026-07-26T11:15:00","buyPriceMax":1017,"buyPriceMaxDate":"2026-07-26T11:15:00","updatedAt":"2026-07-26T11:20:37.245Z"}
+{"itemId":"T4_2H_BOW","city":"Black Market","sellPriceMin":9999,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":10428,"buyPriceMaxDate":"2026-07-25T15:55:00","updatedAt":"2026-07-26T11:22:26.415Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Black Market","sellPriceMin":10596,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":9717,"buyPriceMaxDate":"2026-07-25T13:10:00","updatedAt":"2026-07-26T11:22:26.415Z"}
+{"itemId":"T4_2H_BOW","city":"Black Market","sellPriceMin":9999,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":5688,"buyPriceMaxDate":"2026-07-26T11:20:00","updatedAt":"2026-07-26T11:23:27.330Z"}
+{"itemId":"T4_MAIN_AXE","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":2607,"buyPriceMaxDate":"2026-07-26T11:20:00","updatedAt":"2026-07-26T11:24:27.093Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Black Market","sellPriceMin":10596,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":4503,"buyPriceMaxDate":"2026-07-26T11:20:00","updatedAt":"2026-07-26T11:24:27.093Z"}
+{"itemId":"T4_MAIN_AXE","city":"Black Market","sellPriceMin":8730,"sellPriceMinDate":"2026-07-26T11:20:00","buyPriceMax":2607,"buyPriceMaxDate":"2026-07-26T11:20:00","updatedAt":"2026-07-26T11:25:43.085Z"}
+{"itemId":"T4_MAIN_AXE","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":2310,"buyPriceMaxDate":"2026-07-26T11:25:00","updatedAt":"2026-07-26T11:27:26.537Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":3076,"buyPriceMaxDate":"2026-07-26T11:25:00","updatedAt":"2026-07-26T11:27:26.537Z"}
+{"itemId":"T4_2H_BOW","city":"Martlock","sellPriceMin":6888,"sellPriceMinDate":"2026-07-26T11:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:30:43.950Z"}
+{"itemId":"T4_2H_WARBOW","city":"Martlock","sellPriceMin":4999,"sellPriceMinDate":"2026-07-26T11:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:30:43.950Z"}
