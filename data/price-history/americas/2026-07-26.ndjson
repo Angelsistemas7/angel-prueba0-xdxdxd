@@ -51,3 +51,5 @@
 {"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":14935,"sellPriceMinDate":"2026-07-26T02:50:00","buyPriceMax":10214,"buyPriceMaxDate":"2026-07-26T02:10:00","updatedAt":"2026-07-26T02:51:49.830Z"}
 {"itemId":"T5_BAG","city":"Bridgewatch","sellPriceMin":16800,"sellPriceMinDate":"2026-07-26T02:55:00","buyPriceMax":12258,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T02:59:09.507Z"}
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":14000,"sellPriceMinDate":"2026-07-26T03:00:00","buyPriceMax":14106,"buyPriceMaxDate":"2026-07-25T15:30:00","updatedAt":"2026-07-26T03:03:57.642Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4575,"sellPriceMinDate":"2026-07-26T03:05:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-26T03:05:00","updatedAt":"2026-07-26T03:07:39.880Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4570,"sellPriceMinDate":"2026-07-26T03:05:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-26T03:05:00","updatedAt":"2026-07-26T03:08:40.861Z"}
