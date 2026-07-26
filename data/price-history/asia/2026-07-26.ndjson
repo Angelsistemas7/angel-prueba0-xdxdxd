@@ -98,3 +98,5 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":57855,"sellPriceMinDate":"2026-07-26T14:10:00","buyPriceMax":45029,"buyPriceMaxDate":"2026-07-26T14:10:00","updatedAt":"2026-07-26T14:11:26.877Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":54593,"sellPriceMinDate":"2026-07-26T14:20:00","buyPriceMax":31297,"buyPriceMaxDate":"2026-07-26T14:25:00","updatedAt":"2026-07-26T14:26:41.631Z"}
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":19993,"sellPriceMinDate":"2026-07-26T14:35:00","buyPriceMax":11016,"buyPriceMaxDate":"2026-07-26T04:30:00","updatedAt":"2026-07-26T14:36:26.613Z"}
+{"itemId":"T4_BAG","city":"Bridgewatch","sellPriceMin":4048,"sellPriceMinDate":"2026-07-26T14:45:00","buyPriceMax":2201,"buyPriceMaxDate":"2026-07-26T14:45:00","updatedAt":"2026-07-26T14:46:27.705Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Lymhurst","sellPriceMin":4875,"sellPriceMinDate":"2026-07-26T14:50:00","buyPriceMax":2062,"buyPriceMaxDate":"2026-07-25T17:20:00","updatedAt":"2026-07-26T14:50:52.344Z"}
