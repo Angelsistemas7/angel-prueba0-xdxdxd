@@ -24,3 +24,6 @@
 {"itemId":"T4_2H_WARBOW","city":"Black Market","sellPriceMin":15743,"sellPriceMinDate":"2026-07-26T05:10:00","buyPriceMax":1896,"buyPriceMaxDate":"2026-07-26T05:10:00","updatedAt":"2026-07-26T05:12:08.582Z"}
 {"itemId":"T4_MAIN_AXE","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":6202,"buyPriceMaxDate":"2026-07-25T15:15:00","updatedAt":"2026-07-26T05:20:00.144Z"}
 {"itemId":"T4_POTION_HEAL","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T05:55:10.816Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":7742,"buyPriceMaxDate":"2026-07-26T06:10:00","updatedAt":"2026-07-26T06:11:00.472Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":6320,"buyPriceMaxDate":"2026-07-26T06:15:00","updatedAt":"2026-07-26T06:20:00.371Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":5214,"buyPriceMaxDate":"2026-07-26T06:20:00","updatedAt":"2026-07-26T06:21:04.155Z"}
