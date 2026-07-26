@@ -38,7 +38,6 @@ const PRICE_WATCHLIST_IDS = [
 
 const EVENTS_LIMIT = 51;
 const BATTLES_LIMIT = 20;
-const RETENTION_DAYS = 30;
 const DATA_DIR = 'data';
 
 /** 2026-07-25: se cayó Firestore (cuota gratis de 20.000 escrituras/día se agotaba a mitad de
@@ -287,33 +286,13 @@ async function scrapeGold(region) {
   console.log(`[${region}] +${added.length} precios de oro nuevos.`);
 }
 
-/** Reemplaza el TTL de Firestore (`expireAt`) — borra archivos de días fuera de la ventana de
- * retención. Los snapshots/índices que se pisan en el lugar (precios, guild-stats) y el archivo
- * de oro (chico, ~24 líneas/día, se deja crecer) no tienen fecha en el nombre, no aplica. */
-async function pruneOldFiles() {
-  const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  for (const kind of ['kills', 'battles', 'price-history']) {
-    const kindDir = path.join(DATA_DIR, kind);
-    let regions = [];
-    try {
-      regions = await fs.readdir(kindDir);
-    } catch (err) {
-      if (err.code === 'ENOENT') continue;
-      throw err;
-    }
-    for (const region of regions) {
-      const regionDir = path.join(kindDir, region);
-      const files = await fs.readdir(regionDir).catch(() => []);
-      for (const file of files) {
-        const dateStr = file.replace('.ndjson', '');
-        const fileDate = new Date(`${dateStr}T00:00:00Z`).getTime();
-        if (!Number.isNaN(fileDate) && fileDate < cutoff) {
-          await fs.unlink(path.join(regionDir, file));
-        }
-      }
-    }
-  }
-}
+/** 2026-07-26: se sacó el borrado automático de 30 días (decisión explícita del usuario — quiere
+ * todo el histórico posible para análisis/predicción de precios a futuro, no una ventana rotativa).
+ * `pruneOldFiles`/`RETENTION_DAYS` existieron acá (reemplazaban el TTL de Firestore) — se
+ * eliminaron en vez de dejarlos sin uso. Nada se borra ya: kills/battles/price-history crecen sin
+ * límite en NDJSON diario, igual que gold (que nunca tuvo rotación) y el acumulado de guild-stats.
+ * Si el repo se vuelve pesado con el tiempo, revisar entonces — no reintroducir esto sin que el
+ * usuario lo pida. */
 
 async function main() {
   for (const region of Object.keys(REGION_HOSTS)) {
@@ -334,7 +313,6 @@ async function main() {
       console.error(`[${region}] oro error:`, err.message);
     }
   }
-  await pruneOldFiles();
 }
 
 main().then(() => process.exit(0));
