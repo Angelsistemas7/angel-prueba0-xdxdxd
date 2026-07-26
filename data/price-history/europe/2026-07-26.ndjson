@@ -343,3 +343,16 @@
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5928,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":4573,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:43:31.958Z"}
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5927,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":4573,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:44:24.223Z"}
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15954,"sellPriceMinDate":"2026-07-26T15:40:00","buyPriceMax":9175,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:44:24.223Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6492,"sellPriceMinDate":"2026-07-26T15:45:00","buyPriceMax":3811,"buyPriceMaxDate":"2026-07-26T15:45:00","updatedAt":"2026-07-26T15:47:24.234Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":20993,"sellPriceMinDate":"2026-07-26T15:45:00","buyPriceMax":20224,"buyPriceMaxDate":"2026-07-26T15:45:00","updatedAt":"2026-07-26T15:47:24.234Z"}
+{"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":2897,"sellPriceMinDate":"2026-07-26T15:45:00","buyPriceMax":1820,"buyPriceMaxDate":"2026-07-26T13:45:00","updatedAt":"2026-07-26T15:48:25.270Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5926,"sellPriceMinDate":"2026-07-26T15:45:00","buyPriceMax":4573,"buyPriceMaxDate":"2026-07-26T15:45:00","updatedAt":"2026-07-26T15:49:36.462Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":50944,"sellPriceMinDate":"2026-07-26T15:45:00","buyPriceMax":40133,"buyPriceMaxDate":"2026-07-26T10:30:00","updatedAt":"2026-07-26T15:49:36.462Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Martlock","sellPriceMin":4814,"sellPriceMinDate":"2026-07-26T12:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:50:24.949Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Martlock","sellPriceMin":3684,"sellPriceMinDate":"2026-07-26T14:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:50:24.950Z"}
+{"itemId":"T5_BAG","city":"Bridgewatch","sellPriceMin":10998,"sellPriceMinDate":"2026-07-26T15:50:00","buyPriceMax":7400,"buyPriceMaxDate":"2026-07-26T10:00:00","updatedAt":"2026-07-26T15:51:24.401Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Fort Sterling","sellPriceMin":1770,"sellPriceMinDate":"2026-07-26T15:50:00","buyPriceMax":843,"buyPriceMaxDate":"2026-07-26T15:50:00","updatedAt":"2026-07-26T15:54:54.795Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47299,"sellPriceMinDate":"2026-07-26T15:55:00","buyPriceMax":38967,"buyPriceMaxDate":"2026-07-26T15:55:00","updatedAt":"2026-07-26T15:57:25.010Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15957,"sellPriceMinDate":"2026-07-26T15:55:00","buyPriceMax":9175,"buyPriceMaxDate":"2026-07-26T15:40:00","updatedAt":"2026-07-26T15:57:25.010Z"}
+{"itemId":"T4_BAG","city":"Thetford","sellPriceMin":5999,"sellPriceMinDate":"2026-07-26T15:55:00","buyPriceMax":4196,"buyPriceMaxDate":"2026-07-26T16:00:00","updatedAt":"2026-07-26T16:00:39.682Z"}
+{"itemId":"T5_BAG","city":"Thetford","sellPriceMin":15073,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":9603,"buyPriceMaxDate":"2026-07-26T16:00:00","updatedAt":"2026-07-26T16:00:39.682Z"}
