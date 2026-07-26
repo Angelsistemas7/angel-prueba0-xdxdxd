@@ -22,3 +22,4 @@
 {"itemId":"T4_BAG","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":4424,"buyPriceMaxDate":"2026-07-26T05:00:00","updatedAt":"2026-07-26T05:02:00.404Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":1580,"buyPriceMaxDate":"2026-07-26T05:00:00","updatedAt":"2026-07-26T05:02:00.405Z"}
 {"itemId":"T4_2H_WARBOW","city":"Black Market","sellPriceMin":15743,"sellPriceMinDate":"2026-07-26T05:10:00","buyPriceMax":1896,"buyPriceMaxDate":"2026-07-26T05:10:00","updatedAt":"2026-07-26T05:12:08.582Z"}
+{"itemId":"T4_MAIN_AXE","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":6202,"buyPriceMaxDate":"2026-07-25T15:15:00","updatedAt":"2026-07-26T05:20:00.144Z"}
