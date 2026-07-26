@@ -210,3 +210,7 @@
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":7388,"sellPriceMinDate":"2026-07-26T11:45:00","buyPriceMax":3812,"buyPriceMaxDate":"2026-07-26T11:55:00","updatedAt":"2026-07-26T11:58:24.218Z"}
 {"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":2800,"sellPriceMinDate":"2026-07-26T12:00:00","buyPriceMax":1821,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T12:00:48.238Z"}
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26260,"sellPriceMinDate":"2026-07-26T12:00:00","buyPriceMax":11582,"buyPriceMaxDate":"2026-07-26T12:00:00","updatedAt":"2026-07-26T12:00:48.238Z"}
+{"itemId":"T4_POTION_HEAL","city":"Bridgewatch","sellPriceMin":2016,"sellPriceMinDate":"2026-07-26T12:10:00","buyPriceMax":1821,"buyPriceMaxDate":"2026-07-26T09:55:00","updatedAt":"2026-07-26T12:10:25.257Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6493,"sellPriceMinDate":"2026-07-26T12:10:00","buyPriceMax":3812,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T12:13:24.671Z"}
+{"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26894,"sellPriceMinDate":"2026-07-26T12:10:00","buyPriceMax":11582,"buyPriceMaxDate":"2026-07-26T12:00:00","updatedAt":"2026-07-26T12:13:24.672Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5923,"sellPriceMinDate":"2026-07-26T09:00:00","buyPriceMax":3953,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T12:14:52.350Z"}
