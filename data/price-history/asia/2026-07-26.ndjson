@@ -100,3 +100,6 @@
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":19993,"sellPriceMinDate":"2026-07-26T14:35:00","buyPriceMax":11016,"buyPriceMaxDate":"2026-07-26T04:30:00","updatedAt":"2026-07-26T14:36:26.613Z"}
 {"itemId":"T4_BAG","city":"Bridgewatch","sellPriceMin":4048,"sellPriceMinDate":"2026-07-26T14:45:00","buyPriceMax":2201,"buyPriceMaxDate":"2026-07-26T14:45:00","updatedAt":"2026-07-26T14:46:27.705Z"}
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Lymhurst","sellPriceMin":4875,"sellPriceMinDate":"2026-07-26T14:50:00","buyPriceMax":2062,"buyPriceMaxDate":"2026-07-25T17:20:00","updatedAt":"2026-07-26T14:50:52.344Z"}
+{"itemId":"T4_OFF_SHIELD","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":1504,"buyPriceMaxDate":"2026-07-26T15:00:00","updatedAt":"2026-07-26T15:05:26.615Z"}
+{"itemId":"T4_OFF_SHIELD","city":"Caerleon","sellPriceMin":4950,"sellPriceMinDate":"2026-07-26T15:05:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:10:39.933Z"}
+{"itemId":"T5_BAG","city":"Bridgewatch","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:10:39.933Z"}

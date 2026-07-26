@@ -176,3 +176,7 @@
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5646,"sellPriceMinDate":"2026-07-26T14:55:00","buyPriceMax":3004,"buyPriceMaxDate":"2026-07-26T14:55:00","updatedAt":"2026-07-26T14:55:25.807Z"}
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":786,"sellPriceMinDate":"2026-07-26T14:55:00","buyPriceMax":565,"buyPriceMaxDate":"2026-07-26T14:55:00","updatedAt":"2026-07-26T14:56:52.957Z"}
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":12360,"sellPriceMinDate":"2026-07-26T14:55:00","buyPriceMax":12400,"buyPriceMaxDate":"2026-07-26T07:00:00","updatedAt":"2026-07-26T14:58:25.819Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T15:00:43.231Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4540,"sellPriceMinDate":"2026-07-26T14:05:00","buyPriceMax":2670,"buyPriceMaxDate":"2026-07-26T15:00:00","updatedAt":"2026-07-26T15:03:39.078Z"}
+{"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":20000000,"sellPriceMinDate":"2026-07-25T16:35:00","buyPriceMax":1064,"buyPriceMaxDate":"2026-07-26T15:05:00","updatedAt":"2026-07-26T15:09:26.581Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13439,"sellPriceMinDate":"2026-07-26T15:10:00","buyPriceMax":10211,"buyPriceMaxDate":"2026-07-26T07:35:00","updatedAt":"2026-07-26T15:11:25.776Z"}
