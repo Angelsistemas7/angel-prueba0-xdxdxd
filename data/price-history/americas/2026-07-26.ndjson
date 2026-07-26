@@ -144,3 +144,6 @@
 {"itemId":"T4_OFF_SHIELD","city":"Martlock","sellPriceMin":1949,"sellPriceMinDate":"2026-07-26T09:45:00","buyPriceMax":952,"buyPriceMaxDate":"2026-07-26T09:45:00","updatedAt":"2026-07-26T09:50:06.654Z"}
 {"itemId":"T4_POTION_HEAL","city":"Brecilien","sellPriceMin":1654,"sellPriceMinDate":"2026-07-26T02:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:50:06.654Z"}
 {"itemId":"T4_OFF_SHIELD","city":"Martlock","sellPriceMin":33333,"sellPriceMinDate":"2026-07-26T10:35:00","buyPriceMax":952,"buyPriceMaxDate":"2026-07-26T09:45:00","updatedAt":"2026-07-26T10:39:25.461Z"}
+{"itemId":"T4_ARMOR_LEATHER_SET1","city":"Bridgewatch","sellPriceMin":2972,"sellPriceMinDate":"2026-07-25T16:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T10:55:25.481Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Bridgewatch","sellPriceMin":3328,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T10:55:25.481Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":814018,"sellPriceMinDate":"2026-07-26T08:00:00","buyPriceMax":2671,"buyPriceMaxDate":"2026-07-26T10:55:00","updatedAt":"2026-07-26T10:59:25.952Z"}
