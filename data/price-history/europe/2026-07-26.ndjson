@@ -214,3 +214,13 @@
 {"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6493,"sellPriceMinDate":"2026-07-26T12:10:00","buyPriceMax":3812,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T12:13:24.671Z"}
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":26894,"sellPriceMinDate":"2026-07-26T12:10:00","buyPriceMax":11582,"buyPriceMaxDate":"2026-07-26T12:00:00","updatedAt":"2026-07-26T12:13:24.672Z"}
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":5923,"sellPriceMinDate":"2026-07-26T09:00:00","buyPriceMax":3953,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T12:14:52.350Z"}
+{"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":1814,"sellPriceMinDate":"2026-07-26T12:20:00","buyPriceMax":1323,"buyPriceMaxDate":"2026-07-26T10:20:00","updatedAt":"2026-07-26T12:22:24.651Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15963,"sellPriceMinDate":"2026-07-26T12:25:00","buyPriceMax":12004,"buyPriceMaxDate":"2026-07-25T20:05:00","updatedAt":"2026-07-26T12:25:24.859Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":47491,"sellPriceMinDate":"2026-07-26T11:00:00","buyPriceMax":38952,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T12:26:29.061Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":44994,"sellPriceMinDate":"2026-07-26T12:25:00","buyPriceMax":38952,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T12:27:24.705Z"}
+{"itemId":"T4_BAG","city":"Martlock","sellPriceMin":6990,"sellPriceMinDate":"2026-07-26T12:25:00","buyPriceMax":2754,"buyPriceMaxDate":"2026-07-25T17:25:00","updatedAt":"2026-07-26T12:30:24.650Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":19970,"sellPriceMinDate":"2026-07-26T09:00:00","buyPriceMax":10081,"buyPriceMaxDate":"2026-07-26T12:25:00","updatedAt":"2026-07-26T12:30:24.650Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":15962,"sellPriceMinDate":"2026-07-26T12:30:00","buyPriceMax":9170,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T12:30:24.650Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":7381,"sellPriceMinDate":"2026-07-26T12:30:00","buyPriceMax":3812,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T12:31:25.076Z"}
+{"itemId":"T4_BAG","city":"Martlock","sellPriceMin":6990,"sellPriceMinDate":"2026-07-26T12:25:00","buyPriceMax":2764,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T12:31:25.076Z"}
+{"itemId":"T4_BAG","city":"Black Market","sellPriceMin":5969,"sellPriceMinDate":"2026-07-26T04:30:00","buyPriceMax":5056,"buyPriceMaxDate":"2026-07-26T12:30:00","updatedAt":"2026-07-26T12:32:34.717Z"}
