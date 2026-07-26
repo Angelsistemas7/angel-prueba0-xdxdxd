@@ -72,3 +72,6 @@
 {"itemId":"T4_MAIN_SWORD","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":3076,"buyPriceMaxDate":"2026-07-26T11:25:00","updatedAt":"2026-07-26T11:27:26.537Z"}
 {"itemId":"T4_2H_BOW","city":"Martlock","sellPriceMin":6888,"sellPriceMinDate":"2026-07-26T11:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:30:43.950Z"}
 {"itemId":"T4_2H_WARBOW","city":"Martlock","sellPriceMin":4999,"sellPriceMinDate":"2026-07-26T11:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T11:30:43.950Z"}
+{"itemId":"T4_2H_BOW","city":"Martlock","sellPriceMin":6888,"sellPriceMinDate":"2026-07-26T11:30:00","buyPriceMax":1301,"buyPriceMaxDate":"2026-07-26T11:30:00","updatedAt":"2026-07-26T11:31:27.341Z"}
+{"itemId":"T4_2H_WARBOW","city":"Martlock","sellPriceMin":4999,"sellPriceMinDate":"2026-07-26T11:30:00","buyPriceMax":1625,"buyPriceMaxDate":"2026-07-26T11:30:00","updatedAt":"2026-07-26T11:34:27.470Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":5610977,"sellPriceMinDate":"2026-07-26T04:55:00","buyPriceMax":11071,"buyPriceMaxDate":"2026-07-26T11:45:00","updatedAt":"2026-07-26T11:45:40.762Z"}
