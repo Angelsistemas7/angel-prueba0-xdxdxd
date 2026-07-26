@@ -58,3 +58,4 @@
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":19989,"sellPriceMinDate":"2026-07-26T02:30:00","buyPriceMax":10024,"buyPriceMaxDate":"2026-07-25T16:55:00","updatedAt":"2026-07-26T02:32:52.821Z"}
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":19989,"sellPriceMinDate":"2026-07-26T02:30:00","buyPriceMax":10000,"buyPriceMaxDate":"2026-07-26T02:40:00","updatedAt":"2026-07-26T02:43:39.686Z"}
 {"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5368,"sellPriceMinDate":"2026-07-26T02:45:00","buyPriceMax":3115,"buyPriceMaxDate":"2026-07-26T01:30:00","updatedAt":"2026-07-26T02:48:52.885Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Brecilien","sellPriceMin":48888,"sellPriceMinDate":"2026-07-26T02:55:00","buyPriceMax":40104,"buyPriceMaxDate":"2026-07-26T02:55:00","updatedAt":"2026-07-26T02:56:38.986Z"}
