@@ -124,3 +124,14 @@
 {"itemId":"T4_BAG","city":"Martlock","sellPriceMin":6977,"sellPriceMinDate":"2026-07-26T09:25:00","buyPriceMax":2754,"buyPriceMaxDate":"2026-07-25T17:25:00","updatedAt":"2026-07-26T09:28:59.542Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Martlock","sellPriceMin":44387,"sellPriceMinDate":"2026-07-26T09:25:00","buyPriceMax":31655,"buyPriceMaxDate":"2026-07-26T00:15:00","updatedAt":"2026-07-26T09:28:59.542Z"}
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Fort Sterling","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:30:25.055Z"}
+{"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":4517,"sellPriceMinDate":"2026-07-26T09:35:00","buyPriceMax":1821,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T09:37:14.323Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":1959,"sellPriceMinDate":"2026-07-26T09:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:37:14.323Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5347,"sellPriceMinDate":"2026-07-26T09:35:00","buyPriceMax":3115,"buyPriceMaxDate":"2026-07-26T01:30:00","updatedAt":"2026-07-26T09:41:24.638Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Lymhurst","sellPriceMin":8996,"sellPriceMinDate":"2026-07-26T09:40:00","buyPriceMax":4620,"buyPriceMaxDate":"2026-07-26T09:40:00","updatedAt":"2026-07-26T09:41:24.638Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13421,"sellPriceMinDate":"2026-07-26T09:40:00","buyPriceMax":10030,"buyPriceMaxDate":"2026-07-26T01:30:00","updatedAt":"2026-07-26T09:41:58.991Z"}
+{"itemId":"T4_2H_BOW","city":"Brecilien","sellPriceMin":3775,"sellPriceMinDate":"2026-07-26T09:40:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:42:59.298Z"}
+{"itemId":"T4_MAIN_AXE","city":"Lymhurst","sellPriceMin":6666,"sellPriceMinDate":"2026-07-26T09:40:00","buyPriceMax":2094,"buyPriceMaxDate":"2026-07-26T09:40:00","updatedAt":"2026-07-26T09:42:59.299Z"}
+{"itemId":"T4_OFF_SHIELD","city":"Brecilien","sellPriceMin":2219,"sellPriceMinDate":"2026-07-26T09:40:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T09:42:59.299Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Lymhurst","sellPriceMin":6656,"sellPriceMinDate":"2026-07-26T09:40:00","buyPriceMax":4620,"buyPriceMaxDate":"2026-07-26T09:40:00","updatedAt":"2026-07-26T09:43:59.527Z"}
+{"itemId":"T4_BAG","city":"Fort Sterling","sellPriceMin":6449,"sellPriceMinDate":"2026-07-26T08:35:00","buyPriceMax":3810,"buyPriceMaxDate":"2026-07-26T09:45:00","updatedAt":"2026-07-26T09:46:59.551Z"}
+{"itemId":"T4_MAIN_SWORD","city":"Lymhurst","sellPriceMin":6652,"sellPriceMinDate":"2026-07-26T09:45:00","buyPriceMax":4620,"buyPriceMaxDate":"2026-07-26T09:40:00","updatedAt":"2026-07-26T09:48:25.148Z"}
