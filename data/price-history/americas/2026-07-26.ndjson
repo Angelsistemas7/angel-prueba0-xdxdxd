@@ -132,3 +132,6 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Thetford","sellPriceMin":29487,"sellPriceMinDate":"2026-07-26T08:15:00","buyPriceMax":25155,"buyPriceMaxDate":"2026-07-26T07:05:00","updatedAt":"2026-07-26T08:18:21.776Z"}
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Bridgewatch","sellPriceMin":3328,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":1602,"buyPriceMaxDate":"2026-07-25T10:50:00","updatedAt":"2026-07-26T08:25:59.633Z"}
 {"itemId":"T5_BAG","city":"Thetford","sellPriceMin":15970,"sellPriceMinDate":"2026-07-26T08:25:00","buyPriceMax":13003,"buyPriceMaxDate":"2026-07-26T08:25:00","updatedAt":"2026-07-26T08:28:17.208Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5597,"sellPriceMinDate":"2026-07-26T08:45:00","buyPriceMax":2340,"buyPriceMaxDate":"2026-07-26T04:50:00","updatedAt":"2026-07-26T08:46:00.679Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":14919,"sellPriceMinDate":"2026-07-26T08:45:00","buyPriceMax":10211,"buyPriceMaxDate":"2026-07-26T07:35:00","updatedAt":"2026-07-26T08:46:00.679Z"}
+{"itemId":"T5_BAG","city":"Black Market","sellPriceMin":15485,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":15484,"buyPriceMaxDate":"2026-07-26T08:55:00","updatedAt":"2026-07-26T08:55:59.461Z"}
