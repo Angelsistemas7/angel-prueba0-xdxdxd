@@ -163,3 +163,5 @@
 {"itemId":"T4_2H_WARBOW","city":"Caerleon","sellPriceMin":7983,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":2005,"buyPriceMaxDate":"2026-07-26T13:25:00","updatedAt":"2026-07-26T13:28:26.382Z"}
 {"itemId":"T4_POTION_HEAL","city":"Lymhurst","sellPriceMin":1735,"sellPriceMinDate":"2026-07-26T13:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:28:26.382Z"}
 {"itemId":"T5_BAG","city":"Black Market","sellPriceMin":15485,"sellPriceMinDate":"2026-07-26T03:35:00","buyPriceMax":18012,"buyPriceMaxDate":"2026-07-26T13:40:00","updatedAt":"2026-07-26T13:45:26.385Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4540,"sellPriceMinDate":"2026-07-26T14:05:00","buyPriceMax":2671,"buyPriceMaxDate":"2026-07-26T12:10:00","updatedAt":"2026-07-26T14:09:25.863Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":14264,"sellPriceMinDate":"2026-07-26T14:05:00","buyPriceMax":12400,"buyPriceMaxDate":"2026-07-26T07:00:00","updatedAt":"2026-07-26T14:09:25.864Z"}

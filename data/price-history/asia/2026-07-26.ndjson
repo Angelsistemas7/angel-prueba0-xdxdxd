@@ -91,3 +91,7 @@
 {"itemId":"T4_MOUNT_HORSE","city":"Black Market","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":31034,"buyPriceMaxDate":"2026-07-26T13:40:00","updatedAt":"2026-07-26T13:41:27.464Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Black Market","sellPriceMin":52984,"sellPriceMinDate":"2026-07-26T13:40:00","buyPriceMax":31034,"buyPriceMaxDate":"2026-07-26T13:40:00","updatedAt":"2026-07-26T13:44:36.718Z"}
 {"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":60000,"sellPriceMinDate":"2026-07-26T13:50:00","buyPriceMax":50000,"buyPriceMaxDate":"2026-07-26T08:25:00","updatedAt":"2026-07-26T13:54:27.811Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Bridgewatch","sellPriceMin":60000,"sellPriceMinDate":"2026-07-26T13:50:00","buyPriceMax":41919,"buyPriceMaxDate":"2026-07-26T13:50:00","updatedAt":"2026-07-26T13:55:26.836Z"}
+{"itemId":"T5_BAG","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T13:55:26.836Z"}
+{"itemId":"T5_BAG","city":"Brecilien","sellPriceMin":13981,"sellPriceMinDate":"2026-07-26T13:55:00","buyPriceMax":11071,"buyPriceMaxDate":"2026-07-26T11:45:00","updatedAt":"2026-07-26T14:00:27.374Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Fort Sterling","sellPriceMin":54593,"sellPriceMinDate":"2026-07-26T14:10:00","buyPriceMax":36198,"buyPriceMaxDate":"2026-07-26T14:05:00","updatedAt":"2026-07-26T14:10:39.287Z"}
