@@ -63,3 +63,4 @@
 {"itemId":"T4_ARMOR_PLATE_SET1","city":"Martlock","sellPriceMin":3730,"sellPriceMinDate":"2026-07-26T03:40:00","buyPriceMax":3038,"buyPriceMaxDate":"2026-07-25T15:45:00","updatedAt":"2026-07-26T03:42:39.705Z"}
 {"itemId":"T4_BAG","city":"Caerleon","sellPriceMin":7500,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T03:51:42.873Z"}
 {"itemId":"T5_BAG","city":"Caerleon","sellPriceMin":22000,"sellPriceMinDate":"2026-07-26T03:50:00","buyPriceMax":11576,"buyPriceMaxDate":"2026-07-25T08:10:00","updatedAt":"2026-07-26T03:51:42.874Z"}
+{"itemId":"T4_ARMOR_PLATE_SET1","city":"Black Market","sellPriceMin":6653,"sellPriceMinDate":"2026-07-25T23:05:00","buyPriceMax":6636,"buyPriceMaxDate":"2026-07-26T04:05:00","updatedAt":"2026-07-26T04:06:39.794Z"}

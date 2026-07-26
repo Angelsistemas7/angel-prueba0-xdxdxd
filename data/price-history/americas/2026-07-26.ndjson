@@ -71,3 +71,10 @@
 {"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":567,"buyPriceMaxDate":"2026-07-26T02:50:00","updatedAt":"2026-07-26T03:56:00.850Z"}
 {"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":14990,"sellPriceMinDate":"2026-07-26T03:55:00","buyPriceMax":12800,"buyPriceMaxDate":"2026-07-26T01:45:00","updatedAt":"2026-07-26T03:57:42.958Z"}
 {"itemId":"T4_ARMOR_LEATHER_SET1","city":"Brecilien","sellPriceMin":1991,"sellPriceMinDate":"2026-07-26T03:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:00:39.993Z"}
+{"itemId":"T5_BAG","city":"Lymhurst","sellPriceMin":14988,"sellPriceMinDate":"2026-07-26T04:05:00","buyPriceMax":12451,"buyPriceMaxDate":"2026-07-26T04:05:00","updatedAt":"2026-07-26T04:08:02.205Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Fort Sterling","sellPriceMin":998,"sellPriceMinDate":"2026-07-25T04:50:00","buyPriceMax":801,"buyPriceMaxDate":"2026-07-26T04:15:00","updatedAt":"2026-07-26T04:17:39.607Z"}
+{"itemId":"T5_BAG","city":"Fort Sterling","sellPriceMin":16916,"sellPriceMinDate":"2026-07-26T04:15:00","buyPriceMax":10505,"buyPriceMaxDate":"2026-07-26T04:15:00","updatedAt":"2026-07-26T04:17:39.607Z"}
+{"itemId":"T4_BAG","city":"Brecilien","sellPriceMin":5671,"sellPriceMinDate":"2026-07-26T04:15:00","buyPriceMax":3007,"buyPriceMaxDate":"2026-07-26T04:15:00","updatedAt":"2026-07-26T04:19:40.426Z"}
+{"itemId":"T4_SHOES_CLOTH_SET1","city":"Brecilien","sellPriceMin":698,"sellPriceMinDate":"2026-07-26T04:15:00","buyPriceMax":567,"buyPriceMaxDate":"2026-07-26T02:50:00","updatedAt":"2026-07-26T04:19:40.426Z"}
+{"itemId":"T4_OFF_SHIELD","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-07-26T04:20:40.077Z"}
+{"itemId":"T5_BAG","city":"Fort Sterling","sellPriceMin":16915,"sellPriceMinDate":"2026-07-26T04:20:00","buyPriceMax":10505,"buyPriceMaxDate":"2026-07-26T04:15:00","updatedAt":"2026-07-26T04:20:40.077Z"}
