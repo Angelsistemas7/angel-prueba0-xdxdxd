@@ -53,3 +53,9 @@
 {"itemId":"T5_BAG","city":"Martlock","sellPriceMin":14000,"sellPriceMinDate":"2026-07-26T03:00:00","buyPriceMax":14106,"buyPriceMaxDate":"2026-07-25T15:30:00","updatedAt":"2026-07-26T03:03:57.642Z"}
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4575,"sellPriceMinDate":"2026-07-26T03:05:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-26T03:05:00","updatedAt":"2026-07-26T03:07:39.880Z"}
 {"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4570,"sellPriceMinDate":"2026-07-26T03:05:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-26T03:05:00","updatedAt":"2026-07-26T03:08:40.861Z"}
+{"itemId":"T5_BAG","city":"Bridgewatch","sellPriceMin":15065,"sellPriceMinDate":"2026-07-26T03:15:00","buyPriceMax":12258,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T03:20:40.242Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4558,"sellPriceMinDate":"2026-07-26T03:20:00","buyPriceMax":3164,"buyPriceMaxDate":"2026-07-26T03:20:00","updatedAt":"2026-07-26T03:21:47.334Z"}
+{"itemId":"T4_BAG","city":"Lymhurst","sellPriceMin":4558,"sellPriceMinDate":"2026-07-26T03:20:00","buyPriceMax":3165,"buyPriceMaxDate":"2026-07-26T03:20:00","updatedAt":"2026-07-26T03:22:40.099Z"}
+{"itemId":"T5_BAG","city":"Bridgewatch","sellPriceMin":17431,"sellPriceMinDate":"2026-07-26T03:20:00","buyPriceMax":12258,"buyPriceMaxDate":"2026-07-25T21:40:00","updatedAt":"2026-07-26T03:23:39.776Z"}
+{"itemId":"T4_BAG","city":"Black Market","sellPriceMin":2999,"sellPriceMinDate":"2026-07-26T03:25:00","buyPriceMax":1896,"buyPriceMaxDate":"2026-07-26T03:25:00","updatedAt":"2026-07-26T03:28:40.016Z"}
+{"itemId":"T4_HEAD_PLATE_SET1","city":"Lymhurst","sellPriceMin":1552,"sellPriceMinDate":"2026-07-26T03:30:00","buyPriceMax":962,"buyPriceMaxDate":"2026-07-26T03:30:00","updatedAt":"2026-07-26T03:34:07.898Z"}
