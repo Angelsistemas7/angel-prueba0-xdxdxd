@@ -1,5 +1,8 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 const REGION_HOSTS = {
   europe: 'https://gameinfo.albiononline.com',
@@ -16,25 +19,49 @@ const AODP_HOSTS = {
 
 const CITIES = ['Caerleon', 'Bridgewatch', 'Fort Sterling', 'Lymhurst', 'Martlock', 'Thetford', 'Brecilien', 'Black Market'];
 
-/** Copiado de `MARKET_WATCHLIST_IDS` en `src/utils/radar-dashboard.ts` (repo de la app) — repo
- * separado, sin build compartido, así que se mantiene a mano. Si el watchlist de la app cambia,
- * actualizar acá también. */
-const PRICE_WATCHLIST_IDS = [
-  'T4_BAG',
-  'T5_BAG',
-  'T4_MAIN_SWORD',
-  'T4_2H_BOW',
-  'T4_2H_WARBOW',
-  'T4_OFF_SHIELD',
-  'T4_ARMOR_LEATHER_SET1',
-  'T4_HEAD_PLATE_SET1',
-  'T4_SHOES_CLOTH_SET1',
-  'T4_POTION_HEAL',
-  'T4_MOUNT_HORSE',
-  'T4_2H_CLERICSTAFF',
-  'T4_MAIN_AXE',
-  'T4_ARMOR_PLATE_SET1',
-];
+/** 2026-07-27: reemplaza el watchlist chico de 14 items (decisión explícita del usuario — quiere
+ * histórico de precios de TODO el catálogo, no solo lo que usa el Dashboard de Radar en vivo).
+ * `price-item-ids.json` (este mismo repo, raíz) son los 3.694 item id base de
+ * `src/data/items.json` de la app (mismo catálogo que usa el buscador de Mercado), copiados a
+ * mano una vez — mismo criterio de "repo separado, sin build compartido" que ya se aplicaba al
+ * watchlist chico. Ya NO está atado a `MARKET_WATCHLIST_IDS`/`radar-dashboard.ts` — ese watchlist
+ * chico sigue existiendo en la app para las tarjetas de "mejor oportunidad" en vivo, es un
+ * propósito distinto (rapidez/relevancia en la UI, no archivo histórico completo). */
+const PRICE_ITEM_IDS = require('./price-item-ids.json');
+
+/** Probado en vivo contra AODP antes de este cambio, con un lote FIJO de 250 ids esto rompía con
+ * 414 (URI Too Long) — no por cantidad de ids, sino porque `T*_ARTEFACT_*` (los ids de artefactos
+ * del catálogo) son mucho más largos que el resto (~35-40 caracteres vs ~15-20) y quedan
+ * agrupados en el archivo fuente, así que algunos lotes de 250 pasaban ~8.2KB de URL y otros
+ * ~4.6KB según qué ids les tocaran — confirmado reproduciendo el 414 real con curl contra el lote
+ * exacto que falló. Fix: trocear por PRESUPUESTO DE CARACTERES de la URL, no por cantidad fija de
+ * ids, para que ningún lote pueda pasarse sin importar qué ids le toquen. 6.000 caracteres para
+ * los ids deja margen real bajo el límite típico de ~8KB de línea de request de este tipo de
+ * servidor (confirmado con la falla real a ~8.2KB). */
+const PRICE_CHUNK_MAX_CHARS = 6000;
+
+function chunkByLength(ids, maxChars) {
+  const out = [];
+  let current = [];
+  let currentLength = 0;
+  for (const id of ids) {
+    // +1 por la coma separadora, salvo el primer id del lote.
+    const extra = current.length === 0 ? id.length : id.length + 1;
+    if (current.length > 0 && currentLength + extra > maxChars) {
+      out.push(current);
+      current = [];
+      currentLength = 0;
+    }
+    current.push(id);
+    currentLength += current.length === 1 ? id.length : id.length + 1;
+  }
+  if (current.length > 0) out.push(current);
+  return out;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const EVENTS_LIMIT = 51;
 const BATTLES_LIMIT = 20;
@@ -234,9 +261,21 @@ async function scrapeRegion(region) {
 
 async function scrapePrices(region) {
   const base = AODP_HOSTS[region];
-  const ids = PRICE_WATCHLIST_IDS.join(',');
   const locations = CITIES.map(encodeURIComponent).join(',');
-  const prices = await fetchJson(`${base}/api/v2/stats/prices/${ids}.json?locations=${locations}&qualities=1`);
+  const idChunks = chunkByLength(PRICE_ITEM_IDS, PRICE_CHUNK_MAX_CHARS);
+
+  const prices = [];
+  for (const idsChunk of idChunks) {
+    const ids = idsChunk.join(',');
+    try {
+      const chunkPrices = await fetchJson(`${base}/api/v2/stats/prices/${ids}.json?locations=${locations}&qualities=1`);
+      prices.push(...chunkPrices);
+    } catch (err) {
+      // Un lote caído no debe tumbar el resto del catálogo — se reintenta solo en la próxima corrida.
+      console.error(`[${region}] precios, lote de ${idsChunk.length} ids falló:`, err.message);
+    }
+    await sleep(200); // no golpear la API pública gratuita con 15 requests seguidos sin pausa.
+  }
 
   const snapshotPath = path.join(DATA_DIR, 'prices', `${region}.json`);
   await fs.mkdir(path.dirname(snapshotPath), { recursive: true });
