@@ -38,9 +38,52 @@ jobs:
       # checkout, sin red, sin cuota) y este loop los sube a git cada ~15 min, no cada 60s — así
       # el historial de commits no se infla y el push no compite por tiempo con el scrape.
       - name: Scrape cada 60s, commit+push cada ~15 min, durante ~5h40m
+        env:
+          # Sin este secreto NO pasa nada malo: `DATA_REPOS_DIR` queda vacío, `scrape.js` escribe
+          # donde escribió siempre y el workflow se comporta igual que antes del reparto en varios
+          # repos. Es la invariante que hace que este cambio no pueda romper la recolección.
+          # `GITHUB_TOKEN` no sirve acá: está limitado a ESTE repo y no puede escribir en otro.
+          DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
         run: |
           END=$((SECONDS + 20400))
           LAST_PUSH=$SECONDS
+          REGIONES="europe americas asia"
+          MES_CLONADO=""
+
+          # Deja en `datarepos/<región>` un clon del repo de ESE mes. Se vuelve a llamar en cada
+          # vuelta porque un job dura ~5h40m y puede cruzar un cambio de mes: sin esto, los
+          # primeros días de octubre se escribirían dentro del clon de septiembre y la app no los
+          # encontraría. `--depth 1` porque solo hace falta la punta para agregar encima.
+          preparar_repos() {
+            MES_HOY=$(date -u +%Y-%m)
+            if [ "$MES_HOY" = "$MES_CLONADO" ]; then return 0; fi
+            if [ -z "$DATA_REPO_TOKEN" ]; then return 1; fi
+            for R in $REGIONES; do
+              REPO="albion-data-$R-$MES_HOY"
+              rm -rf "datarepos/$R"
+              mkdir -p datarepos
+              if ! git clone --depth 1 -q                 "https://x-access-token:$DATA_REPO_TOKEN@github.com/${{ github.repository_owner }}/$REPO.git"                 "datarepos/$R"; then
+                echo "::error::no se pudo clonar $REPO — revisa que exista y que DATA_REPO_TOKEN tenga permiso de escritura"
+                return 1
+              fi
+              git -C "datarepos/$R" config user.name "github-actions[bot]"
+              git -C "datarepos/$R" config user.email "github-actions[bot]@users.noreply.github.com"
+            done
+            MES_CLONADO="$MES_HOY"
+            return 0
+          }
+
+          push_datarepos() {
+            if [ -z "$MES_CLONADO" ]; then return 0; fi
+            for R in $REGIONES; do
+              [ -d "datarepos/$R" ] || continue
+              if [ -n "$(git -C "datarepos/$R" status --porcelain)" ]; then
+                git -C "datarepos/$R" add -A
+                git -C "datarepos/$R" commit -q -m "Datos $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                git -C "datarepos/$R" push -q origin HEAD || echo "push de $R falló, se reintenta en el próximo ciclo"
+              fi
+            done
+          }
           # 2026-09-21: el `git pull --rebase ... || true` de abajo dejó marcadores de conflicto
           # DENTRO de los .json de datos el 2026-07-28 y el `git add data` los subió tal cual. A
           # partir de ahí `JSON.parse` fallaba en cada corrida y precios, oro y guild-stats
@@ -72,9 +115,15 @@ jobs:
           }
           while [ "$SECONDS" -lt "$END" ]; do
             START_ITER=$SECONDS
+            if preparar_repos; then
+              export DATA_REPOS_DIR="$PWD/datarepos"
+            else
+              unset DATA_REPOS_DIR
+            fi
             npm start || echo "scrape falló esta vuelta, se sigue con la siguiente"
             if [ $((SECONDS - LAST_PUSH)) -ge 900 ]; then
               push_if_dirty
+              push_datarepos
               LAST_PUSH=$SECONDS
             fi
             ELAPSED=$((SECONDS - START_ITER))
@@ -84,6 +133,7 @@ jobs:
             fi
           done
           push_if_dirty
+          push_datarepos
 
       # Re-dispara este mismo workflow antes de que el runner llegue al límite de 6h, para
       # continuidad 24/7 sin depender del cron de GitHub. `always()` para que la cadena no se

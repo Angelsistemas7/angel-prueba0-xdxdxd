@@ -97,6 +97,29 @@ const EVENTS_PAGE_PAUSE_MS = 120;
 const SLOW_TASKS_INTERVAL_MS = 60 * 60 * 1000;
 const STATE_PATH = path.join(DATA_DIR, 'state.json');
 
+/** 2026-09-21: este repo llegó a 9,9 GB contra un límite blando de 5 GB de GitHub, y crecía ~84 MB
+ * por día entre las tres regiones. Borrar archivos NO lo achica: el historial de git conserva cada
+ * versión de cada blob (árbol de trabajo 4,2 GB, repo 9,9 GB). Así que no se migra nada — este
+ * repo queda como archivo histórico de julio a septiembre y, del corte en adelante, kills y
+ * battles de cada región se escriben en su propio repo mensual, que nace vacío.
+ *
+ * `DATA_REPOS_DIR` lo prepara el workflow: adentro hay un clon por región del repo de ESTE mes.
+ * Si la variable no está (falta el token que permite escribir en otros repos), todo sigue
+ * exactamente como antes, escribiendo acá. Esa es la invariante que hace que este cambio no pueda
+ * romper nada: sin token, comportamiento idéntico al de siempre, y del lado de la app hay además
+ * un respaldo que vuelve a pedirle a este repo si el mensual no tiene el archivo. */
+const PRIMER_DIA_REPOS_MENSUALES = '2026-10-01';
+const DATA_REPOS_DIR = process.env.DATA_REPOS_DIR || '';
+
+/** Dónde guardar el NDJSON de un día: en el repo mensual de esa región si corresponde, o en la
+ * ruta de siempre de este repo. */
+function rutaDeDia(tipo, region, fecha) {
+  if (DATA_REPOS_DIR && fecha >= PRIMER_DIA_REPOS_MENSUALES) {
+    return path.join(DATA_REPOS_DIR, region, tipo, `${fecha}.ndjson`);
+  }
+  return path.join(DATA_DIR, tipo, region, `${fecha}.ndjson`);
+}
+
 /** 2026-07-25: se cayó Firestore (cuota gratis de 20.000 escrituras/día se agotaba a mitad de
  * día corriendo cada 60s, ver `docs/handoff.md` de la app). Reemplazado por archivos dentro de
  * este mismo repo git — commit/push periódico en `scrape.yml`, no acá. Kills/peleas se acumulan
@@ -316,7 +339,7 @@ async function fetchNewEvents(base, region, knownIds) {
 async function scrapeRegion(region) {
   const base = REGION_HOSTS[region];
   const date = todayStr();
-  const killsPath = path.join(DATA_DIR, 'kills', region, `${date}.ndjson`);
+  const killsPath = rutaDeDia('kills', region, date);
   const knownIds = new Set((await readNdjson(killsPath)).map((k) => k.eventId));
 
   const [eventsResult, battles] = await Promise.all([
@@ -354,7 +377,7 @@ async function scrapeRegion(region) {
   const battleEntries = battles.map(extractBattleEntry);
 
   const newKills = await appendUniqueNdjson(killsPath, kills, 'eventId');
-  const newBattles = await appendUniqueNdjson(path.join(DATA_DIR, 'battles', region, `${date}.ndjson`), battleEntries, 'battleId');
+  const newBattles = await appendUniqueNdjson(rutaDeDia('battles', region, date), battleEntries, 'battleId');
   await updateGuildStats(region, { newBattles, newKills });
   console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas (${eventsResult.paginas} página(s) de eventos).`);
 }
