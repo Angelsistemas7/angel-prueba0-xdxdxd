@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { gunzipSync, gzipSync } from 'zlib';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -67,6 +68,35 @@ const EVENTS_LIMIT = 51;
 const BATTLES_LIMIT = 20;
 const DATA_DIR = 'data';
 
+/** 2026-09-21: `limit` mayor a 51 lo rechaza el servidor con 400 (probado en vivo: 100/200/500
+ * fallan, 51 pasa) y `offset` deja de aceptarse pasando 1000 (1020 devuelve 400). O sea que la
+ * ventana MÁXIMA que la API pública expone son 1051 eventos — nada de "traer el torneo entero en
+ * una sola llamada": acá el servidor no lo permite. Lo que sí se puede es paginar DENTRO de esa
+ * ventana solo cuando hace falta.
+ *
+ * Por qué hace falta: medido en vivo el mismo día, la ventana completa de 1.051 eventos de Europa
+ * abarcaba 624 segundos, o sea ~101 eventos por minuto, contra las 51 que traía una sola página.
+ * Corriendo cada 60s con una sola página, más de la mitad de las kills de Europa se perdían sin
+ * que nada lo avisara. (Américas ~20/min y Asia ~44/min sí entraban en una página, pero Asia
+ * queda al borde.) Ahora se pagina hasta REENCONTRAR un evento ya guardado: en una región
+ * tranquila sigue siendo 1 sola llamada, y en una región cargada gasta las que de verdad hagan
+ * falta. Si se agota la ventana sin reencontrar nada, se avisa fuerte: eso significa que el
+ * intervalo de 60s ya no alcanza ni con paginado y hay que bajarlo. */
+const EVENTS_MAX_OFFSET = 1000;
+const EVENTS_PAGE_PAUSE_MS = 120;
+
+/** Precios/oro NO van más en el ciclo de 60s. Dos razones medidas, no estimadas:
+ * 1) El histórico solo registra cambios reales, y el propio catálogo de AODP se refresca por
+ *    aportes de jugadores, no por segundo — revisar 3.694 items × 8 ciudades × 3 regiones cada
+ *    minuto eran ~45 requests por minuto (≈1,9 millones al mes) contra una API pública gratis
+ *    ajena, para capturar cambios que no ocurren a esa velocidad.
+ * 2) Nada de la app lee `data/prices`, `data/price-history`, `data/gold` ni `data/guild-stats`:
+ *    la app y las Functions solo leen `data/kills` y `data/battles`. Se mantiene la captura
+ *    porque el dueño pidió explícitamente acumular histórico de precios para análisis futuro,
+ *    pero a cadencia horaria, que es la que el dato realmente tiene. */
+const SLOW_TASKS_INTERVAL_MS = 60 * 60 * 1000;
+const STATE_PATH = path.join(DATA_DIR, 'state.json');
+
 /** 2026-07-25: se cayó Firestore (cuota gratis de 20.000 escrituras/día se agotaba a mitad de
  * día corriendo cada 60s, ver `docs/handoff.md` de la app). Reemplazado por archivos dentro de
  * este mismo repo git — commit/push periódico en `scrape.yml`, no acá. Kills/peleas se acumulan
@@ -103,18 +133,45 @@ async function readNdjson(filePath) {
   }
 }
 
+/** 2026-09-21: el `git pull --rebase` del workflow dejó marcadores de conflicto (`<<<<<<< HEAD`)
+ * DENTRO de los archivos de datos el 2026-07-28 y `git add data` los commiteó. Desde entonces
+ * `JSON.parse` tiraba en cada corrida, la excepción se comía en el `try/catch` de `main()`, y
+ * precios, oro y guild-stats quedaron MUERTOS durante ocho semanas sin que nada lo avisara —
+ * mientras se seguían gastando las ~45 llamadas por minuto a AODP igual, porque el fetch pasa
+ * antes de la lectura del archivo. Ahora un archivo corrupto no mata el paso: se avisa y se
+ * arranca de cero, que es recuperable, en vez de quedar en un fallo silencioso permanente. */
+function hasConflictMarkers(raw) {
+  return /^(<{7} |={7}$|>{7} )/m.test(raw);
+}
+
 async function readJson(filePath, fallback) {
   try {
-    return JSON.parse(await fs.readFile(filePath, 'utf8'));
+    const raw = await fs.readFile(filePath, 'utf8');
+    if (hasConflictMarkers(raw)) {
+      console.error(`[corrupto] ${filePath} tiene marcadores de conflicto de git — se regenera desde cero.`);
+      return fallback;
+    }
+    return JSON.parse(raw);
   } catch (err) {
     if (err.code === 'ENOENT') return fallback;
-    throw err;
+    console.error(`[corrupto] ${filePath} no se pudo leer (${err.message}) — se regenera desde cero.`);
+    return fallback;
   }
 }
 
 /** Agrega solo las entradas cuyo `idKey` todavía no está en el archivo — evita duplicar la misma
  * kill/pelea/precio de oro si sigue apareciendo en el pool de la API en la siguiente corrida.
  * Devuelve las entradas realmente nuevas (no solo el conteo) para poder encadenar agregados. */
+async function readJsonGz(filePath, fallback) {
+  try {
+    return JSON.parse(gunzipSync(await fs.readFile(filePath)).toString('utf8'));
+  } catch (err) {
+    if (err.code === 'ENOENT') return fallback;
+    console.error(`[corrupto] ${filePath} no se pudo leer (${err.message}) — se regenera desde cero.`);
+    return fallback;
+  }
+}
+
 async function appendUniqueNdjson(filePath, newEntries, idKey) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const existing = await readNdjson(filePath);
@@ -219,14 +276,57 @@ async function updateGuildStats(region, { newBattles, newKills }) {
   await fs.writeFile(filePath, JSON.stringify(stats));
 }
 
+/** Pagina el feed de eventos hasta reencontrar un `EventId` que ya está guardado — ver la nota
+ * de `EVENTS_MAX_OFFSET`. Devuelve los eventos nuevos y si se agotó la ventana de la API sin
+ * llegar a terreno conocido (o sea: hubo pérdida real y hay que avisar). */
+function offsetsDeEventos() {
+  // `offset` avanza de a una página, pero el último salto se recorta a 1000 en vez de saltárselo:
+  // con paso de 51 la secuencia natural es 0,51,…,969,1020, y 1020 el servidor lo rechaza con
+  // 400. Sin este recorte se perdería justo la franja más vieja de la ventana (la que importa
+  // cuando venimos atrasados), que es el único momento en que se pagina tan hondo.
+  const offsets = [];
+  for (let offset = 0; offset < EVENTS_MAX_OFFSET; offset += EVENTS_LIMIT) offsets.push(offset);
+  offsets.push(EVENTS_MAX_OFFSET);
+  return offsets;
+}
+
+async function fetchNewEvents(base, region, knownIds) {
+  const nuevos = [];
+  const offsets = offsetsDeEventos();
+  for (let i = 0; i < offsets.length; i += 1) {
+    const page = await fetchJson(`${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`);
+    if (!Array.isArray(page) || page.length === 0) return { nuevos, agotada: false, paginas: i + 1 };
+    let alcanzado = false;
+    for (const event of page) {
+      if (knownIds.has(event.EventId)) {
+        alcanzado = true;
+        break;
+      }
+      nuevos.push(event);
+    }
+    // Primera corrida del día (archivo vacío): no hay nada conocido con qué cortar, así que se
+    // toma una sola página y el corte lo pone la corrida siguiente. Sin esto, cada arranque de
+    // día bajaría las 21 páginas completas de las 3 regiones sin necesidad.
+    if (alcanzado || knownIds.size === 0) return { nuevos, agotada: false, paginas: i + 1 };
+    await sleep(EVENTS_PAGE_PAUSE_MS);
+  }
+  return { nuevos, agotada: true, paginas: offsets.length };
+}
+
 async function scrapeRegion(region) {
   const base = REGION_HOSTS[region];
-  const [events, battles] = await Promise.all([
-    fetchJson(`${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=0`),
+  const date = todayStr();
+  const killsPath = path.join(DATA_DIR, 'kills', region, `${date}.ndjson`);
+  const knownIds = new Set((await readNdjson(killsPath)).map((k) => k.eventId));
+
+  const [eventsResult, battles] = await Promise.all([
+    fetchNewEvents(base, region, knownIds),
     fetchJson(`${base}/api/gameinfo/battles?range=day&limit=${BATTLES_LIMIT}&offset=0&sort=recent`),
   ]);
-
-  const date = todayStr();
+  const events = eventsResult.nuevos;
+  if (eventsResult.agotada) {
+    console.error(`[${region}] AVISO: se agotó la ventana de la API (~${EVENTS_MAX_OFFSET + EVENTS_LIMIT} eventos) sin reencontrar nada conocido — se PERDIERON kills. Bajar el intervalo del ciclo.`);
+  }
 
   const kills = events.map((event) => ({
     eventId: event.EventId,
@@ -253,10 +353,10 @@ async function scrapeRegion(region) {
 
   const battleEntries = battles.map(extractBattleEntry);
 
-  const newKills = await appendUniqueNdjson(path.join(DATA_DIR, 'kills', region, `${date}.ndjson`), kills, 'eventId');
+  const newKills = await appendUniqueNdjson(killsPath, kills, 'eventId');
   const newBattles = await appendUniqueNdjson(path.join(DATA_DIR, 'battles', region, `${date}.ndjson`), battleEntries, 'battleId');
   await updateGuildStats(region, { newBattles, newKills });
-  console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas (vistas: ${events.length}/${battles.length}).`);
+  console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas (${eventsResult.paginas} página(s) de eventos).`);
 }
 
 async function scrapePrices(region) {
@@ -277,9 +377,14 @@ async function scrapePrices(region) {
     await sleep(200); // no golpear la API pública gratuita con 15 requests seguidos sin pausa.
   }
 
-  const snapshotPath = path.join(DATA_DIR, 'prices', `${region}.json`);
+  // El snapshot es SOLO la línea base contra la que se diffea el histórico — no lo lee nadie más
+  // (la app y las Functions solo leen `data/kills` y `data/battles`). Son 7,3 MB por región en
+  // JSON plano y se commitea cada vez que cambia, o sea 22 MB de objetos git nuevos por hora en
+  // un repo que ya pesa 10,4 GB. Comprimido baja a ~1 MB sin perder nada, porque nadie necesita
+  // leerlo a mano.
+  const snapshotPath = path.join(DATA_DIR, 'prices', `${region}.json.gz`);
   await fs.mkdir(path.dirname(snapshotPath), { recursive: true });
-  const snapshot = await readJson(snapshotPath, {});
+  const snapshot = await readJsonGz(snapshotPath, {});
 
   // Histórico de precios: solo se agrega una línea cuando el precio REALMENTE cambió respecto al
   // último snapshot guardado — a diferencia de kills/peleas (donde casi todo es nuevo cada
@@ -303,7 +408,7 @@ async function scrapePrices(region) {
     }
     snapshot[key] = updated;
   }
-  await fs.writeFile(snapshotPath, JSON.stringify(snapshot));
+  await fs.writeFile(snapshotPath, gzipSync(Buffer.from(JSON.stringify(snapshot), 'utf8')));
 
   if (changed.length > 0) {
     const historyPath = path.join(DATA_DIR, 'price-history', region, `${todayStr()}.ndjson`);
@@ -334,6 +439,10 @@ async function scrapeGold(region) {
  * usuario lo pida. */
 
 async function main() {
+  const state = await readJson(STATE_PATH, {});
+  const ahora = Date.now();
+  const tocaLento = !state.lastSlowRun || ahora - Date.parse(state.lastSlowRun) >= SLOW_TASKS_INTERVAL_MS;
+
   for (const region of Object.keys(REGION_HOSTS)) {
     try {
       await scrapeRegion(region);
@@ -341,6 +450,7 @@ async function main() {
       // Una región caída no debe tumbar el resto — cada región es independiente.
       console.error(`[${region}] error:`, err.message);
     }
+    if (!tocaLento) continue;
     try {
       await scrapePrices(region);
     } catch (err) {
@@ -351,6 +461,13 @@ async function main() {
     } catch (err) {
       console.error(`[${region}] oro error:`, err.message);
     }
+  }
+
+  if (tocaLento) {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(STATE_PATH, JSON.stringify({ ...state, lastSlowRun: new Date(ahora).toISOString() }));
+  } else {
+    console.log('Precios/oro se saltean esta vuelta (cadencia horaria).');
   }
 }
 

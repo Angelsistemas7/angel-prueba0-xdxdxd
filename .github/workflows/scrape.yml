@@ -41,11 +41,32 @@ jobs:
         run: |
           END=$((SECONDS + 20400))
           LAST_PUSH=$SECONDS
+          # 2026-09-21: el `git pull --rebase ... || true` de abajo dejó marcadores de conflicto
+          # DENTRO de los .json de datos el 2026-07-28 y el `git add data` los subió tal cual. A
+          # partir de ahí `JSON.parse` fallaba en cada corrida y precios, oro y guild-stats
+          # quedaron muertos OCHO SEMANAS sin que nada avisara. Estas dos guardas cierran las dos
+          # mitades del agujero: el rebase que falla se aborta en vez de dejar el árbol a medias,
+          # y nada con marcadores de conflicto puede llegar a un commit.
+          abortar_si_hay_conflicto() {
+            if git grep -qI -e '^<<<<<<< ' -e '^>>>>>>> ' -- data; then
+              echo "::error::Marcadores de conflicto en data/ — no se commitea. Archivos afectados:"
+              git grep -lI -e '^<<<<<<< ' -e '^>>>>>>> ' -- data
+              return 1
+            fi
+            return 0
+          }
           push_if_dirty() {
             if [ -n "$(git status --porcelain -- data)" ]; then
+              abortar_si_hay_conflicto || return 0
               git add data
               git commit -m "Scraper snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)" -q
-              git pull --rebase --autostash -q origin "${{ github.ref_name }}" || true
+              if ! git pull --rebase --autostash -q origin "${{ github.ref_name }}"; then
+                echo "::warning::rebase con conflicto — se aborta y se reintenta en el próximo ciclo"
+                git rebase --abort 2>/dev/null || true
+                git stash pop 2>/dev/null || true
+                return 0
+              fi
+              abortar_si_hay_conflicto || return 0
               git push -q origin "HEAD:${{ github.ref_name }}" || echo "push falló, se reintenta en el próximo ciclo"
             fi
           }
