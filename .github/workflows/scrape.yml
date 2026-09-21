@@ -90,10 +90,23 @@ jobs:
           # quedaron muertos OCHO SEMANAS sin que nada avisara. Estas dos guardas cierran las dos
           # mitades del agujero: el rebase que falla se aborta en vez de dejar el árbol a medias,
           # y nada con marcadores de conflicto puede llegar a un commit.
+          # Solo los archivos que CAMBIARON, no todo `data/`: `git grep -- data` recorre el árbol
+          # de trabajo entero, que son 4,2 GB, y tardaba minutos en cada ciclo de push. Los que
+          # cambiaron son un puñado y es donde puede aparecer un marcador nuevo; los que no
+          # cambiaron ya pasaron por esta misma comprobación cuando se commitearon.
+          # Solo los archivos que CAMBIARON, no todo `data/`: `git grep -- data` recorre el
+          # arbol de trabajo entero, que son 4,2 GB, y tardaba minutos en cada ciclo de push.
+          # Los que cambiaron son un punado y es donde puede aparecer un marcador nuevo; los que
+          # no cambiaron ya pasaron por esta misma comprobacion cuando se commitearon.
           abortar_si_hay_conflicto() {
-            if git grep -qI -e '^<<<<<<< ' -e '^>>>>>>> ' -- data; then
-              echo "::error::Marcadores de conflicto en data/ — no se commitea. Archivos afectados:"
-              git grep -lI -e '^<<<<<<< ' -e '^>>>>>>> ' -- data
+            SUCIOS=""
+            while IFS= read -r ARCHIVO; do
+              if [ -f "$ARCHIVO" ] && grep -lI -e '^<<<<<<< ' -e '^>>>>>>> ' "$ARCHIVO" >/dev/null 2>&1; then
+                SUCIOS="$SUCIOS $ARCHIVO"
+              fi
+            done <<< "$(git status --porcelain -- data | sed 's/^...//')"
+            if [ -n "$SUCIOS" ]; then
+              echo "::error::Marcadores de conflicto en data/ — no se commitea. Archivos afectados:$SUCIOS"
               return 1
             fi
             return 0
