@@ -5743,3 +5743,13 @@
 {"itemId":"T4_CAPEITEM_FW_THETFORD_BP","city":"Brecilien","sellPriceMin":16993,"sellPriceMinDate":"2026-09-23T19:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T19:34:15.768Z"}
 {"itemId":"T6_2H_KNUCKLES_SET2","city":"Martlock","sellPriceMin":84989,"sellPriceMinDate":"2026-09-23T18:50:00","buyPriceMax":83882,"buyPriceMaxDate":"2026-09-23T18:50:00","updatedAt":"2026-09-23T19:34:15.768Z"}
 {"itemId":"T8_JOURNAL_FISHING_EMPTY","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T19:34:15.772Z"}
+{"itemId":"T5_MEAL_ROAST_FISH","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.765Z"}
+{"itemId":"T7_ARTEFACT_ARMOR_LEATHER_HELL","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.770Z"}
+{"itemId":"T5_CAPEITEM_FW_LYMHURST","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.774Z"}
+{"itemId":"T6_ARMOR_CLOTH_SET1","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.776Z"}
+{"itemId":"T6_HEAD_LEATHER_SET3","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.776Z"}
+{"itemId":"T6_SHOES_LEATHER_SET2","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.776Z"}
+{"itemId":"T6_SHOES_PLATE_SET1","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.776Z"}
+{"itemId":"T8_ARMOR_PLATE_SET1","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.777Z"}
+{"itemId":"T4_MAIN_CURSEDSTAFF","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.781Z"}
+{"itemId":"T4_MAIN_AXE","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-23T20:34:15.783Z"}
