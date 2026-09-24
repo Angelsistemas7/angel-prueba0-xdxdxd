@@ -6021,3 +6021,16 @@
 {"itemId":"T6_CAPEITEM_HERETIC_BP","city":"Martlock","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T19:04:22.321Z"}
 {"itemId":"T8_CAPEITEM_UNDEAD_BP","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T19:04:22.321Z"}
 {"itemId":"T6_JOURNAL_HIDE_FULL","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T19:04:22.323Z"}
+{"itemId":"T8_2H_TOOL_TRACKING","city":"Fort Sterling","sellPriceMin":209904,"sellPriceMinDate":"2026-09-24T19:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.650Z"}
+{"itemId":"T4_POTION_ENERGY","city":"Fort Sterling","sellPriceMin":2692,"sellPriceMinDate":"2026-09-24T19:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.652Z"}
+{"itemId":"T7_ORE","city":"Lymhurst","sellPriceMin":1678,"sellPriceMinDate":"2026-09-24T19:45:00","buyPriceMax":1676,"buyPriceMaxDate":"2026-09-24T19:45:00","updatedAt":"2026-09-24T20:04:19.654Z"}
+{"itemId":"T8_MEAL_SANDWICH","city":"Fort Sterling","sellPriceMin":5249,"sellPriceMinDate":"2026-09-24T19:30:00","buyPriceMax":4026,"buyPriceMaxDate":"2026-09-24T12:30:00","updatedAt":"2026-09-24T20:04:19.654Z"}
+{"itemId":"T8_MEAL_STEW","city":"Fort Sterling","sellPriceMin":5635,"sellPriceMinDate":"2026-09-24T19:30:00","buyPriceMax":3199,"buyPriceMaxDate":"2026-09-24T05:25:00","updatedAt":"2026-09-24T20:04:19.654Z"}
+{"itemId":"T8_ARTEFACT_2H_CLAYMORE_AVALON","city":"Fort Sterling","sellPriceMin":809989,"sellPriceMinDate":"2026-09-24T19:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.656Z"}
+{"itemId":"T4_RELIC","city":"Lymhurst","sellPriceMin":468,"sellPriceMinDate":"2026-09-24T19:30:00","buyPriceMax":424,"buyPriceMaxDate":"2026-09-24T18:30:00","updatedAt":"2026-09-24T20:04:19.658Z"}
+{"itemId":"T4_HEAD_PLATE_ROYAL","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.664Z"}
+{"itemId":"T5_HEAD_PLATE_ROYAL","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.664Z"}
+{"itemId":"T6_HEAD_PLATE_ROYAL","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.664Z"}
+{"itemId":"T7_HEAD_PLATE_ROYAL","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.665Z"}
+{"itemId":"T8_HEAD_PLATE_ROYAL","city":"Brecilien","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-24T20:04:19.665Z"}
+{"itemId":"T6_MAIN_AXE","city":"Lymhurst","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":31811,"buyPriceMaxDate":"2026-09-24T19:30:00","updatedAt":"2026-09-24T20:04:19.670Z"}
