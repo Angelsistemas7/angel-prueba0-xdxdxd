@@ -1,0 +1,11 @@
+{"itemId":"T2_WOOD","city":"Thetford","sellPriceMin":66,"sellPriceMinDate":"2026-09-24T23:50:00","buyPriceMax":57,"buyPriceMaxDate":"2026-09-24T23:50:00","updatedAt":"2026-09-25T00:04:23.120Z"}
+{"itemId":"T3_HIDE","city":"Lymhurst","sellPriceMin":110,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":108,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.120Z"}
+{"itemId":"T3_WOOD","city":"Thetford","sellPriceMin":119,"sellPriceMinDate":"2026-09-24T23:50:00","buyPriceMax":117,"buyPriceMaxDate":"2026-09-24T23:50:00","updatedAt":"2026-09-25T00:04:23.121Z"}
+{"itemId":"T4_FIBER","city":"Thetford","sellPriceMin":121,"sellPriceMinDate":"2026-09-24T23:55:00","buyPriceMax":119,"buyPriceMaxDate":"2026-09-24T23:55:00","updatedAt":"2026-09-25T00:04:23.121Z"}
+{"itemId":"T4_RELIC","city":"Lymhurst","sellPriceMin":468,"sellPriceMinDate":"2026-09-24T19:30:00","buyPriceMax":422,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.129Z"}
+{"itemId":"T4_RUNE","city":"Lymhurst","sellPriceMin":8,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":6,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.129Z"}
+{"itemId":"T4_RUNE","city":"Thetford","sellPriceMin":8,"sellPriceMinDate":"2026-09-24T23:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T00:04:23.129Z"}
+{"itemId":"T4_SOUL","city":"Lymhurst","sellPriceMin":79,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":78,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.129Z"}
+{"itemId":"T5_RUNE","city":"Lymhurst","sellPriceMin":34,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T00:04:23.129Z"}
+{"itemId":"T5_SOUL","city":"Lymhurst","sellPriceMin":252,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":248,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.129Z"}
+{"itemId":"T6_RUNE","city":"Lymhurst","sellPriceMin":185,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":174,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.130Z"}
