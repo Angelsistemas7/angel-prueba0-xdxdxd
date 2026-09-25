@@ -5540,3 +5540,6 @@
 {"itemId":"T5_MAIN_AXE","city":"Lymhurst","sellPriceMin":14420,"sellPriceMinDate":"2026-09-25T21:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T21:44:26.663Z"}
 {"itemId":"T6_2H_SHAPESHIFTER_SET1","city":"Fort Sterling","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T21:44:26.665Z"}
 {"itemId":"T7_JOURNAL_WARRIOR_EMPTY","city":"Caerleon","sellPriceMin":0,"sellPriceMinDate":"0001-01-01T00:00:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T21:44:26.667Z"}
+{"itemId":"T7_POTION_REVIVE","city":"Thetford","sellPriceMin":12958,"sellPriceMinDate":"2026-09-25T22:30:00","buyPriceMax":10151,"buyPriceMaxDate":"2026-09-25T13:35:00","updatedAt":"2026-09-25T22:45:01.024Z"}
+{"itemId":"T4_RUNE","city":"Thetford","sellPriceMin":8,"sellPriceMinDate":"2026-09-25T22:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T22:45:01.028Z"}
+{"itemId":"T3_FURNITUREITEM_TROPHY_GENERAL","city":"Thetford","sellPriceMin":7,"sellPriceMinDate":"2026-09-25T22:30:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T22:45:01.039Z"}
