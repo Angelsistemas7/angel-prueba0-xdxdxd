@@ -9,3 +9,23 @@
 {"itemId":"T5_RUNE","city":"Lymhurst","sellPriceMin":34,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T00:04:23.129Z"}
 {"itemId":"T5_SOUL","city":"Lymhurst","sellPriceMin":252,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":248,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.129Z"}
 {"itemId":"T6_RUNE","city":"Lymhurst","sellPriceMin":185,"sellPriceMinDate":"2026-09-24T23:35:00","buyPriceMax":174,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T00:04:23.130Z"}
+{"itemId":"T4_SKILLBOOK_STANDARD","city":"Fort Sterling","sellPriceMin":30662,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":27021,"buyPriceMaxDate":"2026-09-24T16:35:00","updatedAt":"2026-09-25T01:05:22.191Z"}
+{"itemId":"T1_HIDE","city":"Fort Sterling","sellPriceMin":6,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.194Z"}
+{"itemId":"T3_MEAL_PIE","city":"Lymhurst","sellPriceMin":905,"sellPriceMinDate":"2026-09-25T00:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.195Z"}
+{"itemId":"T5_MEAL_PIE","city":"Lymhurst","sellPriceMin":2565,"sellPriceMinDate":"2026-09-25T00:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.197Z"}
+{"itemId":"T6_MEAL_SALAD","city":"Lymhurst","sellPriceMin":5555,"sellPriceMinDate":"2026-09-25T00:25:00","buyPriceMax":4542,"buyPriceMaxDate":"2026-09-24T05:35:00","updatedAt":"2026-09-25T01:05:22.197Z"}
+{"itemId":"T6_MEAL_SALAD_FISH","city":"Lymhurst","sellPriceMin":34999,"sellPriceMinDate":"2026-09-25T00:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.197Z"}
+{"itemId":"T7_CLOTH","city":"Fort Sterling","sellPriceMin":9373,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":8242,"buyPriceMaxDate":"2026-09-24T16:30:00","updatedAt":"2026-09-25T01:05:22.198Z"}
+{"itemId":"T7_MEAL_PIE","city":"Lymhurst","sellPriceMin":5798,"sellPriceMinDate":"2026-09-25T00:40:00","buyPriceMax":5002,"buyPriceMaxDate":"2026-09-25T00:40:00","updatedAt":"2026-09-25T01:05:22.198Z"}
+{"itemId":"T7_METALBAR","city":"Fort Sterling","sellPriceMin":8185,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":7026,"buyPriceMaxDate":"2026-09-25T00:35:00","updatedAt":"2026-09-25T01:05:22.198Z"}
+{"itemId":"T7_PLANKS","city":"Fort Sterling","sellPriceMin":11908,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":9337,"buyPriceMaxDate":"2026-09-24T16:30:00","updatedAt":"2026-09-25T01:05:22.198Z"}
+{"itemId":"T5_ARTEFACT_MAIN_ROCKMACE_KEEPER","city":"Fort Sterling","sellPriceMin":3550,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.199Z"}
+{"itemId":"T4_RUNE","city":"Fort Sterling","sellPriceMin":10,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":7,"buyPriceMaxDate":"2026-09-24T10:50:00","updatedAt":"2026-09-25T01:05:22.213Z"}
+{"itemId":"T4_RUNE","city":"Lymhurst","sellPriceMin":7,"sellPriceMinDate":"2026-09-25T01:05:00","buyPriceMax":6,"buyPriceMaxDate":"2026-09-24T23:35:00","updatedAt":"2026-09-25T01:05:22.213Z"}
+{"itemId":"T3_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":11899,"sellPriceMinDate":"2026-09-25T00:15:00","buyPriceMax":8041,"buyPriceMaxDate":"2026-09-24T18:05:00","updatedAt":"2026-09-25T01:05:22.216Z"}
+{"itemId":"T4_2H_TOOL_HAMMER","city":"Lymhurst","sellPriceMin":3332,"sellPriceMinDate":"2026-09-25T00:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.216Z"}
+{"itemId":"T4_2H_TOOL_KNIFE","city":"Lymhurst","sellPriceMin":3111,"sellPriceMinDate":"2026-09-25T00:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.216Z"}
+{"itemId":"T4_MOUNT_HORSE","city":"Lymhurst","sellPriceMin":51846,"sellPriceMinDate":"2026-09-25T00:15:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.216Z"}
+{"itemId":"T5_2H_TOOL_HAMMER","city":"Lymhurst","sellPriceMin":10854,"sellPriceMinDate":"2026-09-25T00:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.216Z"}
+{"itemId":"T5_2H_TOOL_KNIFE","city":"Lymhurst","sellPriceMin":8781,"sellPriceMinDate":"2026-09-25T00:25:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.216Z"}
+{"itemId":"T8_JOURNAL_STONE_EMPTY","city":"Fort Sterling","sellPriceMin":99999,"sellPriceMinDate":"2026-09-25T00:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-25T01:05:22.247Z"}
