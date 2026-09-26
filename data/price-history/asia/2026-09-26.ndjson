@@ -5682,3 +5682,17 @@
 {"itemId":"T6_MAIN_DAGGER_HELL","city":"Lymhurst","sellPriceMin":84998,"sellPriceMinDate":"2026-09-26T21:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T22:05:35.244Z"}
 {"itemId":"T7_MAIN_DAGGER_HELL","city":"Lymhurst","sellPriceMin":319994,"sellPriceMinDate":"2026-09-26T21:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T22:05:35.244Z"}
 {"itemId":"T8_MAIN_DAGGER_HELL","city":"Lymhurst","sellPriceMin":1111082,"sellPriceMinDate":"2026-09-26T21:55:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T22:05:35.245Z"}
+{"itemId":"T5_ROCK","city":"Lymhurst","sellPriceMin":68,"sellPriceMinDate":"2026-09-26T22:10:00","buyPriceMax":68,"buyPriceMaxDate":"2026-09-26T16:20:00","updatedAt":"2026-09-26T23:05:37.504Z"}
+{"itemId":"T6_POTION_LAVA","city":"Caerleon","sellPriceMin":17999,"sellPriceMinDate":"2026-09-26T22:35:00","buyPriceMax":10001,"buyPriceMaxDate":"2026-09-26T22:35:00","updatedAt":"2026-09-26T23:05:37.504Z"}
+{"itemId":"T5_ARTEFACT_2H_KNUCKLES_HELL","city":"Lymhurst","sellPriceMin":2378,"sellPriceMinDate":"2026-09-26T22:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.508Z"}
+{"itemId":"T5_ARTEFACT_HEAD_PLATE_HELL","city":"Lymhurst","sellPriceMin":2900,"sellPriceMinDate":"2026-09-26T22:10:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.510Z"}
+{"itemId":"T4_RUNE","city":"Caerleon","sellPriceMin":14,"sellPriceMinDate":"2026-09-26T22:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.512Z"}
+{"itemId":"T5_RELIC","city":"Lymhurst","sellPriceMin":747,"sellPriceMinDate":"2026-09-26T22:10:00","buyPriceMax":707,"buyPriceMaxDate":"2026-09-26T11:50:00","updatedAt":"2026-09-26T23:05:37.512Z"}
+{"itemId":"T5_RUNE","city":"Lymhurst","sellPriceMin":49,"sellPriceMinDate":"2026-09-26T22:10:00","buyPriceMax":35,"buyPriceMaxDate":"2026-09-26T18:50:00","updatedAt":"2026-09-26T23:05:37.512Z"}
+{"itemId":"T6_RUNE","city":"Caerleon","sellPriceMin":229,"sellPriceMinDate":"2026-09-26T22:35:00","buyPriceMax":196,"buyPriceMaxDate":"2026-09-26T08:50:00","updatedAt":"2026-09-26T23:05:37.513Z"}
+{"itemId":"T4_2H_DAGGERPAIR","city":"Caerleon","sellPriceMin":24959,"sellPriceMinDate":"2026-09-26T22:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.529Z"}
+{"itemId":"T4_2H_DAGGERPAIR","city":"Lymhurst","sellPriceMin":7471,"sellPriceMinDate":"2026-09-26T22:20:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.529Z"}
+{"itemId":"T5_2H_DAGGERPAIR","city":"Lymhurst","sellPriceMin":22000,"sellPriceMinDate":"2026-09-26T22:20:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.529Z"}
+{"itemId":"T6_2H_DAGGERPAIR","city":"Lymhurst","sellPriceMin":70999,"sellPriceMinDate":"2026-09-26T22:20:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.530Z"}
+{"itemId":"T7_2H_DAGGERPAIR","city":"Lymhurst","sellPriceMin":249991,"sellPriceMinDate":"2026-09-26T22:20:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.530Z"}
+{"itemId":"T6_FURNITUREITEM_TROPHY_GENERAL","city":"Caerleon","sellPriceMin":288,"sellPriceMinDate":"2026-09-26T22:35:00","buyPriceMax":0,"buyPriceMaxDate":"0001-01-01T00:00:00","updatedAt":"2026-09-26T23:05:37.539Z"}
