@@ -54,7 +54,29 @@ jobs:
           # vuelta porque un job dura ~5h40m y puede cruzar un cambio de mes: sin esto, los
           # primeros días de octubre se escribirían dentro del clon de septiembre y la app no los
           # encontraría. `--depth 1` porque solo hace falta la punta para agregar encima.
+          # Crea (si falta) el repo mensual de una región: público y con un commit inicial, para
+          # que se pueda clonar. El token necesita "Administration: write" sobre "All repositories"
+          # además de "Contents: write". Si ya existe, GitHub responde 422 y no pasa nada.
+          crear_repo() {
+            curl -s -o /dev/null -w "%{http_code}" -X POST               -H "Authorization: Bearer $DATA_REPO_TOKEN" -H "Accept: application/vnd.github+json"               https://api.github.com/user/repos               -d "{\"name\":\"$1\",\"private\":false,\"auto_init\":true,\"description\":\"Datos del scraper de Albion World ($1)\"}"
+          }
+
+          # Desde el día 25, deja listos los repos del mes que viene (así el día 1 no depende de
+          # crearlos a la carrera). Una vez por corrida.
+          PROXIMO_CREADO=""
+          preparar_mes_siguiente() {
+            [ -z "$DATA_REPO_TOKEN" ] && return 0
+            [ -n "$PROXIMO_CREADO" ] && return 0
+            [ "$(date -u +%d)" -lt 25 ] && return 0
+            MES_SIG=$(date -u -d "$(date -u +%Y-%m-01) +1 month" +%Y-%m)
+            for R in $REGIONES; do
+              echo "repo albion-data-$R-$MES_SIG: $(crear_repo "albion-data-$R-$MES_SIG")"
+            done
+            PROXIMO_CREADO=1
+          }
+
           preparar_repos() {
+            preparar_mes_siguiente
             MES_HOY=$(date -u +%Y-%m)
             if [ "$MES_HOY" = "$MES_CLONADO" ]; then return 0; fi
             if [ -z "$DATA_REPO_TOKEN" ]; then return 1; fi
@@ -62,9 +84,15 @@ jobs:
               REPO="albion-data-$R-$MES_HOY"
               rm -rf "datarepos/$R"
               mkdir -p datarepos
-              if ! git clone --depth 1 -q                 "https://x-access-token:$DATA_REPO_TOKEN@github.com/${{ github.repository_owner }}/$REPO.git"                 "datarepos/$R"; then
-                echo "::error::no se pudo clonar $REPO — revisa que exista y que DATA_REPO_TOKEN tenga permiso de escritura"
-                return 1
+              URL="https://x-access-token:$DATA_REPO_TOKEN@github.com/${{ github.repository_owner }}/$REPO.git"
+              if ! git clone --depth 1 -q "$URL" "datarepos/$R"; then
+                # No existe todavía: se crea y se reintenta una vez.
+                echo "creando $REPO: $(crear_repo "$REPO")"
+                sleep 5
+                if ! git clone --depth 1 -q "$URL" "datarepos/$R"; then
+                  echo "::error::no se pudo clonar ni crear $REPO — revisa que DATA_REPO_TOKEN tenga Contents y Administration (write) sobre All repositories"
+                  return 1
+                fi
               fi
               git -C "datarepos/$R" config user.name "github-actions[bot]"
               git -C "datarepos/$R" config user.email "github-actions[bot]@users.noreply.github.com"
