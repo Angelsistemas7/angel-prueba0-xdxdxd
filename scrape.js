@@ -1,11 +1,24 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
+/** 2026-09-29: hasta hoy "europe" apuntaba al host de América y "americas" al de Europa (confirmado
+ * por IDs de evento —Europa abrió en 2024 y tiene los más bajos— y por horas pico). Europa es
+ * `gameinfo-ams` (Ámsterdam) y América es `gameinfo`. Ver `carpetaDeRegion` para el historial. */
 const REGION_HOSTS = {
-  europe: 'https://gameinfo.albiononline.com',
-  americas: 'https://gameinfo-ams.albiononline.com',
+  europe: 'https://gameinfo-ams.albiononline.com',
+  americas: 'https://gameinfo.albiononline.com',
   asia: 'https://gameinfo-sgp.albiononline.com',
 };
+
+/** Los archivos del repo histórico anteriores al 01/10/2026 quedaron con Europa y América cruzados.
+ * Para que cada día quede entero y coherente, hasta el 30/09 se sigue escribiendo en la carpeta de
+ * siempre (la cruzada); desde el 01/10 cada región va a la suya. La app, las Functions y el proceso
+ * de estadísticas leen con la misma regla. */
+const PRIMER_DIA_REGIONES_CORRECTAS = '2026-10-01';
+function carpetaDeRegion(region, fecha) {
+  if (fecha >= PRIMER_DIA_REGIONES_CORRECTAS) return region;
+  return region === 'europe' ? 'americas' : region === 'americas' ? 'europe' : region;
+}
 
 /** Mismos hosts que usa la app (`src/services/albion-data.ts`) para AODP (solo oro). */
 const AODP_HOSTS = {
@@ -75,7 +88,7 @@ function rutaDeDia(tipo, region, fecha) {
   if (DATA_REPOS_DIR && fecha >= PRIMER_DIA_REPOS_MENSUALES) {
     return path.join(DATA_REPOS_DIR, region, tipo, `${fecha}.ndjson`);
   }
-  return path.join(DATA_DIR, tipo, region, `${fecha}.ndjson`);
+  return path.join(DATA_DIR, tipo, carpetaDeRegion(region, fecha), `${fecha}.ndjson`);
 }
 
 /** 2026-07-25: se cayó Firestore (cuota gratis de 20.000 escrituras/día se agotaba a mitad de
