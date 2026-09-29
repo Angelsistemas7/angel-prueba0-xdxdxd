@@ -1,9 +1,5 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { gunzipSync, gzipSync } from 'zlib';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
 
 const REGION_HOSTS = {
   europe: 'https://gameinfo.albiononline.com',
@@ -11,54 +7,12 @@ const REGION_HOSTS = {
   asia: 'https://gameinfo-sgp.albiononline.com',
 };
 
-/** Mismos hosts que usa la app (`src/services/albion-data.ts`) para AODP. */
+/** Mismos hosts que usa la app (`src/services/albion-data.ts`) para AODP (solo oro). */
 const AODP_HOSTS = {
   americas: 'https://west.albion-online-data.com',
   asia: 'https://east.albion-online-data.com',
   europe: 'https://europe.albion-online-data.com',
 };
-
-const CITIES = ['Caerleon', 'Bridgewatch', 'Fort Sterling', 'Lymhurst', 'Martlock', 'Thetford', 'Brecilien', 'Black Market'];
-
-/** 2026-07-27: reemplaza el watchlist chico de 14 items (decisión explícita del usuario — quiere
- * histórico de precios de TODO el catálogo, no solo lo que usa el Dashboard de Radar en vivo).
- * `price-item-ids.json` (este mismo repo, raíz) son los 3.694 item id base de
- * `src/data/items.json` de la app (mismo catálogo que usa el buscador de Mercado), copiados a
- * mano una vez — mismo criterio de "repo separado, sin build compartido" que ya se aplicaba al
- * watchlist chico. Ya NO está atado a `MARKET_WATCHLIST_IDS`/`radar-dashboard.ts` — ese watchlist
- * chico sigue existiendo en la app para las tarjetas de "mejor oportunidad" en vivo, es un
- * propósito distinto (rapidez/relevancia en la UI, no archivo histórico completo). */
-const PRICE_ITEM_IDS = require('./price-item-ids.json');
-
-/** Probado en vivo contra AODP antes de este cambio, con un lote FIJO de 250 ids esto rompía con
- * 414 (URI Too Long) — no por cantidad de ids, sino porque `T*_ARTEFACT_*` (los ids de artefactos
- * del catálogo) son mucho más largos que el resto (~35-40 caracteres vs ~15-20) y quedan
- * agrupados en el archivo fuente, así que algunos lotes de 250 pasaban ~8.2KB de URL y otros
- * ~4.6KB según qué ids les tocaran — confirmado reproduciendo el 414 real con curl contra el lote
- * exacto que falló. Fix: trocear por PRESUPUESTO DE CARACTERES de la URL, no por cantidad fija de
- * ids, para que ningún lote pueda pasarse sin importar qué ids le toquen. 6.000 caracteres para
- * los ids deja margen real bajo el límite típico de ~8KB de línea de request de este tipo de
- * servidor (confirmado con la falla real a ~8.2KB). */
-const PRICE_CHUNK_MAX_CHARS = 6000;
-
-function chunkByLength(ids, maxChars) {
-  const out = [];
-  let current = [];
-  let currentLength = 0;
-  for (const id of ids) {
-    // +1 por la coma separadora, salvo el primer id del lote.
-    const extra = current.length === 0 ? id.length : id.length + 1;
-    if (current.length > 0 && currentLength + extra > maxChars) {
-      out.push(current);
-      current = [];
-      currentLength = 0;
-    }
-    current.push(id);
-    currentLength += current.length === 1 ? id.length : id.length + 1;
-  }
-  if (current.length > 0) out.push(current);
-  return out;
-}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -85,7 +39,11 @@ const DATA_DIR = 'data';
 const EVENTS_MAX_OFFSET = 1000;
 const EVENTS_PAGE_PAUSE_MS = 120;
 
-/** Precios/oro NO van más en el ciclo de 60s. Dos razones medidas, no estimadas:
+/** 2026-09-29: los PRECIOS salieron de este scraper. Los tiene el escáner de mercado
+ * (`albion-world-radar`): todo el catálogo con encantamientos cada 30 min, 180 días de historial por
+ * ítem desde la API y los resultados que usa la app. Acá solo quedan kills, peleas, equipo y oro.
+ *
+ * Nota vieja (se conserva por el contexto). Precios/oro NO van más en el ciclo de 60s. Dos razones medidas, no estimadas:
  * 1) El histórico solo registra cambios reales, y el propio catálogo de AODP se refresca por
  *    aportes de jugadores, no por segundo — revisar 3.694 items × 8 ciudades × 3 regiones cada
  *    minuto eran ~45 requests por minuto (≈1,9 millones al mes) contra una API pública gratis
@@ -185,16 +143,6 @@ async function readJson(filePath, fallback) {
 /** Agrega solo las entradas cuyo `idKey` todavía no está en el archivo — evita duplicar la misma
  * kill/pelea/precio de oro si sigue apareciendo en el pool de la API en la siguiente corrida.
  * Devuelve las entradas realmente nuevas (no solo el conteo) para poder encadenar agregados. */
-async function readJsonGz(filePath, fallback) {
-  try {
-    return JSON.parse(gunzipSync(await fs.readFile(filePath)).toString('utf8'));
-  } catch (err) {
-    if (err.code === 'ENOENT') return fallback;
-    console.error(`[corrupto] ${filePath} no se pudo leer (${err.message}) — se regenera desde cero.`);
-    return fallback;
-  }
-}
-
 async function appendUniqueNdjson(filePath, newEntries, idKey) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const existing = await readNdjson(filePath);
@@ -234,70 +182,11 @@ function extractBattleEntry(battle) {
   };
 }
 
-function emptyGuildEntry(name) {
-  return { name, battles: 0, wins: 0, losses: 0, kills: 0, deaths: 0, fameGained: 0, players: {} };
-}
-
-function emptyPlayerEntry(name) {
-  return { name, participations: 0, kills: 0, deaths: 0, fame: 0, damageDone: 0, healingDone: 0 };
-}
-
-/** Índice acumulado por gremio: victorias/derrotas/fama/participación vienen de `/battles` (dato
- * agregado por el propio servidor del juego, más completo que lo que alcanzamos a capturar del
- * pool de 51 kills), daño/curación vienen de `/events` (único lugar donde existen, ver nota de
- * arriba). Ambos se actualizan SOLO con entradas recién agregadas (nunca se reprocesa una kill o
- * pelea ya vista), así el conteo no se duplica si sigue apareciendo en el pool de la API.
- * "Victoria/derrota" es una heurística honesta (kills > deaths del gremio EN ESA pelea puntual),
- * no un resultado oficial del juego — mismo criterio "observado" ya usado para el ranking de
- * gremios en el resto del proyecto. */
-async function updateGuildStats(region, { newBattles, newKills }) {
-  if (newBattles.length === 0 && newKills.length === 0) return;
-  const filePath = path.join(DATA_DIR, 'guild-stats', `${region}.json`);
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  const stats = await readJson(filePath, {});
-
-  for (const battle of newBattles) {
-    for (const g of battle.guilds) {
-      if (!g.id) continue;
-      const entry = stats[g.id] ?? emptyGuildEntry(g.name);
-      entry.name = g.name || entry.name;
-      entry.battles += 1;
-      if (g.kills > g.deaths) entry.wins += 1;
-      else if (g.kills < g.deaths) entry.losses += 1;
-      entry.kills += g.kills;
-      entry.deaths += g.deaths;
-      entry.fameGained += g.killFame;
-      stats[g.id] = entry;
-    }
-    for (const p of battle.players) {
-      if (!p.guildId) continue;
-      const guildEntry = stats[p.guildId] ?? emptyGuildEntry(p.guildName);
-      const playerEntry = guildEntry.players[p.id] ?? emptyPlayerEntry(p.name);
-      playerEntry.name = p.name || playerEntry.name;
-      playerEntry.participations += 1;
-      playerEntry.kills += p.kills;
-      playerEntry.deaths += p.deaths;
-      playerEntry.fame += p.killFame;
-      guildEntry.players[p.id] = playerEntry;
-      stats[p.guildId] = guildEntry;
-    }
-  }
-
-  for (const kill of newKills) {
-    for (const p of kill.participants) {
-      if (!p.guildId) continue;
-      const guildEntry = stats[p.guildId] ?? emptyGuildEntry(p.guildName);
-      const playerEntry = guildEntry.players[p.id] ?? emptyPlayerEntry(p.name);
-      playerEntry.name = p.name || playerEntry.name;
-      playerEntry.damageDone += p.damageDone;
-      playerEntry.healingDone += p.healingDone;
-      guildEntry.players[p.id] = playerEntry;
-      stats[p.guildId] = guildEntry;
-    }
-  }
-
-  await fs.writeFile(filePath, JSON.stringify(stats));
-}
+/** 2026-09-29: `data/guild-stats/<region>.json` (5-10 MB por región) se reescribía ENTERO cada minuto
+ * y se commiteaba cada 15 min: era la causa principal de que este repo pasara de 10 GB. Ya no se
+ * actualiza acá: las estadísticas de gremio (24 h, 7 días, mes, total, rivales) las calcula una
+ * Cloud Function de la app a partir de `kills` y `battles`, que ya se guardan. Los archivos viejos
+ * quedan como archivo histórico. */
 
 /** Pagina el feed de eventos hasta reencontrar un `EventId` que ya está guardado — ver la nota
  * de `EVENTS_MAX_OFFSET`. Devuelve los eventos nuevos y si se agotó la ventana de la API sin
@@ -378,68 +267,37 @@ async function scrapeRegion(region) {
 
   const newKills = await appendUniqueNdjson(killsPath, kills, 'eventId');
   const newBattles = await appendUniqueNdjson(rutaDeDia('battles', region, date), battleEntries, 'battleId');
-  await updateGuildStats(region, { newBattles, newKills });
-  console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas (${eventsResult.paginas} página(s) de eventos).`);
+  // Equipo de asesino y víctima en un archivo APARTE (los teléfonos bajan `kills` al buscar un
+  // jugador y no deben cargar esto): lo usa la Cloud Function de Meta Armory para estadísticas de
+  // armas con TODO el historial en vez de una muestra.
+  const nuevosIds = new Set(newKills.map((k) => k.eventId));
+  const equipo = events.filter((e) => nuevosIds.has(e.EventId)).map(extractEquipment);
+  const newEquipment = await appendUniqueNdjson(rutaDeDia('equipment', region, date), equipo, 'e');
+  console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas, +${newEquipment.length} equipos (${eventsResult.paginas} página(s) de eventos).`);
+  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada };
 }
 
-async function scrapePrices(region) {
-  const base = AODP_HOSTS[region];
-  const locations = CITIES.map(encodeURIComponent).join(',');
-  const idChunks = chunkByLength(PRICE_ITEM_IDS, PRICE_CHUNK_MAX_CHARS);
+/** Orden fijo de ranuras: [arma, mano izquierda, cabeza, pecho, pies, capa, montura]. Sin calidad ni
+ * consumibles a propósito: Europa pasa de 140.000 kills por día y cada byte por línea cuenta
+ * (~290 B por kill así, contra ~400 B con todo). */
+const SLOTS = ['MainHand', 'OffHand', 'Head', 'Armor', 'Shoes', 'Cape', 'Mount'];
 
-  const prices = [];
-  for (const idsChunk of idChunks) {
-    const ids = idsChunk.join(',');
-    try {
-      const chunkPrices = await fetchJson(`${base}/api/v2/stats/prices/${ids}.json?locations=${locations}&qualities=1`);
-      prices.push(...chunkPrices);
-    } catch (err) {
-      // Un lote caído no debe tumbar el resto del catálogo — se reintenta solo en la próxima corrida.
-      console.error(`[${region}] precios, lote de ${idsChunk.length} ids falló:`, err.message);
-    }
-    await sleep(200); // no golpear la API pública gratuita con 15 requests seguidos sin pausa.
-  }
+/** Solo la BASE del ítem (`T6_2H_CLAYMORE@1` → `2H_CLAYMORE`): Meta Armory cuenta qué se usa, no el
+ * tier ni el encantamiento (el poder de objeto va aparte en `kp`/`vp`). */
+function compactEquipment(eq) {
+  return SLOTS.map((slot) => (eq?.[slot]?.Type ?? '').replace(/^T\d_/, '').replace(/@\d$/, ''));
+}
 
-  // El snapshot es SOLO la línea base contra la que se diffea el histórico — no lo lee nadie más
-  // (la app y las Functions solo leen `data/kills` y `data/battles`). Son 7,3 MB por región en
-  // JSON plano y se commitea cada vez que cambia, o sea 22 MB de objetos git nuevos por hora en
-  // un repo que ya pesa 10,4 GB. Comprimido baja a ~1 MB sin perder nada, porque nadie necesita
-  // leerlo a mano.
-  const snapshotPath = path.join(DATA_DIR, 'prices', `${region}.json.gz`);
-  await fs.mkdir(path.dirname(snapshotPath), { recursive: true });
-  const snapshot = await readJsonGz(snapshotPath, {});
-
-  // Histórico de precios: solo se agrega una línea cuando el precio REALMENTE cambió respecto al
-  // último snapshot guardado — a diferencia de kills/peleas (donde casi todo es nuevo cada
-  // corrida), la mayoría de los precios no cambian minuto a minuto, así que registrar cada
-  // corrida sin filtrar infla el archivo sin aportar nada para el análisis de tendencia futuro.
-  const changed = [];
-  for (const p of prices) {
-    const key = `${p.item_id}_${p.city}`;
-    const prev = snapshot[key];
-    const updated = {
-      itemId: p.item_id,
-      city: p.city,
-      sellPriceMin: p.sell_price_min,
-      sellPriceMinDate: p.sell_price_min_date,
-      buyPriceMax: p.buy_price_max,
-      buyPriceMaxDate: p.buy_price_max_date,
-      updatedAt: new Date().toISOString(),
-    };
-    if (!prev || prev.sellPriceMin !== updated.sellPriceMin || prev.buyPriceMax !== updated.buyPriceMax) {
-      changed.push(updated);
-    }
-    snapshot[key] = updated;
-  }
-  await fs.writeFile(snapshotPath, gzipSync(Buffer.from(JSON.stringify(snapshot), 'utf8')));
-
-  if (changed.length > 0) {
-    const historyPath = path.join(DATA_DIR, 'price-history', region, `${todayStr()}.ndjson`);
-    await fs.mkdir(path.dirname(historyPath), { recursive: true });
-    const lines = changed.map((e) => JSON.stringify(e)).join('\n') + '\n';
-    await fs.appendFile(historyPath, lines, 'utf8');
-  }
-  console.log(`[${region}] ${prices.length} precios revisados, ${changed.length} cambios registrados en histórico.`);
+/** Una línea por kill, compacta: `e` evento, `k`/`v` equipo de asesino y víctima (ver SLOTS),
+ * `kp`/`vp` poder de objeto promedio. */
+function extractEquipment(event) {
+  return {
+    e: event.EventId,
+    k: compactEquipment(event.Killer?.Equipment),
+    v: compactEquipment(event.Victim?.Equipment),
+    kp: Math.round(event.Killer?.AverageItemPower ?? 0),
+    vp: Math.round(event.Victim?.AverageItemPower ?? 0),
+  };
 }
 
 /** Precio del oro (`/api/v2/stats/gold.json`, endpoint documentado de AODP nunca usado hasta
@@ -451,6 +309,30 @@ async function scrapeGold(region) {
   const filePath = path.join(DATA_DIR, 'gold', `${region}.ndjson`);
   const added = await appendUniqueNdjson(filePath, entries, 'timestamp');
   console.log(`[${region}] +${added.length} precios de oro nuevos.`);
+  return added.length;
+}
+
+/** Salud del scraper para el panel de admin (`data/status.json`, ~1 KB): última vuelta buena y
+ * último error de cada tarea y región. Se escribe cada vuelta; si una región falla, su entrada
+ * conserva la última vuelta buena y agrega el error. */
+async function writeStatus(results) {
+  const statusPath = path.join(DATA_DIR, 'status.json');
+  const previous = await readJson(statusPath, { regions: {} });
+  const now = new Date().toISOString();
+  const regions = { ...(previous.regions ?? {}) };
+  for (const [region, tasks] of Object.entries(results)) {
+    const prev = regions[region] ?? {};
+    const next = { ...prev };
+    for (const [task, result] of Object.entries(tasks)) {
+      const before = prev[task] ?? {};
+      next[task] = result.ok
+        ? { ...before, ok: true, at: now, ...result.data, error: null, failures: 0 }
+        : { ...before, ok: false, failedAt: now, error: result.error, failures: (before.failures ?? 0) + 1 };
+    }
+    regions[region] = next;
+  }
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(statusPath, JSON.stringify({ updatedAt: now, regions }));
 }
 
 /** 2026-07-26: se sacó el borrado automático de 30 días (decisión explícita del usuario — quiere
@@ -466,31 +348,37 @@ async function main() {
   const ahora = Date.now();
   const tocaLento = !state.lastSlowRun || ahora - Date.parse(state.lastSlowRun) >= SLOW_TASKS_INTERVAL_MS;
 
+  const results = {};
   for (const region of Object.keys(REGION_HOSTS)) {
+    results[region] = {};
     try {
-      await scrapeRegion(region);
+      const r = await scrapeRegion(region);
+      results[region].kills = { ok: true, data: r };
+      if (r.lostWindow) results[region].kills.data.warning = 'se agotó la ventana de la API: se perdieron kills';
     } catch (err) {
       // Una región caída no debe tumbar el resto — cada región es independiente.
       console.error(`[${region}] error:`, err.message);
+      results[region].kills = { ok: false, error: String(err.message).slice(0, 200) };
     }
     if (!tocaLento) continue;
     try {
-      await scrapePrices(region);
-    } catch (err) {
-      console.error(`[${region}] precios error:`, err.message);
-    }
-    try {
-      await scrapeGold(region);
+      results[region].gold = { ok: true, data: { added: await scrapeGold(region) } };
     } catch (err) {
       console.error(`[${region}] oro error:`, err.message);
+      results[region].gold = { ok: false, error: String(err.message).slice(0, 200) };
     }
+  }
+  try {
+    await writeStatus(results);
+  } catch (err) {
+    console.error('status.json no se pudo escribir:', err.message);
   }
 
   if (tocaLento) {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.writeFile(STATE_PATH, JSON.stringify({ ...state, lastSlowRun: new Date(ahora).toISOString() }));
   } else {
-    console.log('Precios/oro se saltean esta vuelta (cadencia horaria).');
+    console.log('Oro se saltea esta vuelta (cadencia horaria).');
   }
 }
 
