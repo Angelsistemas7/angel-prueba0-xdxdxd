@@ -243,6 +243,14 @@ async function scrapeRegion(region) {
   const date = todayStr();
   const killsPath = rutaDeDia('kills', region, date);
   const knownIds = new Set((await readNdjson(killsPath)).map((k) => k.eventId));
+  // 2026-09-29: al empezar el día UTC el archivo de hoy está vacío y antes se tomaba UNA sola
+  // página (51 eventos): en Europa (~100 kills/min) se perdían kills en cada cambio de día y las
+  // que sí llegaban podían duplicar las últimas de ayer. Mientras hoy tenga menos de una ventana
+  // completa, se suman los ids de ayer para cortar en el lugar exacto.
+  if (knownIds.size < EVENTS_MAX_OFFSET + EVENTS_LIMIT) {
+    const ayer = new Date(Date.parse(`${date}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+    for (const k of await readNdjson(rutaDeDia("kills", region, ayer))) knownIds.add(k.eventId);
+  }
 
   const [eventsResult, battles] = await Promise.all([
     fetchNewEvents(base, region, knownIds),
@@ -407,7 +415,9 @@ async function main() {
     try {
       const r = await scrapeRegion(region);
       results[region].kills = { ok: true, data: r };
-      if (r.lostWindow) results[region].kills.data.warning = 'se agotó la ventana de la API: se perdieron kills';
+      // Siempre se escribe (también null): antes el aviso quedaba pegado en status.json aunque ya no pasara.
+      results[region].kills.data.warning = r.lostWindow ? 'se agotó la ventana de la API: se perdieron kills' : null;
+      if (r.lostWindow) results[region].kills.data.lastLostWindowAt = new Date().toISOString();
     } catch (err) {
       // Una región caída no debe tumbar el resto — cada región es independiente.
       console.error(`[${region}] error:`, err.message);
