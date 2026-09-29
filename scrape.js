@@ -284,7 +284,8 @@ async function scrapeRegion(region) {
   // jugador y no deben cargar esto): lo usa la Cloud Function de Meta Armory para estadísticas de
   // armas con TODO el historial en vez de una muestra.
   const nuevosIds = new Set(newKills.map((k) => k.eventId));
-  const equipo = events.filter((e) => nuevosIds.has(e.EventId)).map(extractEquipment);
+  const valores = await valoresDeMercado(region);
+  const equipo = events.filter((e) => nuevosIds.has(e.EventId)).map((e) => extractEquipment(e, valores));
   const newEquipment = await appendUniqueNdjson(rutaDeDia('equipment', region, date), equipo, 'e');
   console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas, +${newEquipment.length} equipos (${eventsResult.paginas} página(s) de eventos).`);
   return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada };
@@ -295,22 +296,61 @@ async function scrapeRegion(region) {
  * (~290 B por kill así, contra ~400 B con todo). */
 const SLOTS = ['MainHand', 'OffHand', 'Head', 'Armor', 'Shoes', 'Cape', 'Mount'];
 
-/** Solo la BASE del ítem (`T6_2H_CLAYMORE@1` → `2H_CLAYMORE`): Meta Armory cuenta qué se usa, no el
- * tier ni el encantamiento (el poder de objeto va aparte en `kp`/`vp`). */
+/** 2026-09-29 (pedido del dueño): el ítem COMPLETO con tier y encantamiento (`T8_2H_CLAYMORE@3` =
+ * 8.3), para "arma y build favorita" por jugador. La montura va solo con su base. Antes de este
+ * cambio las líneas guardaban solo la base (`2H_CLAYMORE`): los lectores distinguen por /^T\d_/. */
 function compactEquipment(eq) {
-  return SLOTS.map((slot) => (eq?.[slot]?.Type ?? '').replace(/^T\d_/, '').replace(/@\d$/, ''));
+  return SLOTS.map((slot) => {
+    const type = eq?.[slot]?.Type ?? '';
+    return slot === 'Mount' ? type.replace(/^T\d_/, '').replace(/@\d$/, '') : type;
+  });
+}
+
+/** Valor de mercado por ítem que publica el escáner del Radar (`values-<región>.json`: mediana entre
+ * ciudades del promedio de 30 días). Se baja una vez por vuelta y región; si falla, el equipo se
+ * guarda sin valor (esto nunca frena al scraper). */
+const VALORES_URL = 'https://raw.githubusercontent.com/Johandiaz777/albion-world-radar/data';
+const valoresCache = new Map();
+async function valoresDeMercado(region) {
+  if (valoresCache.has(region)) return valoresCache.get(region);
+  let p = null;
+  try {
+    const res = await fetch(`${VALORES_URL}/values-${region}.json`);
+    const json = res.ok ? await res.json() : null;
+    if (json?.v === 1 && json.region === region && json.p && typeof json.p === 'object') p = json.p;
+  } catch {
+    /* sin valores esta vuelta */
+  }
+  valoresCache.set(region, p);
+  return p;
+}
+
+/** Plata estimada de ítems de la API (`Type` + `Count`) con los valores de mercado. */
+function valorDe(items, valores) {
+  let total = 0;
+  for (const it of items) {
+    const v = it?.Type ? valores[it.Type] : 0;
+    if (v > 0) total += v * Math.max(1, it.Count ?? 1);
+  }
+  return Math.round(total);
 }
 
 /** Una línea por kill, compacta: `e` evento, `k`/`v` equipo de asesino y víctima (ver SLOTS),
- * `kp`/`vp` poder de objeto promedio. */
-function extractEquipment(event) {
-  return {
+ * `kp`/`vp` poder de objeto promedio y, si hay valores de mercado, `ve`/`vi` plata estimada del
+ * equipo y del inventario de la víctima (el botín posible y lo que perdió quien murió). */
+function extractEquipment(event, valores) {
+  const line = {
     e: event.EventId,
     k: compactEquipment(event.Killer?.Equipment),
     v: compactEquipment(event.Victim?.Equipment),
     kp: Math.round(event.Killer?.AverageItemPower ?? 0),
     vp: Math.round(event.Victim?.AverageItemPower ?? 0),
   };
+  if (valores) {
+    line.ve = valorDe(Object.values(event.Victim?.Equipment ?? {}), valores);
+    line.vi = valorDe(event.Victim?.Inventory ?? [], valores);
+  }
+  return line;
 }
 
 /** Precio del oro (`/api/v2/stats/gold.json`, endpoint documentado de AODP nunca usado hasta
