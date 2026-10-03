@@ -125,6 +125,9 @@ jobs:
             [ -z "$MES_CLONADO" ] && return 0
             HOY=$(date -u +%Y-%m-%d)
             [ "$HOY" = "$DIAS_AJUSTADOS" ] && return 0
+            # 2026-10-03 (auditoría p60): antes de achicar el checkout se sube lo pendiente; un archivo
+            # modificado que queda fuera del checkout ya no se puede agregar (git lo ignora).
+            [ -n "$DIAS_AJUSTADOS" ] && push_datarepos
             AYER=$(date -u -d "$HOY -1 day" +%Y-%m-%d)
             PATRONES="/README.md"
             for T in kills battles equipment; do
@@ -143,6 +146,13 @@ jobs:
               [ -d "datarepos/$R" ] || continue
               if [ -n "$(git -C "datarepos/$R" status --porcelain)" ]; then
                 git -C "datarepos/$R" add -A
+                # 2026-10-03 (auditoría p60, probado en Linux): un archivo fuera del checkout reducido
+                # aparece en `status` pero `add -A` no lo toma; el commit vacío fallaba y, con `bash -e`,
+                # cortaba el escáner entero. Solo se commitea si hay algo preparado.
+                if git -C "datarepos/$R" diff --cached --quiet; then
+                  echo "::warning::$R: cambios fuera del checkout sin subir: $(git -C "datarepos/$R" status --porcelain | head -3 | tr '\n' ' ')"
+                  continue
+                fi
                 git -C "datarepos/$R" commit -q -m "Datos $(date -u +%Y-%m-%dT%H:%M:%SZ)"
                 git -C "datarepos/$R" push -q origin HEAD || echo "push de $R falló, se reintenta en el próximo ciclo"
               fi
@@ -179,6 +189,8 @@ jobs:
             if [ -n "$(git status --porcelain -- data)" ]; then
               abortar_si_hay_conflicto || return 0
               git add data
+              # Mismo resguardo que en los repos mensuales: sin nada preparado, el commit fallaría y cortaría todo.
+              if git diff --cached --quiet; then return 0; fi
               git commit -m "Scraper snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)" -q
               if ! git pull --rebase --autostash -q origin "${{ github.ref_name }}"; then
                 echo "::warning::rebase con conflicto — se aborta y se reintenta en el próximo ciclo"
