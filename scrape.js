@@ -336,6 +336,9 @@ async function scrapeRegion(region, lastEventId) {
     killerName: event.Killer?.Name ?? '',
     killerGuild: event.Killer?.GuildName ?? '',
     victimName: event.Victim?.Name ?? '',
+    // 2026-10-03: el id de la víctima (el del asesino ya viene en `participants`): el índice de
+    // estadísticas lo usa para que la app abra perfiles por id, sin la búsqueda por nombre de Albion.
+    victimId: event.Victim?.Id ?? '',
     victimGuild: event.Victim?.GuildName ?? '',
     totalFame: event.TotalVictimKillFame ?? 0,
     participantsCount: event.numberOfParticipants ?? 1,
