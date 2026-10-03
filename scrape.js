@@ -133,6 +133,15 @@ async function fetchJson(url) {
 const CACHE_STALE_FACTOR = 3;
 const SNAPSHOT_TOLERANCE_MS = 1500;
 let cacheRefetches = 0;
+async function fetchFromOrigin(url) {
+  const desdeOrigen = Date.now();
+  const fresh = await fetch(`${url}&_=${desdeOrigen}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  if (!fresh.ok) throw new Error(`${url} (origen) respondió ${fresh.status}`);
+  const data = await fresh.json();
+  cacheRefetches += 1;
+  return { data, snapshot: desdeOrigen, fromOrigin: true };
+}
+
 async function fetchFreshJson(url, maxAgeSec, minSnapshot = 0) {
   const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`${url} respondió ${res.status}`);
@@ -140,20 +149,15 @@ async function fetchFreshJson(url, maxAgeSec, minSnapshot = 0) {
   const snapshot = Date.now() - age * 1000;
   const trabada = age > maxAgeSec * CACHE_STALE_FACTOR;
   const atrasada = minSnapshot > 0 && snapshot < minSnapshot - SNAPSHOT_TOLERANCE_MS;
-  if (!trabada && !atrasada) return { data: await res.json(), snapshot };
+  if (!trabada && !atrasada) return { data: await res.json(), snapshot, fromOrigin: false };
   try {
-    const desdeOrigen = Date.now();
-    const fresh = await fetch(`${url}&_=${desdeOrigen}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-    if (fresh.ok) {
-      const data = await fresh.json();
-      cacheRefetches += 1;
-      if (trabada) console.warn(`caché de Albion trabada (Age ${age} s): ${url} se pidió al origen`);
-      return { data, snapshot: desdeOrigen };
-    }
+    const fresh = await fetchFromOrigin(url);
+    if (trabada) console.warn(`caché de Albion trabada (Age ${age} s): ${url} se pidió al origen`);
+    return fresh;
   } catch {
     /* el origen no respondió: se usa la copia de la caché */
   }
-  return { data: await res.json(), snapshot };
+  return { data: await res.json(), snapshot, fromOrigin: false };
 }
 
 function todayStr() {
@@ -270,7 +274,20 @@ async function fetchNewEvents(base, region, knownIds, lastEventId) {
   const conocido = (event) => knownIds.has(event.EventId) || (sinArchivo && lastEventId > 0 && event.EventId <= lastEventId);
   let minSnapshot = 0;
   for (let i = 0; i < offsets.length; i += 1) {
-    const { data: page, snapshot } = await fetchFreshJson(`${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`, 60, minSnapshot);
+    const url = `${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`;
+    let { data: page, snapshot, fromOrigin } = await fetchFreshJson(url, 60, minSnapshot);
+    // 2026-10-03: el `Age` no alcanza para saber si la copia está trabada. Cada servidor de caché
+    // tiene la suya y una copia vieja puede llegar con `Age` bajo (la corrida de GitHub recibió la
+    // página de Europa de las 01:56 sin nada raro en el encabezado, mientras el origen ya tenía hasta
+    // las 02:59). Si la primera página no trae NADA nuevo, se confirma una vez con el origen: cuesta
+    // un pedido por región y minuto solo cuando no hubo kills nuevas.
+    if (i === 0 && !fromOrigin && Array.isArray(page) && page.length > 0 && conocido(page[0])) {
+      try {
+        ({ data: page, snapshot, fromOrigin } = await fetchFromOrigin(url));
+      } catch {
+        /* el origen no respondió: vale lo de la caché */
+      }
+    }
     minSnapshot = Math.max(minSnapshot, snapshot);
     if (!Array.isArray(page) || page.length === 0) return { nuevos, agotada: false, paginas: i + 1 };
     let alcanzado = false;
