@@ -110,6 +110,33 @@ async function fetchJson(url) {
   return res.json();
 }
 
+/** 2026-10-03: la caché de Albion declara `max-age=60` (eventos) y `max-age=300` (peleas), pero a
+ * veces se TRABA en una dirección exacta y la sigue sirviendo horas. Medido ese día a las 03:08 UTC:
+ * `events?limit=51&offset=0` de Europa con `Age: 1955` (kill más nueva 01:56, mientras `limit=50`
+ * traía las de hace 10 min) y `battles?...limit=51` con `Age: 63329` (17,6 h). Con esa página vieja
+ * este scraper encontraba solo kills conocidas, cortaba en la página 1 y dejaba de guardar Europa SIN
+ * avisar (el archivo del día quedó en 01:56:02). Si la copia tiene más de 3 veces su vida declarada, se
+ * vuelve a pedir con un parámetro único: eso salta la caché y responde el origen (~1-15 s). Si el
+ * origen falla, se usa la copia vieja igual (la próxima vuelta reintenta). */
+const CACHE_STALE_FACTOR = 3;
+async function fetchFreshJson(url, maxAgeSec) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} respondió ${res.status}`);
+  const age = Number(res.headers.get('age'));
+  if (!(age > maxAgeSec * CACHE_STALE_FACTOR)) return res.json();
+  try {
+    const fresh = await fetch(`${url}&_=${Date.now()}`, { signal: AbortSignal.timeout(45_000) });
+    if (fresh.ok) {
+      const json = await fresh.json();
+      console.warn(`caché de Albion trabada (Age ${age} s): ${url} se pidió al origen`);
+      return json;
+    }
+  } catch {
+    /* el origen no respondió: se usa la copia vieja */
+  }
+  return res.json();
+}
+
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -219,7 +246,7 @@ async function fetchNewEvents(base, region, knownIds) {
   const nuevos = [];
   const offsets = offsetsDeEventos();
   for (let i = 0; i < offsets.length; i += 1) {
-    const page = await fetchJson(`${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`);
+    const page = await fetchFreshJson(`${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`, 60);
     if (!Array.isArray(page) || page.length === 0) return { nuevos, agotada: false, paginas: i + 1 };
     let alcanzado = false;
     for (const event of page) {
@@ -254,7 +281,7 @@ async function scrapeRegion(region) {
 
   const [eventsResult, battles] = await Promise.all([
     fetchNewEvents(base, region, knownIds),
-    fetchJson(`${base}/api/gameinfo/battles?range=day&limit=${BATTLES_LIMIT}&offset=0&sort=recent`),
+    fetchFreshJson(`${base}/api/gameinfo/battles?range=day&limit=${BATTLES_LIMIT}&offset=0&sort=recent`, 300),
   ]);
   const events = eventsResult.nuevos;
   if (eventsResult.agotada) {
