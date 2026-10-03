@@ -1,5 +1,9 @@
+import { execFile } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { promisify } from 'util';
+
+const execFileP = promisify(execFile);
 
 /** 2026-09-29: hasta hoy "europe" apuntaba al host de América y "americas" al de Europa (confirmado
  * por IDs de evento —Europa abrió en 2024 y tiene los más bajos— y por horas pico). Europa es
@@ -164,16 +168,46 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** 2026-10-03 (auditoría p60): una línea dañada (escritura cortada, marcador de conflicto) ya no deja
+ * muerta la captura de la región en cada vuelta: se salta con aviso y se sigue. Los lectores (stats y
+ * app) ya saltaban líneas malas. */
 async function readNdjson(filePath) {
+  let raw;
   try {
-    const raw = await fs.readFile(filePath, 'utf8');
-    return raw
-      .split('\n')
-      .filter(Boolean)
-      .map((line) => JSON.parse(line));
+    raw = await fs.readFile(filePath, 'utf8');
   } catch (err) {
     if (err.code === 'ENOENT') return [];
     throw err;
+  }
+  const out = [];
+  let malas = 0;
+  for (const line of raw.split('\n')) {
+    if (!line) continue;
+    try {
+      out.push(JSON.parse(line));
+    } catch {
+      malas += 1;
+    }
+  }
+  if (malas > 0) console.error(`[corrupto] ${filePath}: ${malas} línea(s) que no se pudieron leer, se saltan`);
+  return out;
+}
+
+/** ¿El archivo termina en salto de línea? (vacío o inexistente cuenta como sí). */
+async function terminaEnSalto(filePath) {
+  try {
+    const fh = await fs.open(filePath, 'r');
+    try {
+      const { size } = await fh.stat();
+      if (size === 0) return true;
+      const buf = Buffer.alloc(1);
+      await fh.read(buf, 0, 1, size - 1);
+      return buf[0] === 0x0a;
+    } finally {
+      await fh.close();
+    }
+  } catch {
+    return true;
   }
 }
 
@@ -220,7 +254,9 @@ async function appendUniqueNdjson(filePath, newEntries, idKey) {
     toAppend.push(e);
   }
   if (toAppend.length === 0) return [];
-  const lines = toAppend.map((e) => JSON.stringify(e)).join('\n') + '\n';
+  // Si una escritura anterior quedó cortada (sin salto final), la línea nueva no se pega a la rota.
+  const prefijo = (await terminaEnSalto(filePath)) ? '' : '\n';
+  const lines = prefijo + toAppend.map((e) => JSON.stringify(e)).join('\n') + '\n';
   await fs.appendFile(filePath, lines, 'utf8');
   return toAppend;
 }
@@ -441,12 +477,57 @@ const GAP_PROBE_MAX_IN_FLIGHT = 8;
 /** Un rango más grande que esto no es un hueco real (ids corridos o archivo vacío): no se barre. */
 const GAP_RANGE_MAX_IDS = 200_000;
 class LimitadoPorAlbion extends Error {}
+/** Se acabó el tiempo de la vuelta para el relleno: no es un fallo de Albion, se sigue la próxima. */
+class SinTiempo extends Error {}
 
-/** GET con detección del límite de Albion. */
-async function fetchRelleno(url, timeoutMs = FETCH_TIMEOUT_MS) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(Math.max(1000, Math.min(FETCH_TIMEOUT_MS, timeoutMs))) });
+/** Hora límite de TODO el relleno de esta vuelta (la fija `main`; auditoría p60: antes el tope solo
+ * valía para el barrido por id, y la lista de peleas o una pelea lenta podían alargar la vuelta). */
+let limiteRellenoMs = Infinity;
+
+/** GET con detección del límite de Albion, sin pasar nunca de `limiteRellenoMs`. */
+async function fetchRelleno(url, timeoutMs = FETCH_TIMEOUT_MS, cancelar = null) {
+  const queda = limiteRellenoMs - Date.now();
+  if (queda < 1000) throw new SinTiempo('sin tiempo');
+  const tiempo = AbortSignal.timeout(Math.max(1000, Math.min(FETCH_TIMEOUT_MS, timeoutMs, queda)));
+  let res;
+  try {
+    res = await fetch(url, { signal: cancelar ? AbortSignal.any([tiempo, cancelar]) : tiempo });
+  } catch (err) {
+    // Cortado por el tope de la vuelta o por un 429 de otro pedido: no cuenta como fallo.
+    if (cancelar?.aborted || limiteRellenoMs - Date.now() < 1500) throw new SinTiempo('cortado');
+    throw err;
+  }
   if (res.status === 429) throw new LimitadoPorAlbion('429');
   return res;
+}
+
+/** Tope de ids pendientes por región (auditoría p60: la lista crecía sin cota en sobrecarga). A ~90 ids
+ * por vuelta son ~2 días de barrido; más viejo que eso no se llega a rellenar a tiempo. */
+const GAP_PENDING_MAX_IDS = 300_000;
+
+/** Une rangos que se tocan, ordena del más nuevo al más viejo y descarta (con aviso) lo que pase del tope. */
+function topearRangos(region, rangos) {
+  const orden = rangos
+    .filter((r) => Array.isArray(r) && Number.isFinite(r[0]) && Number.isFinite(r[1]) && r[1] >= r[0])
+    .map(([lo, hi]) => [lo, hi])
+    .sort((a, b) => b[1] - a[1]);
+  const unidos = [];
+  for (const [lo, hi] of orden) {
+    const ult = unidos[unidos.length - 1];
+    if (ult && hi >= ult[0] - 1) ult[0] = Math.min(ult[0], lo);
+    else unidos.push([lo, hi]);
+  }
+  const out = [];
+  let total = 0;
+  for (const [lo, hi] of unidos) {
+    const cabe = Math.min(hi - lo + 1, GAP_PENDING_MAX_IDS - total);
+    if (cabe <= 0) break;
+    out.push([hi - cabe + 1, hi]); // se queda con la parte más nueva del rango
+    total += cabe;
+  }
+  const todos = unidos.reduce((n, [lo, hi]) => n + hi - lo + 1, 0);
+  if (todos > total) console.error(`[${region}] relleno: más de ${GAP_PENDING_MAX_IDS} ids pendientes; se descartan ${todos - total} de los más viejos`);
+  return out;
 }
 
 /** Un tramo que falla (no 404) se reintenta; después de tantas vueltas seguidas se salta y se avisa. */
@@ -496,14 +577,51 @@ async function killsDePelea(base, battleId) {
   return out;
 }
 
+/** 2026-10-03 (auditoría p60, probado con git 2.53 en Linux): el checkout de los repos mensuales solo
+ * trae hoy y ayer. Un archivo de anteayer escrito "desde cero" queda FUERA del checkout: `git add -A`
+ * lo ignora y esas kills nunca se suben (y el commit vacío fallaba). Por eso:
+ * - día más viejo del MISMO mes → se habilita en el checkout (`sparse-checkout add`, trae el archivo
+ *   completo) y se agrega ahí;
+ * - día de OTRO mes (relleno del 31 hecho el 1.º) → ese repo no está en el disco: va al archivo de hoy
+ *   (cuenta en hoy, pero no se pierde);
+ * - si habilitarlo falla, también va a hoy. */
+async function fechaDeGuardado(region, fecha) {
+  if (!DATA_REPOS_DIR) return fecha;
+  const hoy = todayStr();
+  const ayer = new Date(Date.parse(hoy) - 86_400_000).toISOString().slice(0, 10);
+  if (fecha > hoy) return hoy;
+  // Antes de los repos mensuales (ruta vieja de este repo, tampoco está en su checkout) u otro mes.
+  if (fecha < PRIMER_DIA_REPOS_MENSUALES || fecha.slice(0, 7) !== hoy.slice(0, 7)) {
+    console.warn(`[${region}] kills recuperadas del ${fecha} (otro mes): se guardan en el archivo de hoy`);
+    return hoy;
+  }
+  if (fecha === hoy || fecha === ayer) return fecha;
+  const repo = path.join(DATA_REPOS_DIR, region);
+  try {
+    await fs.access(path.join(repo, 'kills', `${fecha}.ndjson`));
+    return fecha; // ya habilitado en esta corrida
+  } catch {
+    /* hay que habilitarlo */
+  }
+  try {
+    await execFileP('git', ['-C', repo, 'sparse-checkout', 'add', `/kills/${fecha}.ndjson`, `/equipment/${fecha}.ndjson`], { timeout: 60_000 });
+    console.log(`[${region}] ${fecha} habilitado en el checkout para guardar kills recuperadas`);
+    return fecha;
+  } catch (err) {
+    console.error(`[${region}] no se pudo habilitar ${fecha} (${String(err.message).slice(0, 120)}): se guardan en el archivo de hoy`);
+    return hoy;
+  }
+}
+
 /** Escribe eventos recuperados en el archivo del día de cada uno (kills y equipo), sin duplicar: un
  * solo `appendUniqueNdjson` por día y tipo. Devuelve cuántas kills eran nuevas. */
 async function guardarRecuperadas(region, events) {
   const valores = await valoresDeMercado(region);
   const porDia = new Map();
   for (const e of events) {
-    const fecha = String(e?.TimeStamp ?? '').slice(0, 10);
-    if (!Number.isFinite(e?.EventId) || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) continue;
+    const dia = String(e?.TimeStamp ?? '').slice(0, 10);
+    if (!Number.isFinite(e?.EventId) || !/^\d{4}-\d{2}-\d{2}$/.test(dia)) continue;
+    const fecha = await fechaDeGuardado(region, dia);
     if (!porDia.has(fecha)) porDia.set(fecha, new Map());
     porDia.get(fecha).set(e.EventId, e);
   }
@@ -521,8 +639,8 @@ async function guardarRecuperadas(region, events) {
 
 /** Un evento por id: el evento, `null` si no existe (404: ese id no es una kill), o lanza si falla
  * (`LimitadoPorAlbion` si respondió 429). */
-async function eventoPorId(base, id, timeoutMs) {
-  const res = await fetchRelleno(`${base}/api/gameinfo/events/${id}`, timeoutMs);
+async function eventoPorId(base, id, timeoutMs, cancelar = null) {
+  const res = await fetchRelleno(`${base}/api/gameinfo/events/${id}`, timeoutMs, cancelar);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`events/${id} respondió ${res.status}`);
   return res.json();
@@ -550,6 +668,9 @@ async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_
   const resultado = new Map(); // id → 'kill' | 'no' | 'limite' | 'error'
   const halladas = [];
   const enVuelo = new Set();
+  // Al primer 429 se cortan los que esperaban (auditoría p60): seguir esperándolos solo alargaba la
+  // vuelta; quedan sin confirmar y se repiten la próxima.
+  const cancelar = new AbortController();
   let limitado = false;
   while (!limitado && Date.now() < hastaMs - 1000) {
     if (enVuelo.size >= GAP_PROBE_MAX_IN_FLIGHT) {
@@ -559,7 +680,7 @@ async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_
     const id = siguienteId();
     if (id === null) break;
     orden.push(id);
-    const p = eventoPorId(base, id, Math.max(10_000, limiteRespuestaMs - Date.now()))
+    const p = eventoPorId(base, id, Math.max(10_000, limiteRespuestaMs - Date.now()), cancelar.signal)
       .then((ev) => {
         resultado.set(id, ev ? 'kill' : 'no');
         if (ev) halladas.push(ev);
@@ -568,7 +689,9 @@ async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_
         if (err instanceof LimitadoPorAlbion) {
           resultado.set(id, 'limite');
           limitado = true;
-        } else resultado.set(id, 'error');
+          cancelar.abort();
+        } else if (err instanceof SinTiempo) resultado.set(id, 'limite');
+        else resultado.set(id, 'error');
       })
       .finally(() => enVuelo.delete(p));
     enVuelo.add(p);
@@ -635,9 +758,9 @@ async function rellenarHueco(region, cola, hastaMs = Date.now() + GAP_RUN_BUDGET
     try {
       juntas.push(...(await killsDePelea(base, battleId)));
     } catch (err) {
-      if (err instanceof LimitadoPorAlbion) {
-        pendientes.unshift(item); // misma pelea, la próxima vuelta
-        limitado = true;
+      if (err instanceof LimitadoPorAlbion || err instanceof SinTiempo) {
+        pendientes.unshift(item); // misma pelea, la próxima vuelta (sin contarla como fallida)
+        limitado = err instanceof LimitadoPorAlbion;
         break;
       }
       console.error(`[${region}] relleno: la pelea ${battleId} falló (${err.message})`);
@@ -673,7 +796,8 @@ async function valoresDeMercado(region) {
   if (valoresCache.has(region)) return valoresCache.get(region);
   let p = null;
   try {
-    const res = await fetch(`${VALORES_URL}/values-${region}.json`);
+    // Con tope (auditoría p60): sin él, un GitHub colgado frenaba la vuelta entera.
+    const res = await fetch(`${VALORES_URL}/values-${region}.json`, { signal: AbortSignal.timeout(10_000) });
     const json = res.ok ? await res.json() : null;
     if (json?.v === 1 && json.region === region && json.p && typeof json.p === 'object') p = json.p;
   } catch {
@@ -774,8 +898,12 @@ async function main() {
       if (r.maxEventId > 0) lastEventIds[region] = r.maxEventId;
       delete r.maxEventId;
       // Solo se anotan los huecos: el relleno corre al final, después de las 3 regiones.
-      if (r.gapWindow) gapWindows[region] = [...(gapWindows[region] ?? []), r.gapWindow].slice(-20);
-      if (r.gapRange) gapRanges[region] = [r.gapRange, ...(gapRanges[region] ?? [])]; // el más nuevo primero
+      if (r.gapWindow) {
+        const ventanas = [...(gapWindows[region] ?? []), r.gapWindow];
+        if (ventanas.length > 20) console.error(`[${region}] relleno: más de 20 ventanas pendientes, se descartan las ${ventanas.length - 20} más viejas (el barrido por id las cubre)`);
+        gapWindows[region] = ventanas.slice(-20);
+      }
+      if (r.gapRange) gapRanges[region] = topearRangos(region, [r.gapRange, ...(gapRanges[region] ?? [])]); // el más nuevo primero
       delete r.gapWindow;
       delete r.gapRange;
       r.originRefetches = cacheRefetches - antes;
@@ -798,12 +926,16 @@ async function main() {
   }
   // Relleno de huecos, con lo que sobra de la vuelta (presupuesto total, se corta en el primer 429).
   const hastaMs = Date.now() + GAP_RUN_BUDGET_MS;
-  // Tope absoluto de cada pedido del relleno: la vuelta entera nunca pasa de ~95 s.
+  // Tope absoluto de TODO pedido del relleno (peleas, lista de peleas, ids): la vuelta nunca pasa de ~95 s.
   const limiteRespuestaMs = inicioVuelta + GAP_RUN_MAX_MS;
+  limiteRellenoMs = limiteRespuestaMs;
   let limitado = false;
   const capturaLenta = Date.now() - inicioVuelta > GAP_SKIP_IF_CAPTURE_MS;
   if (capturaLenta) console.warn(`relleno: la captura normal tardó ${Math.round((Date.now() - inicioVuelta) / 1000)} s; esta vuelta no se rellena`);
-  for (const region of Object.keys(REGION_HOSTS)) {
+  // Orden rotado por minuto (auditoría p60): con orden fijo, si Europa gastaba el tiempo, Asia nunca rellenaba.
+  const regiones = Object.keys(REGION_HOSTS);
+  const giro = Math.floor(Date.now() / 60_000) % regiones.length;
+  for (const region of [...regiones.slice(giro), ...regiones.slice(0, giro)]) {
     if (capturaLenta || limitado || Date.now() >= hastaMs) break;
     const base = REGION_HOSTS[region];
     let recuperadas = 0;
@@ -813,7 +945,9 @@ async function main() {
         const [desde, hasta] = gapWindows[region][0];
         const ids = await peleasDelHueco(base, desde, hasta);
         const enCola = new Set((gapQueue[region] ?? []).map((x) => (typeof x === 'object' ? x.id : x)));
-        gapQueue[region] = [...(gapQueue[region] ?? []), ...ids.filter((id) => !enCola.has(id))].slice(-GAP_QUEUE_MAX);
+        const cola = [...(gapQueue[region] ?? []), ...ids.filter((id) => !enCola.has(id))];
+        if (cola.length > GAP_QUEUE_MAX) console.error(`[${region}] relleno: la cola de peleas pasó de ${GAP_QUEUE_MAX}; se descartan ${cola.length - GAP_QUEUE_MAX} (el barrido por id las cubre)`);
+        gapQueue[region] = cola.slice(-GAP_QUEUE_MAX);
         gapWindows[region] = gapWindows[region].slice(1);
         console.log(`[${region}] hueco ${desde} → ${hasta}: ${ids.length} peleas a la cola`);
       }
@@ -826,14 +960,20 @@ async function main() {
       }
       // c) Barrido por id (completa las sueltas).
       if (!limitado && (gapRanges[region] ?? []).length > 0 && Date.now() < hastaMs) {
-        const bar = await barrerIds(region, gapRanges[region], gapFails[region] ?? 0, hastaMs, limiteRespuestaMs);
+        // Los fallos seguidos cuentan para el MISMO id de la cabeza (auditoría p60: antes era un número
+        // por región y, si llegaba un rango nuevo adelante, sumaba fallos de ids distintos).
+        const cabeza = gapRanges[region][0]?.[1] ?? null;
+        const previo = gapFails[region];
+        const fallosPrevios = previo && typeof previo === 'object' && previo.id === cabeza ? Number(previo.n) || 0 : 0;
+        const bar = await barrerIds(region, gapRanges[region], fallosPrevios, hastaMs, limiteRespuestaMs);
         gapRanges[region] = bar.rangos;
-        gapFails[region] = bar.fallos;
+        gapFails[region] = { id: bar.rangos[0]?.[1] ?? null, n: bar.fallos };
         recuperadas += bar.recuperadas;
         limitado = bar.limitado;
       }
     } catch (err) {
       if (err instanceof LimitadoPorAlbion) limitado = true;
+      else if (err instanceof SinTiempo) console.log(`[${region}] relleno: se acabó el tiempo de la vuelta; sigue la próxima`);
       else console.error(`[${region}] relleno error: ${err.message}`);
     }
     if (results[region]?.kills?.ok) {
