@@ -210,7 +210,15 @@ async function appendUniqueNdjson(filePath, newEntries, idKey) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const existing = await readNdjson(filePath);
   const seen = new Set(existing.map((e) => e[idKey]));
-  const toAppend = newEntries.filter((e) => !seen.has(e[idKey]));
+  // 2026-10-03 (parte 59): también sin repetidos DENTRO del lote. Al paginar la lista de Albion mientras
+  // llegan kills nuevas, una misma kill cae al final de una página y al principio de la siguiente: desde
+  // el 22/09 eso dejó entre 2,5 % y 12 % de líneas repetidas (los lectores ya las descartan por id).
+  const toAppend = [];
+  for (const e of newEntries) {
+    if (seen.has(e[idKey])) continue;
+    seen.add(e[idKey]);
+    toAppend.push(e);
+  }
   if (toAppend.length === 0) return [];
   const lines = toAppend.map((e) => JSON.stringify(e)).join('\n') + '\n';
   await fs.appendFile(filePath, lines, 'utf8');
@@ -310,14 +318,17 @@ async function scrapeRegion(region, lastEventId) {
   const base = REGION_HOSTS[region];
   const date = todayStr();
   const killsPath = rutaDeDia('kills', region, date);
-  const knownIds = new Set((await readNdjson(killsPath)).map((k) => k.eventId));
+  const todays = await readNdjson(killsPath);
+  const knownIds = new Set(todays.map((k) => k.eventId));
+  let ayerKills = [];
   // 2026-09-29: al empezar el día UTC el archivo de hoy está vacío y antes se tomaba UNA sola
   // página (51 eventos): en Europa (~100 kills/min) se perdían kills en cada cambio de día y las
   // que sí llegaban podían duplicar las últimas de ayer. Mientras hoy tenga menos de una ventana
   // completa, se suman los ids de ayer para cortar en el lugar exacto.
   if (knownIds.size < EVENTS_MAX_OFFSET + EVENTS_LIMIT) {
     const ayer = new Date(Date.parse(`${date}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
-    for (const k of await readNdjson(rutaDeDia("kills", region, ayer))) knownIds.add(k.eventId);
+    ayerKills = await readNdjson(rutaDeDia("kills", region, ayer));
+    for (const k of ayerKills) knownIds.add(k.eventId);
   }
 
   const [eventsResult, battles] = await Promise.all([
@@ -329,7 +340,49 @@ async function scrapeRegion(region, lastEventId) {
     console.error(`[${region}] AVISO: se agotó la ventana de la API (~${EVENTS_MAX_OFFSET + EVENTS_LIMIT} eventos) sin reencontrar nada conocido — se PERDIERON kills. Bajar el intervalo del ciclo.`);
   }
 
-  const kills = events.map((event) => ({
+  const kills = events.map(toKillLine);
+
+  const battleEntries = battles.map(extractBattleEntry);
+
+  const newKills = await appendUniqueNdjson(killsPath, kills, 'eventId');
+  const newBattles = await appendUniqueNdjson(rutaDeDia('battles', region, date), battleEntries, 'battleId');
+  // Equipo de asesino y víctima en un archivo APARTE (los teléfonos bajan `kills` al buscar un
+  // jugador y no deben cargar esto): lo usa la Cloud Function de Meta Armory para estadísticas de
+  // armas con TODO el historial en vez de una muestra.
+  const nuevosIds = new Set(newKills.map((k) => k.eventId));
+  const valores = await valoresDeMercado(region);
+  const equipo = events.filter((e) => nuevosIds.has(e.EventId)).map((e) => extractEquipment(e, valores));
+  const newEquipment = await appendUniqueNdjson(rutaDeDia('equipment', region, date), equipo, 'e');
+  console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas, +${newEquipment.length} equipos (${eventsResult.paginas} página(s) de eventos).`);
+  const maxEventId = events.reduce((max, e) => Math.max(max, e.EventId ?? 0), lastEventId || 0);
+
+  // Ventana agotada: las kills entre la última guardada y la más vieja que se alcanzó a leer se
+  // perdieron. Las peleas de ese rato van a la cola de relleno (state.json) y se procesan de a poco.
+  let gapWindow = null;
+  let gapRange = null;
+  if (eventsResult.agotada && events.length > 0) {
+    // Rango exacto de ids perdidos: después de la kill guardada más nueva y antes de la más vieja leída.
+    // Recorrido simple: Math.max(...ids) revienta con las ~140.000 kills diarias de Europa.
+    let maxConocido = lastEventId || 0;
+    for (const id of knownIds) if (Number.isFinite(id) && id > maxConocido) maxConocido = id;
+    const minLeido = events.reduce((min, e) => Math.min(min, e.EventId), Infinity);
+    if (maxConocido > 0 && minLeido - 1 > maxConocido && minLeido - 1 - maxConocido <= GAP_RANGE_MAX_IDS) {
+      gapRange = [maxConocido + 1, minLeido - 1];
+      console.error(`[${region}] hueco por id: ${gapRange[0]}…${gapRange[1]} (${gapRange[1] - gapRange[0] + 1} ids a revisar)`);
+    }
+    const desde = ultimaKillGuardada(todays, ayerKills);
+    const hasta = events.reduce((min, e) => (e.TimeStamp < min ? e.TimeStamp : min), events[0].TimeStamp);
+    if (desde && desde < hasta) {
+      gapWindow = [desde, hasta];
+      console.error(`[${region}] hueco ${desde} → ${hasta}: sus peleas se listan en el relleno`);
+    }
+  }
+  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada, maxEventId, gapWindow, gapRange };
+}
+
+/** Línea de kill del NDJSON a partir de un evento de la API. */
+function toKillLine(event) {
+  return {
     eventId: event.EventId,
     battleId: event.BattleId ?? null,
     timestamp: event.TimeStamp,
@@ -353,22 +406,247 @@ async function scrapeRegion(region, lastEventId) {
       damageDone: p.DamageDone ?? 0,
       healingDone: p.SupportHealingDone ?? 0,
     })),
-  }));
+  };
+}
 
-  const battleEntries = battles.map(extractBattleEntry);
 
-  const newKills = await appendUniqueNdjson(killsPath, kills, 'eventId');
-  const newBattles = await appendUniqueNdjson(rutaDeDia('battles', region, date), battleEntries, 'battleId');
-  // Equipo de asesino y víctima en un archivo APARTE (los teléfonos bajan `kills` al buscar un
-  // jugador y no deben cargar esto): lo usa la Cloud Function de Meta Armory para estadísticas de
-  // armas con TODO el historial en vez de una muestra.
-  const nuevosIds = new Set(newKills.map((k) => k.eventId));
+/** 2026-10-03 (parte 59, "nada se puede perder"): si en un minuto llegan más de 1.051 kills (lo
+ * máximo que deja leer Albion: limit 51 × offset 1000), las más viejas de esa ráfaga no se alcanzan.
+ * Pasó en América a las 00:40 UTC del 03/10, cuando el origen de Albion se puso al día de golpe
+ * después de ~2 h de atraso. El hueco se rellena en dos pasos, siempre DESPUÉS de la captura normal:
+ * 1) peleas: `/battles` lista las de 3 o más kills (medido: ninguna de 1-2) y `/events/battle/{id}`
+ *    da sus kills; barato, recupera enseguida las grupales;
+ * 2) barrido por id: se conoce el rango exacto de ids perdidos (entre la kill guardada más nueva y la
+ *    más vieja leída) y se pide cada uno a `/events/{id}`; recupera también las sueltas (55 % de las
+ *    kills). Medido: en un tramo de ids solo el 13 % son kills (el resto da 404, a veces tras 27-50 s
+ *    en el origen de Albion). Probado de punta a punta: 46 de 46 kills de un hueco recuperadas,
+ *    idénticas a las de la captura normal, 41 de ellas sueltas.
+ * El límite de Albion es por IP y para TODA la API (tras ~70 pedidos rápidos también la lista de kills
+ * dio 429; se levanta en ~1 s): el relleno va a ritmo constante y se corta en el primer 429. Un hueco
+ * de 1.000 kills (~7.700 ids) tarda horas en completarse, pero se completa. Todo se agrega sin
+ * duplicar (por `eventId`) en el archivo del día de cada kill. */
+const GAP_BATTLES_PER_RUN = 6;
+/** Tiempo para LANZAR pedidos de relleno por vuelta; cada pedido puede esperar su respuesta hasta
+ * FETCH_TIMEOUT_MS (60 s): un 404 en el origen de Albion tarda hasta 27-50 s (medido). Peor caso la
+ * vuelta dura ~1,5 min; el workflow apunta a 1 por minuto y la ventana de 1.051 kills alcanza ~7 min de
+ * Europa en hora pico, así que la captura normal no pierde nada. */
+const GAP_RUN_BUDGET_MS = 30_000;
+/** Si la captura normal ya tardó esto, la vuelta no rellena; y ninguna vuelta pasa de GAP_RUN_MAX_MS. */
+const GAP_SKIP_IF_CAPTURE_MS = 30_000;
+const GAP_RUN_MAX_MS = 95_000;
+/** Un pedido cada 333 ms (3 por segundo: medido sin 429) y hasta 8 esperando respuesta: un id que
+ * Albion calcula en su origen tarda 20-50 s (medido) y no debe frenar a los demás. */
+const GAP_PROBE_SPACING_MS = 333;
+const GAP_PROBE_MAX_IN_FLIGHT = 8;
+/** Un rango más grande que esto no es un hueco real (ids corridos o archivo vacío): no se barre. */
+const GAP_RANGE_MAX_IDS = 200_000;
+class LimitadoPorAlbion extends Error {}
+
+/** GET con detección del límite de Albion. */
+async function fetchRelleno(url, timeoutMs = FETCH_TIMEOUT_MS) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(Math.max(1000, Math.min(FETCH_TIMEOUT_MS, timeoutMs))) });
+  if (res.status === 429) throw new LimitadoPorAlbion('429');
+  return res;
+}
+
+/** Un tramo que falla (no 404) se reintenta; después de tantas vueltas seguidas se salta y se avisa. */
+const GAP_PROBE_MAX_FAILS = 10;
+const GAP_QUEUE_MAX = 400;
+const GAP_LIST_MAX_OFFSET = 1000;
+
+/** Hora de la kill guardada más nueva (hoy o, si hoy está vacío, ayer). */
+function ultimaKillGuardada(todays, ayerKills) {
+  let max = '';
+  for (const k of todays.length > 0 ? todays : ayerKills) if (k.timestamp > max) max = k.timestamp;
+  return max || null;
+}
+
+/** Ids de las peleas que se cruzan con [desde, hasta] (ISO), de la más nueva a la más vieja. */
+async function peleasDelHueco(base, desde, hasta) {
+  const ids = [];
+  for (let offset = 0; offset <= GAP_LIST_MAX_OFFSET; offset += 51) {
+    // Al origen (parámetro único): una copia trabada de la caché escondería las peleas del hueco.
+    const res = await fetchRelleno(`${base}/api/gameinfo/battles?range=day&limit=51&offset=${offset}&sort=recent&_=${Date.now()}`);
+    if (!res.ok) throw new Error(`battles respondió ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) break;
+    for (const b of data) {
+      const fin = b.endTime ?? b.startTime;
+      if (b.startTime <= hasta && fin >= desde) ids.push(b.id);
+    }
+    // La lista va de la más reciente hacia atrás: pasado el comienzo del hueco, no hay más.
+    if (data[data.length - 1].startTime < desde) break;
+    await sleep(EVENTS_PAGE_PAUSE_MS);
+  }
+  return ids;
+}
+
+/** Kills de una pelea (todas sus páginas). */
+async function killsDePelea(base, battleId) {
+  const out = [];
+  for (let offset = 0; offset <= EVENTS_MAX_OFFSET; offset += 51) {
+    const res = await fetchRelleno(`${base}/api/gameinfo/events/battle/${battleId}?offset=${offset}&limit=51`);
+    if (!res.ok) throw new Error(`events/battle/${battleId} respondió ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) break;
+    out.push(...data);
+    if (data.length < 51) break;
+    await sleep(EVENTS_PAGE_PAUSE_MS);
+  }
+  return out;
+}
+
+/** Escribe eventos recuperados en el archivo del día de cada uno (kills y equipo), sin duplicar: un
+ * solo `appendUniqueNdjson` por día y tipo. Devuelve cuántas kills eran nuevas. */
+async function guardarRecuperadas(region, events) {
   const valores = await valoresDeMercado(region);
-  const equipo = events.filter((e) => nuevosIds.has(e.EventId)).map((e) => extractEquipment(e, valores));
-  const newEquipment = await appendUniqueNdjson(rutaDeDia('equipment', region, date), equipo, 'e');
-  console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas, +${newEquipment.length} equipos (${eventsResult.paginas} página(s) de eventos).`);
-  const maxEventId = events.reduce((max, e) => Math.max(max, e.EventId ?? 0), lastEventId || 0);
-  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada, maxEventId };
+  const porDia = new Map();
+  for (const e of events) {
+    const fecha = String(e?.TimeStamp ?? '').slice(0, 10);
+    if (!Number.isFinite(e?.EventId) || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) continue;
+    if (!porDia.has(fecha)) porDia.set(fecha, new Map());
+    porDia.get(fecha).set(e.EventId, e);
+  }
+  let nuevasTotal = 0;
+  for (const [fecha, mapa] of porDia) {
+    const evs = [...mapa.values()];
+    const nuevas = await appendUniqueNdjson(rutaDeDia('kills', region, fecha), evs.map(toKillLine), 'eventId');
+    if (nuevas.length === 0) continue;
+    nuevasTotal += nuevas.length;
+    const ids = new Set(nuevas.map((k) => k.eventId));
+    await appendUniqueNdjson(rutaDeDia('equipment', region, fecha), evs.filter((e) => ids.has(e.EventId)).map((e) => extractEquipment(e, valores)), 'e');
+  }
+  return nuevasTotal;
+}
+
+/** Un evento por id: el evento, `null` si no existe (404: ese id no es una kill), o lanza si falla
+ * (`LimitadoPorAlbion` si respondió 429). */
+async function eventoPorId(base, id, timeoutMs) {
+  const res = await fetchRelleno(`${base}/api/gameinfo/events/${id}`, timeoutMs);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`events/${id} respondió ${res.status}`);
+  return res.json();
+}
+
+/** Barre los rangos de ids pendientes de la región, del más nuevo hacia atrás, con presupuesto de
+ * tiempo hasta `hastaMs`. El rango avanza solo hasta el primer id sin respuesta clara (kill o 404):
+ * lo que tardó, falló o recibió 429 se repite la vuelta siguiente, así no se salta nada por un fallo
+ * de red. Devuelve los rangos que quedan, las kills recuperadas, el estado de fallos y si hubo 429. */
+async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_RUN_BUDGET_MS, limiteRespuestaMs = hastaMs + FETCH_TIMEOUT_MS) {
+  const base = REGION_HOSTS[region];
+  const pendientes = rangos.map((r) => [...r]).filter(([lo, hi]) => hi >= lo);
+  // Ids en orden (del más nuevo hacia atrás, rango por rango), generados a medida que se piden.
+  const orden = [];
+  let ri = 0;
+  let cursor = pendientes[0]?.[1];
+  const siguienteId = () => {
+    while (ri < pendientes.length) {
+      if (cursor >= pendientes[ri][0]) return cursor--;
+      ri += 1;
+      cursor = pendientes[ri]?.[1];
+    }
+    return null;
+  };
+  const resultado = new Map(); // id → 'kill' | 'no' | 'limite' | 'error'
+  const halladas = [];
+  const enVuelo = new Set();
+  let limitado = false;
+  while (!limitado && Date.now() < hastaMs - 1000) {
+    if (enVuelo.size >= GAP_PROBE_MAX_IN_FLIGHT) {
+      await Promise.race(enVuelo);
+      continue;
+    }
+    const id = siguienteId();
+    if (id === null) break;
+    orden.push(id);
+    const p = eventoPorId(base, id, Math.max(10_000, limiteRespuestaMs - Date.now()))
+      .then((ev) => {
+        resultado.set(id, ev ? 'kill' : 'no');
+        if (ev) halladas.push(ev);
+      })
+      .catch((err) => {
+        if (err instanceof LimitadoPorAlbion) {
+          resultado.set(id, 'limite');
+          limitado = true;
+        } else resultado.set(id, 'error');
+      })
+      .finally(() => enVuelo.delete(p));
+    enVuelo.add(p);
+    await sleep(GAP_PROBE_SPACING_MS);
+  }
+  await Promise.allSettled([...enVuelo]);
+
+  // Avance: hasta el primer id sin respuesta clara (kill o 404). Un error repetido GAP_PROBE_MAX_FAILS
+  // vueltas seguidas en el mismo id hace saltar SOLO ese id (con aviso); un 429 no cuenta como fallo.
+  let avanzados = 0;
+  let paroPorError = false;
+  for (const id of orden) {
+    const r = resultado.get(id);
+    if (r === 'kill' || r === 'no') {
+      avanzados += 1;
+      continue;
+    }
+    if (r === 'error') {
+      paroPorError = true;
+      fallos += 1;
+      if (fallos >= GAP_PROBE_MAX_FAILS) {
+        console.error(`[${region}] barrido: el id ${id} falló ${fallos} vueltas seguidas; se salta`);
+        fallos = 0;
+        paroPorError = false;
+        avanzados += 1;
+        continue;
+      }
+    }
+    break;
+  }
+  if (!paroPorError && avanzados > 0) fallos = 0;
+  // Recortar los rangos según los `avanzados` primeros ids de `orden`.
+  let resto = avanzados;
+  while (resto > 0 && pendientes.length > 0) {
+    const [lo, hi] = pendientes[0];
+    const tam = hi - lo + 1;
+    if (resto >= tam) {
+      pendientes.shift();
+      resto -= tam;
+    } else {
+      pendientes[0][1] = hi - resto;
+      resto = 0;
+    }
+  }
+  const recuperadas = halladas.length > 0 ? await guardarRecuperadas(region, halladas) : 0;
+  const quedan = pendientes.reduce((n, [lo, hi]) => n + hi - lo + 1, 0);
+  if (orden.length > 0) console.log(`[${region}] barrido por id: ${orden.length} pedidos, ${avanzados} confirmados, ${halladas.length} kills encontradas, +${recuperadas} nuevas (quedan ${quedan} ids)${limitado ? ' · Albion pidió esperar (429)' : ''}`);
+  return { rangos: pendientes, recuperadas, fallos, limitado };
+}
+
+/** Procesa hasta GAP_BATTLES_PER_RUN peleas de la cola: agrega las kills que falten (y su equipo) al
+ * archivo del día de cada kill. Devuelve la cola que queda y cuántas kills se recuperaron. Una pelea
+ * que falla vuelve al final de la cola una sola vez más (`reintento`). */
+async function rellenarHueco(region, cola, hastaMs = Date.now() + GAP_RUN_BUDGET_MS) {
+  const base = REGION_HOSTS[region];
+  const pendientes = [...cola];
+  const tomadas = [];
+  const juntas = [];
+  let limitado = false;
+  while (pendientes.length > 0 && tomadas.length < GAP_BATTLES_PER_RUN && Date.now() < hastaMs) {
+    const item = pendientes.shift();
+    tomadas.push(item);
+    const battleId = typeof item === 'object' ? item.id : item;
+    try {
+      juntas.push(...(await killsDePelea(base, battleId)));
+    } catch (err) {
+      if (err instanceof LimitadoPorAlbion) {
+        pendientes.unshift(item); // misma pelea, la próxima vuelta
+        limitado = true;
+        break;
+      }
+      console.error(`[${region}] relleno: la pelea ${battleId} falló (${err.message})`);
+      if (typeof item !== 'object') pendientes.push({ id: battleId, reintento: true });
+    }
+  }
+  const recuperadas = juntas.length > 0 ? await guardarRecuperadas(region, juntas) : 0;
+  if (tomadas.length > 0) console.log(`[${region}] relleno del hueco: +${recuperadas} kills recuperadas de ${tomadas.length} peleas (quedan ${pendientes.length})`);
+  return { cola: pendientes, recuperadas, limitado };
 }
 
 /** Orden fijo de ranuras: [arma, mano izquierda, cabeza, pecho, pies, capa, montura]. Sin calidad ni
@@ -477,12 +755,17 @@ async function writeStatus(results) {
  * usuario lo pida. */
 
 async function main() {
+  const inicioVuelta = Date.now();
   const state = await readJson(STATE_PATH, {});
   const ahora = Date.now();
   const tocaLento = !state.lastSlowRun || ahora - Date.parse(state.lastSlowRun) >= SLOW_TASKS_INTERVAL_MS;
 
   const results = {};
   const lastEventIds = { ...(state.lastEventIds ?? {}) };
+  const gapQueue = { ...(state.gapQueue ?? {}) };
+  const gapRanges = { ...(state.gapRanges ?? {}) };
+  const gapFails = { ...(state.gapFails ?? {}) };
+  const gapWindows = { ...(state.gapWindows ?? {}) };
   for (const region of Object.keys(REGION_HOSTS)) {
     results[region] = {};
     try {
@@ -490,6 +773,11 @@ async function main() {
       const r = await scrapeRegion(region, Number(state.lastEventIds?.[region]) || 0);
       if (r.maxEventId > 0) lastEventIds[region] = r.maxEventId;
       delete r.maxEventId;
+      // Solo se anotan los huecos: el relleno corre al final, después de las 3 regiones.
+      if (r.gapWindow) gapWindows[region] = [...(gapWindows[region] ?? []), r.gapWindow].slice(-20);
+      if (r.gapRange) gapRanges[region] = [r.gapRange, ...(gapRanges[region] ?? [])]; // el más nuevo primero
+      delete r.gapWindow;
+      delete r.gapRange;
       r.originRefetches = cacheRefetches - antes;
       results[region].kills = { ok: true, data: r };
       // Siempre se escribe (también null): antes el aviso quedaba pegado en status.json aunque ya no pasara.
@@ -508,6 +796,61 @@ async function main() {
       results[region].gold = { ok: false, error: String(err.message).slice(0, 200) };
     }
   }
+  // Relleno de huecos, con lo que sobra de la vuelta (presupuesto total, se corta en el primer 429).
+  const hastaMs = Date.now() + GAP_RUN_BUDGET_MS;
+  // Tope absoluto de cada pedido del relleno: la vuelta entera nunca pasa de ~95 s.
+  const limiteRespuestaMs = inicioVuelta + GAP_RUN_MAX_MS;
+  let limitado = false;
+  const capturaLenta = Date.now() - inicioVuelta > GAP_SKIP_IF_CAPTURE_MS;
+  if (capturaLenta) console.warn(`relleno: la captura normal tardó ${Math.round((Date.now() - inicioVuelta) / 1000)} s; esta vuelta no se rellena`);
+  for (const region of Object.keys(REGION_HOSTS)) {
+    if (capturaLenta || limitado || Date.now() >= hastaMs) break;
+    const base = REGION_HOSTS[region];
+    let recuperadas = 0;
+    try {
+      // a) Ventanas de tiempo → peleas a la cola.
+      while ((gapWindows[region] ?? []).length > 0 && Date.now() < hastaMs) {
+        const [desde, hasta] = gapWindows[region][0];
+        const ids = await peleasDelHueco(base, desde, hasta);
+        const enCola = new Set((gapQueue[region] ?? []).map((x) => (typeof x === 'object' ? x.id : x)));
+        gapQueue[region] = [...(gapQueue[region] ?? []), ...ids.filter((id) => !enCola.has(id))].slice(-GAP_QUEUE_MAX);
+        gapWindows[region] = gapWindows[region].slice(1);
+        console.log(`[${region}] hueco ${desde} → ${hasta}: ${ids.length} peleas a la cola`);
+      }
+      // b) Peleas (barato: recupera enseguida las kills grupales).
+      if ((gapQueue[region] ?? []).length > 0) {
+        const rel = await rellenarHueco(region, gapQueue[region], hastaMs);
+        gapQueue[region] = rel.cola;
+        recuperadas += rel.recuperadas;
+        limitado = rel.limitado;
+      }
+      // c) Barrido por id (completa las sueltas).
+      if (!limitado && (gapRanges[region] ?? []).length > 0 && Date.now() < hastaMs) {
+        const bar = await barrerIds(region, gapRanges[region], gapFails[region] ?? 0, hastaMs, limiteRespuestaMs);
+        gapRanges[region] = bar.rangos;
+        gapFails[region] = bar.fallos;
+        recuperadas += bar.recuperadas;
+        limitado = bar.limitado;
+      }
+    } catch (err) {
+      if (err instanceof LimitadoPorAlbion) limitado = true;
+      else console.error(`[${region}] relleno error: ${err.message}`);
+    }
+    if (results[region]?.kills?.ok) {
+      Object.assign(results[region].kills.data, {
+        gapRecovered: recuperadas,
+        gapQueue: (gapQueue[region] ?? []).length,
+        gapIdsPending: (gapRanges[region] ?? []).reduce((n, [lo, hi]) => n + hi - lo + 1, 0),
+      });
+    }
+  }
+  if (limitado) {
+    // El límite de Albion es por IP para toda la API y dura ~1 s (medido): una pausa corta antes de
+    // salir para que la captura normal de la vuelta siguiente nunca arranque castigada.
+    console.warn('relleno: Albion pidió esperar (429); sigue la próxima vuelta');
+    await sleep(5000);
+  }
+
   try {
     await writeStatus(results);
   } catch (err) {
@@ -517,10 +860,40 @@ async function main() {
   // `lastEventIds` se guarda en cada vuelta (corte de respaldo de `fetchNewEvents`); `lastSlowRun`
   // solo cuando corrió el oro.
   await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(STATE_PATH, JSON.stringify({ ...state, lastEventIds, ...(tocaLento ? { lastSlowRun: new Date(ahora).toISOString() } : {}) }));
+  await fs.writeFile(STATE_PATH, JSON.stringify({ ...state, lastEventIds, gapQueue, gapRanges, gapFails, gapWindows, ...(tocaLento ? { lastSlowRun: new Date(ahora).toISOString() } : {}) }));
   if (!tocaLento) {
     console.log('Oro se saltea esta vuelta (cadencia horaria).');
   }
 }
 
-main().then(() => process.exit(0));
+if (process.argv[2] === '--probar-ids') {
+  const [, , , region, lo, hi] = process.argv;
+  (async () => {
+    let rangos = [[Number(lo), Number(hi)]];
+    let fallos = 0;
+    while (rangos.length > 0) {
+      ({ rangos, fallos } = await barrerIds(region, rangos, fallos));
+      if (rangos.length > 0) await sleep(5000); // la vuelta real es cada 60 s
+    }
+    process.exit(0);
+  })().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+} else if (process.argv[2] === '--probar-hueco') {
+  // Prueba manual del relleno (no toca state.json): node scrape.js --probar-hueco americas <desde> <hasta>
+  const [, , , region, desde, hasta] = process.argv;
+  peleasDelHueco(REGION_HOSTS[region], desde, hasta)
+    .then(async (ids) => {
+      console.log(`peleas en el hueco: ${ids.length}`);
+      let cola = ids;
+      while (cola.length > 0) cola = (await rellenarHueco(region, cola)).cola;
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+} else {
+  main().then(() => process.exit(0));
+}
