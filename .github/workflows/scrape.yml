@@ -21,7 +21,18 @@ jobs:
     # checkout/install/el paso final de re-disparo.
     timeout-minutes: 345
     steps:
+      # 2026-10-03: el checkout completo bajaba los 4,2 GB del histórico de julio-septiembre y tardaba
+      # 16,5 min (medido en la corrida 37081418577). Ese rato nadie escaneaba, y en Europa en hora pico la
+      # API solo guarda ~10 min de kills hacia atrás: cada relanzamiento (cada 5 h 40 min) dejaba un hueco
+      # (visto el 02/10 a las 18:15 y a las 23:58 UTC). De este repo el scraper solo usa scrape.js,
+      # package.json, data/status.json, data/state.json y data/gold/ (kills, peleas y equipo van a los
+      # repos mensuales): con esto el checkout tarda segundos. Probado en local: 2 s.
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            .github
+            data/gold
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -85,11 +96,14 @@ jobs:
               rm -rf "datarepos/$R"
               mkdir -p datarepos
               URL="https://x-access-token:$DATA_REPO_TOKEN@github.com/${{ github.repository_owner }}/$REPO.git"
-              if ! git clone --depth 1 -q "$URL" "datarepos/$R"; then
+              # Clon parcial (2026-10-03): un repo mensual de Europa llega a ~1,4 GB a fin de mes y el clon
+              # completo de las tres regiones se comía minutos de cada arranque. `ajustar_dias` deja en el
+              # disco solo los archivos de hoy y de ayer, que son los únicos que el scraper lee y escribe.
+              if ! git clone --depth 1 --filter=blob:none --sparse -q "$URL" "datarepos/$R"; then
                 # No existe todavía: se crea y se reintenta una vez.
                 echo "creando $REPO: $(crear_repo "$REPO")"
                 sleep 5
-                if ! git clone --depth 1 -q "$URL" "datarepos/$R"; then
+                if ! git clone --depth 1 --filter=blob:none --sparse -q "$URL" "datarepos/$R"; then
                   echo "::error::no se pudo clonar ni crear $REPO — revisa que DATA_REPO_TOKEN tenga Contents y Administration (write) sobre All repositories"
                   return 1
                 fi
@@ -98,7 +112,29 @@ jobs:
               git -C "datarepos/$R" config user.email "github-actions[bot]@users.noreply.github.com"
             done
             MES_CLONADO="$MES_HOY"
+            DIAS_AJUSTADOS=""
             return 0
+          }
+
+          # Archivos de los repos mensuales que quedan en el disco: los de hoy y ayer (kills, peleas y
+          # equipo). Se vuelve a ajustar al cambiar el día UTC; los de anteayer ya están subidos y salen
+          # del disco (si alguno tuviera cambios sin subir, git no lo saca). Un archivo que todavía no
+          # existe igual queda en la lista, así `git add -A` lo toma cuando el scraper lo cree.
+          DIAS_AJUSTADOS=""
+          ajustar_dias() {
+            [ -z "$MES_CLONADO" ] && return 0
+            HOY=$(date -u +%Y-%m-%d)
+            [ "$HOY" = "$DIAS_AJUSTADOS" ] && return 0
+            AYER=$(date -u -d "$HOY -1 day" +%Y-%m-%d)
+            PATRONES="/README.md"
+            for T in kills battles equipment; do
+              PATRONES="$PATRONES /$T/$HOY.ndjson /$T/$AYER.ndjson"
+            done
+            for R in $REGIONES; do
+              [ -d "datarepos/$R" ] || continue
+              git -C "datarepos/$R" sparse-checkout set --no-cone $PATRONES || echo "::warning::sparse-checkout de $R falló"
+            done
+            DIAS_AJUSTADOS="$HOY"
           }
 
           push_datarepos() {
@@ -157,6 +193,7 @@ jobs:
           while [ "$SECONDS" -lt "$END" ]; do
             START_ITER=$SECONDS
             if preparar_repos; then
+              ajustar_dias
               export DATA_REPOS_DIR="$PWD/datarepos"
             else
               unset DATA_REPOS_DIR
