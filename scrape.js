@@ -104,37 +104,56 @@ function rutaDeDia(tipo, region, fecha) {
  * pelea. Verificado con la API real antes de este cambio (`Participants` con `DamageDone`>0 y
  * `SupportHealingDone`>0 en el pool en vivo). No repetir la afirmación de que esto no existe. */
 
+/** Tiempo máximo por pedido: sin esto, un pedido colgado frenaba la vuelta hasta 5 min (el límite de
+ * undici) y con ella las tres regiones. */
+const FETCH_TIMEOUT_MS = 60_000;
+
 async function fetchJson(url) {
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`${url} respondió ${res.status}`);
   return res.json();
 }
 
 /** 2026-10-03: la caché de Albion declara `max-age=60` (eventos) y `max-age=300` (peleas), pero a
  * veces se TRABA en una dirección exacta y la sigue sirviendo horas. Medido ese día a las 03:08 UTC:
- * `events?limit=51&offset=0` de Europa con `Age: 1955` (kill más nueva 01:56, mientras `limit=50`
+ * `events?limit=51&offset=0` de Europa con `Age: 1955` (kill más nueva 01:56, mientras el origen
  * traía las de hace 10 min) y `battles?...limit=51` con `Age: 63329` (17,6 h). Con esa página vieja
  * este scraper encontraba solo kills conocidas, cortaba en la página 1 y dejaba de guardar Europa SIN
- * avisar (el archivo del día quedó en 01:56:02). Si la copia tiene más de 3 veces su vida declarada, se
- * vuelve a pedir con un parámetro único: eso salta la caché y responde el origen (~1-15 s). Si el
- * origen falla, se usa la copia vieja igual (la próxima vuelta reintenta). */
+ * avisar (el archivo del día quedó en 01:56:02 más de una hora).
+ *
+ * Dos reglas, las dos con el encabezado `Age` (cuántos segundos tiene la copia):
+ * 1) Si la copia tiene más de 3 veces su vida declarada, está trabada: se pide al origen.
+ * 2) Al paginar, cada página tiene que ser IGUAL O MÁS NUEVA que la anterior (`minSnapshot`). Si
+ *    la página 2 es una copia más vieja que la 1, la lista "se corrió" menos y las kills que
+ *    llegaron entre ambas copias caen justo en el hueco entre la página 1 y la 2: se saltaban sin
+ *    aviso (y el corte por id conocido lo tapaba). Una página más nueva solo repite kills, y esas
+ *    se descartan por `eventId`.
+ * El origen se pide con un parámetro único (salta la caché, ~1-15 s). Si el origen falla, se usa la
+ * copia de la caché igual: la próxima vuelta reintenta. Devuelve el JSON y el momento de la copia. */
 const CACHE_STALE_FACTOR = 3;
-async function fetchFreshJson(url, maxAgeSec) {
-  const res = await fetch(url);
+const SNAPSHOT_TOLERANCE_MS = 1500;
+let cacheRefetches = 0;
+async function fetchFreshJson(url, maxAgeSec, minSnapshot = 0) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`${url} respondió ${res.status}`);
-  const age = Number(res.headers.get('age'));
-  if (!(age > maxAgeSec * CACHE_STALE_FACTOR)) return res.json();
+  const age = Number(res.headers.get('age')) || 0;
+  const snapshot = Date.now() - age * 1000;
+  const trabada = age > maxAgeSec * CACHE_STALE_FACTOR;
+  const atrasada = minSnapshot > 0 && snapshot < minSnapshot - SNAPSHOT_TOLERANCE_MS;
+  if (!trabada && !atrasada) return { data: await res.json(), snapshot };
   try {
-    const fresh = await fetch(`${url}&_=${Date.now()}`, { signal: AbortSignal.timeout(45_000) });
+    const desdeOrigen = Date.now();
+    const fresh = await fetch(`${url}&_=${desdeOrigen}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (fresh.ok) {
-      const json = await fresh.json();
-      console.warn(`caché de Albion trabada (Age ${age} s): ${url} se pidió al origen`);
-      return json;
+      const data = await fresh.json();
+      cacheRefetches += 1;
+      if (trabada) console.warn(`caché de Albion trabada (Age ${age} s): ${url} se pidió al origen`);
+      return { data, snapshot: desdeOrigen };
     }
   } catch {
-    /* el origen no respondió: se usa la copia vieja */
+    /* el origen no respondió: se usa la copia de la caché */
   }
-  return res.json();
+  return { data: await res.json(), snapshot };
 }
 
 function todayStr() {
@@ -242,30 +261,35 @@ function offsetsDeEventos() {
   return offsets;
 }
 
-async function fetchNewEvents(base, region, knownIds) {
+async function fetchNewEvents(base, region, knownIds, lastEventId) {
   const nuevos = [];
   const offsets = offsetsDeEventos();
+  // Sin ids conocidos (región nueva, o el día 1 del mes: el archivo de ayer quedó en el repo del mes
+  // anterior) se corta por el último `EventId` guardado en `state.json` (los ids crecen siempre).
+  const sinArchivo = knownIds.size === 0;
+  const conocido = (event) => knownIds.has(event.EventId) || (sinArchivo && lastEventId > 0 && event.EventId <= lastEventId);
+  let minSnapshot = 0;
   for (let i = 0; i < offsets.length; i += 1) {
-    const page = await fetchFreshJson(`${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`, 60);
+    const { data: page, snapshot } = await fetchFreshJson(`${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`, 60, minSnapshot);
+    minSnapshot = Math.max(minSnapshot, snapshot);
     if (!Array.isArray(page) || page.length === 0) return { nuevos, agotada: false, paginas: i + 1 };
     let alcanzado = false;
     for (const event of page) {
-      if (knownIds.has(event.EventId)) {
+      if (conocido(event)) {
         alcanzado = true;
         break;
       }
       nuevos.push(event);
     }
-    // Primera corrida del día (archivo vacío): no hay nada conocido con qué cortar, así que se
-    // toma una sola página y el corte lo pone la corrida siguiente. Sin esto, cada arranque de
-    // día bajaría las 21 páginas completas de las 3 regiones sin necesidad.
-    if (alcanzado || knownIds.size === 0) return { nuevos, agotada: false, paginas: i + 1 };
+    // Sin nada con qué cortar (ni archivo ni último id): una sola página y el corte lo pone la
+    // corrida siguiente. Sin esto, cada arranque bajaría las 21 páginas de las 3 regiones.
+    if (alcanzado || (sinArchivo && !(lastEventId > 0))) return { nuevos, agotada: false, paginas: i + 1 };
     await sleep(EVENTS_PAGE_PAUSE_MS);
   }
   return { nuevos, agotada: true, paginas: offsets.length };
 }
 
-async function scrapeRegion(region) {
+async function scrapeRegion(region, lastEventId) {
   const base = REGION_HOSTS[region];
   const date = todayStr();
   const killsPath = rutaDeDia('kills', region, date);
@@ -280,8 +304,8 @@ async function scrapeRegion(region) {
   }
 
   const [eventsResult, battles] = await Promise.all([
-    fetchNewEvents(base, region, knownIds),
-    fetchFreshJson(`${base}/api/gameinfo/battles?range=day&limit=${BATTLES_LIMIT}&offset=0&sort=recent`, 300),
+    fetchNewEvents(base, region, knownIds, lastEventId),
+    fetchFreshJson(`${base}/api/gameinfo/battles?range=day&limit=${BATTLES_LIMIT}&offset=0&sort=recent`, 300).then((r) => r.data),
   ]);
   const events = eventsResult.nuevos;
   if (eventsResult.agotada) {
@@ -323,7 +347,8 @@ async function scrapeRegion(region) {
   const equipo = events.filter((e) => nuevosIds.has(e.EventId)).map((e) => extractEquipment(e, valores));
   const newEquipment = await appendUniqueNdjson(rutaDeDia('equipment', region, date), equipo, 'e');
   console.log(`[${region}] +${newKills.length} kills nuevas, +${newBattles.length} peleas nuevas, +${newEquipment.length} equipos (${eventsResult.paginas} página(s) de eventos).`);
-  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada };
+  const maxEventId = events.reduce((max, e) => Math.max(max, e.EventId ?? 0), lastEventId || 0);
+  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada, maxEventId };
 }
 
 /** Orden fijo de ranuras: [arma, mano izquierda, cabeza, pecho, pies, capa, montura]. Sin calidad ni
@@ -437,10 +462,15 @@ async function main() {
   const tocaLento = !state.lastSlowRun || ahora - Date.parse(state.lastSlowRun) >= SLOW_TASKS_INTERVAL_MS;
 
   const results = {};
+  const lastEventIds = { ...(state.lastEventIds ?? {}) };
   for (const region of Object.keys(REGION_HOSTS)) {
     results[region] = {};
     try {
-      const r = await scrapeRegion(region);
+      const antes = cacheRefetches;
+      const r = await scrapeRegion(region, Number(state.lastEventIds?.[region]) || 0);
+      if (r.maxEventId > 0) lastEventIds[region] = r.maxEventId;
+      delete r.maxEventId;
+      r.originRefetches = cacheRefetches - antes;
       results[region].kills = { ok: true, data: r };
       // Siempre se escribe (también null): antes el aviso quedaba pegado en status.json aunque ya no pasara.
       results[region].kills.data.warning = r.lostWindow ? 'se agotó la ventana de la API: se perdieron kills' : null;
@@ -464,10 +494,11 @@ async function main() {
     console.error('status.json no se pudo escribir:', err.message);
   }
 
-  if (tocaLento) {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(STATE_PATH, JSON.stringify({ ...state, lastSlowRun: new Date(ahora).toISOString() }));
-  } else {
+  // `lastEventIds` se guarda en cada vuelta (corte de respaldo de `fetchNewEvents`); `lastSlowRun`
+  // solo cuando corrió el oro.
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(STATE_PATH, JSON.stringify({ ...state, lastEventIds, ...(tocaLento ? { lastSlowRun: new Date(ahora).toISOString() } : {}) }));
+  if (!tocaLento) {
     console.log('Oro se saltea esta vuelta (cadencia horaria).');
   }
 }
