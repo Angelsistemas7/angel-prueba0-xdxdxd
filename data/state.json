@@ -1,1 +1,1 @@
-{"lastSlowRun":"2026-10-04T04:07:52.382Z","lastEventIds":{"americas":1459563924,"asia":516658990,"europe":443218250},"gapQueue":{},"gapRanges":{"americas":[[1459559165,1459560210]]},"gapFails":{},"gapWindows":{"americas":[["2026-10-04T03:16:32.431283400Z","2026-10-04T03:18:26.525751100Z"]]}}
+{"lastSlowRun":"2026-10-04T04:07:52.382Z","lastEventIds":{"americas":1459572046,"asia":516662461,"europe":443220322},"gapQueue":{"americas":[]},"gapRanges":{"americas":[[1459559165,1459560182]]},"gapFails":{"americas":{"id":1459560182,"n":0}},"gapWindows":{"americas":[]}}
