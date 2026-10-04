@@ -402,8 +402,15 @@ async function scrapeRegion(region, lastEventId) {
     let maxConocido = lastEventId || 0;
     for (const id of knownIds) if (Number.isFinite(id) && id > maxConocido) maxConocido = id;
     const minLeido = events.reduce((min, e) => Math.min(min, e.EventId), Infinity);
-    if (maxConocido > 0 && minLeido - 1 > maxConocido && minLeido - 1 - maxConocido <= GAP_RANGE_MAX_IDS) {
-      gapRange = [maxConocido + 1, minLeido - 1];
+    if (maxConocido > 0 && minLeido - 1 > maxConocido) {
+      // 2026-10-04 (auditoría p64 H3): un hueco más grande que el tope (escáner caído ~4,5 h en hora pico
+      // de Europa, o estado viejo) antes se abandonaba ENTERO y sin aviso. Ahora se barren los
+      // GAP_RANGE_MAX_IDS ids más nuevos (lo más valioso y lo que alcanza a rellenarse) y se avisa del resto.
+      const total = minLeido - 1 - maxConocido;
+      gapRange = [Math.max(maxConocido + 1, minLeido - GAP_RANGE_MAX_IDS), minLeido - 1];
+      if (total > GAP_RANGE_MAX_IDS) {
+        console.error(`[${region}] hueco por id de ${total} ids: se barren los ${GAP_RANGE_MAX_IDS} más nuevos; ${total - GAP_RANGE_MAX_IDS} más viejos quedan sin barrer`);
+      }
       console.error(`[${region}] hueco por id: ${gapRange[0]}…${gapRange[1]} (${gapRange[1] - gapRange[0] + 1} ids a revisar)`);
     }
     const desde = ultimaKillGuardada(todays, ayerKills);
@@ -474,7 +481,7 @@ const GAP_RUN_MAX_MS = 95_000;
  * Albion calcula en su origen tarda 20-50 s (medido) y no debe frenar a los demás. */
 const GAP_PROBE_SPACING_MS = 333;
 const GAP_PROBE_MAX_IN_FLIGHT = 8;
-/** Un rango más grande que esto no es un hueco real (ids corridos o archivo vacío): no se barre. */
+/** Tope de ids de UN hueco: si es más grande, solo se barren los más nuevos (ver scrapeRegion). */
 const GAP_RANGE_MAX_IDS = 200_000;
 class LimitadoPorAlbion extends Error {}
 /** Se acabó el tiempo de la vuelta para el relleno: no es un fallo de Albion, se sigue la próxima. */
