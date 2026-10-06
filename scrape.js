@@ -438,6 +438,10 @@ function toKillLine(event) {
     victimGuild: event.Victim?.GuildName ?? '',
     totalFame: event.TotalVictimKillFame ?? 0,
     participantsCount: event.numberOfParticipants ?? 1,
+    // 2026-10-05 (parte 74): la API corta numberOfParticipants y Participants en 4 (medido: ninguna kill con
+    // más de 4, desde siempre), así que los filtros "6+" y "10+ ayudas" nunca tenían nada. El grupo del
+    // atacante (GroupMembers) sí pasa de 4: las functions toman el mayor de los dos.
+    groupSize: Array.isArray(event.GroupMembers) ? event.GroupMembers.length : 0,
     // Daño/curación por jugador en ESTA kill puntual (no de la pelea completa) — sumando esto a
     // través de todas las kills con el mismo battleId se arma el total por pelea, igual que hace
     // albionbb.com.
