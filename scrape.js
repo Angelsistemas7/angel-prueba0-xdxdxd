@@ -818,14 +818,27 @@ async function valoresDeMercado(region) {
   return p;
 }
 
+/** Tope de un valor de mercado por unidad (auditoría p92 H8): un dato roto o gigante del Radar no infla
+ * el botín de los perfiles. Lo más caro del juego no llega a 10.000 millones. */
+const VALOR_MAX = 1e10;
+
 /** Plata estimada de ítems de la API (`Type` + `Count`) con los valores de mercado. */
 function valorDe(items, valores) {
   let total = 0;
   for (const it of items) {
-    const v = it?.Type ? valores[it.Type] : 0;
-    if (v > 0) total += v * Math.max(1, it.Count ?? 1);
+    const v = it?.Type ? Number(valores[it.Type]) : 0;
+    if (!(v > 0 && v < VALOR_MAX)) continue;
+    // Count raro (texto, negativo): cuenta 1; una pila del juego no pasa de 999.
+    const count = Math.min(999, Math.max(1, Math.floor(Number(it.Count)) || 1));
+    total += v * count;
   }
-  return Math.round(total);
+  return Number.isFinite(total) ? Math.round(total) : 0;
+}
+
+/** Poder de objeto como número (auditoría p92 H8): un valor no numérico de la API daba NaN y se publicaba null. */
+function poderDe(value) {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
 /** Una línea por kill, compacta: `e` evento, `k`/`v` equipo de asesino y víctima (ver SLOTS),
@@ -836,8 +849,8 @@ function extractEquipment(event, valores) {
     e: event.EventId,
     k: compactEquipment(event.Killer?.Equipment),
     v: compactEquipment(event.Victim?.Equipment),
-    kp: Math.round(event.Killer?.AverageItemPower ?? 0),
-    vp: Math.round(event.Victim?.AverageItemPower ?? 0),
+    kp: poderDe(event.Killer?.AverageItemPower),
+    vp: poderDe(event.Victim?.AverageItemPower),
   };
   if (valores) {
     line.ve = valorDe(Object.values(event.Victim?.Equipment ?? {}), valores);
@@ -878,7 +891,18 @@ async function writeStatus(results) {
     regions[region] = next;
   }
   await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(statusPath, JSON.stringify({ updatedAt: now, regions }));
+  await writeFileAtomic(statusPath, JSON.stringify({ updatedAt: now, regions }));
+}
+
+/** Escribe a un temporal y lo renombra (auditoría p92 H5, misma receta que `store.mjs` del Radar y de las
+ * estadísticas): si el runner muere a mitad (tope de 345 min, disco lleno), queda el archivo anterior entero
+ * en vez de uno cortado que se lee como corrupto y pierde de golpe la cola de relleno de huecos. */
+async function writeFileAtomic(file, data) {
+  // El temporal va FUERA de data/ (en la carpeta de arriba): el workflow sube `git add data` cada ~15 min mientras
+  // el scraper corre y no debe llevarse un .tmp a medio escribir. Mismo disco: el rename sigue siendo atómico.
+  const tmp = path.join(path.dirname(file), '..', `.${path.basename(file)}.tmp`);
+  await fs.writeFile(tmp, data);
+  await fs.rename(tmp, file);
 }
 
 /** 2026-07-26: se sacó el borrado automático de 30 días (decisión explícita del usuario — quiere
@@ -1011,7 +1035,7 @@ async function main() {
   // `lastEventIds` se guarda en cada vuelta (corte de respaldo de `fetchNewEvents`); `lastSlowRun`
   // solo cuando corrió el oro.
   await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(STATE_PATH, JSON.stringify({ ...state, lastEventIds, gapQueue, gapRanges, gapFails, gapWindows, ...(tocaLento ? { lastSlowRun: new Date(ahora).toISOString() } : {}) }));
+  await writeFileAtomic(STATE_PATH, JSON.stringify({ ...state, lastEventIds, gapQueue, gapRanges, gapFails, gapWindows, ...(tocaLento ? { lastSlowRun: new Date(ahora).toISOString() } : {}) }));
   if (!tocaLento) {
     console.log('Oro se saltea esta vuelta (cadencia horaria).');
   }
