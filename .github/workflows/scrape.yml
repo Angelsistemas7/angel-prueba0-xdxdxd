@@ -27,13 +27,13 @@ jobs:
       # (visto el 02/10 a las 18:15 y a las 23:58 UTC). De este repo el scraper solo usa scrape.js,
       # package.json, data/status.json, data/state.json y data/gold/ (kills, peleas y equipo van a los
       # repos mensuales): con esto el checkout tarda segundos. Probado en local: 2 s.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0 (auditoría p92 H7: fijada por SHA, Node 24)
         with:
           filter: blob:none
           sparse-checkout: |
             .github
             data/gold
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 20
       - run: npm install
@@ -55,6 +55,8 @@ jobs:
           # repos. Es la invariante que hace que este cambio no pueda romper la recolección.
           # `GITHUB_TOKEN` no sirve acá: está limitado a ESTE repo y no puede escribir en otro.
           DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          # Auditoría p92 H6: el nombre de rama por env, no pegado en el script (se expandía antes de bash).
+          REF_NAME: ${{ github.ref_name }}
         run: |
           END=$((SECONDS + 20400))
           LAST_PUSH=$SECONDS
@@ -192,14 +194,14 @@ jobs:
               # Mismo resguardo que en los repos mensuales: sin nada preparado, el commit fallaría y cortaría todo.
               if git diff --cached --quiet; then return 0; fi
               git commit -m "Scraper snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)" -q
-              if ! git pull --rebase --autostash -q origin "${{ github.ref_name }}"; then
+              if ! git pull --rebase --autostash -q origin "$REF_NAME"; then
                 echo "::warning::rebase con conflicto — se aborta y se reintenta en el próximo ciclo"
                 git rebase --abort 2>/dev/null || true
                 git stash pop 2>/dev/null || true
                 return 0
               fi
               abortar_si_hay_conflicto || return 0
-              git push -q origin "HEAD:${{ github.ref_name }}" || echo "push falló, se reintenta en el próximo ciclo"
+              git push -q origin "HEAD:$REF_NAME" || echo "push falló, se reintenta en el próximo ciclo"
             fi
           }
           while [ "$SECONDS" -lt "$END" ]; do
@@ -230,9 +232,12 @@ jobs:
       # corte aunque alguna vuelta de scrape haya fallado.
       - name: Encadenar siguiente ciclo
         if: always()
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -sf -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/scrape.yml/dispatches" \
-            -d '{"ref":"${{ github.ref_name }}"}'
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/scrape.yml/dispatches" \
+            -d "{\"ref\":\"$REF_NAME\"}"
