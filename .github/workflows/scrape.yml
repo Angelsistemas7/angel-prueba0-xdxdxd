@@ -147,7 +147,11 @@ jobs:
             for R in $REGIONES; do
               [ -d "datarepos/$R" ] || continue
               if [ -n "$(git -C "datarepos/$R" status --porcelain)" ]; then
-                git -C "datarepos/$R" add -A
+                # 2026-10-11 (parte 103 de la app): al cambiar el día UTC el scraper puede escribir el archivo del
+                # día nuevo antes de que `ajustar_dias` lo sume al checkout; con git >= 2.4x `add -A` sale con
+                # error 1 y, con `bash -e`, cortaba el escáner y se perdían los últimos minutos del día (corridas
+                # 38094602684 del 10/10 y la del 05/10 a las 00:00 UTC). `--sparse` agrega también esos archivos.
+                git -C "datarepos/$R" add --sparse -A
                 # 2026-10-03 (auditoría p60, probado en Linux): un archivo fuera del checkout reducido
                 # aparece en `status` pero `add -A` no lo toma; el commit vacío fallaba y, con `bash -e`,
                 # cortaba el escáner entero. Solo se commitea si hay algo preparado.
