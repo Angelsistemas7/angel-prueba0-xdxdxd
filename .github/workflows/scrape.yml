@@ -27,8 +27,14 @@ jobs:
       # (visto el 02/10 a las 18:15 y a las 23:58 UTC). De este repo el scraper solo usa scrape.js,
       # package.json, data/status.json, data/state.json y data/gold/ (kills, peleas y equipo van a los
       # repos mensuales): con esto el checkout tarda segundos. Probado en local: 2 s.
+      # 2026-10-27 (parte 115): `ref` = la PUNTA de la rama al arrancar. Sin esto el checkout usa el SHA del
+      # momento en que la corrida entró a la cola: la programada de las 23:33 del 26/10 esperó detrás de otra,
+      # arrancó a las 02:44 con ese commit viejo y cada `push_if_dirty` chocó en data/status.json y
+      # data/state.json con lo subido entre medio, así que en 5 h 40 min no subió nada (las kills sí, van a
+      # los repos mensuales; se perdió el state.json de la corrida: cola de huecos y lastEventIds).
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0 (auditoría p92 H7: fijada por SHA, Node 24)
         with:
+          ref: ${{ github.ref_name }}
           filter: blob:none
           sparse-checkout: |
             .github
@@ -198,7 +204,10 @@ jobs:
               # Mismo resguardo que en los repos mensuales: sin nada preparado, el commit fallaría y cortaría todo.
               if git diff --cached --quiet; then return 0; fi
               git commit -m "Scraper snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)" -q
-              if ! git pull --rebase --autostash -q origin "$REF_NAME"; then
+              # 2026-10-27: `-X theirs` en un rebase = gana el commit LOCAL que se reaplica (lo más nuevo de
+              # esta corrida). Una sola corrida a la vez escribe acá (concurrency), así que si igual choca es
+              # porque lo de origin es más viejo; antes se abortaba y no se subía nunca.
+              if ! git pull --rebase --autostash -X theirs -q origin "$REF_NAME"; then
                 echo "::warning::rebase con conflicto — se aborta y se reintenta en el próximo ciclo"
                 git rebase --abort 2>/dev/null || true
                 git stash pop 2>/dev/null || true
