@@ -6,16 +6,45 @@ on:
     - cron: '0 */4 * * *'
   workflow_dispatch: {}
 
-concurrency:
-  group: scrape-loop
-  cancel-in-progress: false
+# Parte 127: la `concurrency` va en el trabajo `scrape`, no en todo el workflow. Así la corrida del cron de respaldo
+# arranca enseguida, la guardia ve si ya hay una corriendo y, si la hay, el trabajo se salta (queda «correcta» en
+# Actions). Antes esperaba en la cola detrás de la cadena y GitHub la cancelaba cuando la cadena mandaba la siguiente.
 
 permissions:
   actions: write
   contents: write
 
 jobs:
+  # Solo para el cron de respaldo: ¿hay otra corrida de este workflow en curso o en cola? (una consulta, segundos).
+  guardia:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      ocupado: ${{ steps.mirar.outputs.ocupado }}
+    steps:
+      - id: mirar
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          n=0
+          for estado in in_progress queued; do
+            c=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/scrape.yml/runs?status=$estado&per_page=20" \
+              --jq "[.workflow_runs[] | select(.id != $RUN_ID)] | length") || c=0
+            n=$((n + c))
+          done
+          echo "otras corridas: $n"
+          if [ "$n" -gt 0 ]; then echo "ocupado=true" >> "$GITHUB_OUTPUT"; else echo "ocupado=false" >> "$GITHUB_OUTPUT"; fi
+
   scrape:
+    needs: guardia
+    # `always()`: en las corridas de la cadena (workflow_dispatch) la guardia se salta y sin esto se saltaría también
+    # este trabajo. Si la guardia falla, `ocupado` queda vacío y se corre igual (como antes).
+    if: ${{ always() && (github.event_name != 'schedule' || needs.guardia.outputs.ocupado != 'true') }}
+    concurrency:
+      group: scrape-loop
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     # El límite duro de GitHub-hosted runners es 360 min (6h). Dejamos margen para
     # checkout/install/el paso final de re-disparo.
