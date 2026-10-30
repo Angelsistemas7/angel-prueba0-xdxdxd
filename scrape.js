@@ -847,13 +847,13 @@ async function rellenarHueco(region, cola, hastaMs = Date.now() + GAP_RUN_BUDGET
 const SLOTS = ['MainHand', 'OffHand', 'Head', 'Armor', 'Shoes', 'Cape', 'Mount'];
 
 /** 2026-09-29 (pedido del dueño): el ítem COMPLETO con tier y encantamiento (`T8_2H_CLAYMORE@3` =
- * 8.3), para "arma y build favorita" por jugador. La montura va solo con su base. Antes de este
- * cambio las líneas guardaban solo la base (`2H_CLAYMORE`): los lectores distinguen por /^T\d_/. */
+ * 8.3), para "arma y build favorita" por jugador. Antes de este cambio las líneas guardaban solo la base
+ * (`2H_CLAYMORE`): los lectores distinguen por /^T\d_/.
+ * Parte 137 (decisión del dueño): la montura también va completa (`T5_MOUNT_ARMORED_HORSE`). Meta Armory se arma
+ * ahora desde estos archivos (stats-builder) y sin el tier no puede dibujar el top de monturas ni la montura de
+ * los ganadores. Ningún otro lector usa la posición 6 (stats-builder cuenta piezas 2-5 y builds 0-4). */
 function compactEquipment(eq) {
-  return SLOTS.map((slot) => {
-    const type = eq?.[slot]?.Type ?? '';
-    return slot === 'Mount' ? type.replace(/^T\d_/, '').replace(/@\d$/, '') : type;
-  });
+  return SLOTS.map((slot) => eq?.[slot]?.Type ?? '');
 }
 
 /** Valor de mercado por ítem que publica el escáner del Radar (`values-<región>.json`: mediana entre
