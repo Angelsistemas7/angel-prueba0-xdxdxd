@@ -1,4 +1,5 @@
 import { execFile } from 'child_process';
+import { createHmac, randomUUID } from 'crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { promisify } from 'util';
@@ -171,7 +172,54 @@ function todayStr() {
 /** 2026-10-03 (auditoría p60): una línea dañada (escritura cortada, marcador de conflicto) ya no deja
  * muerta la captura de la región en cada vuelta: se salta con aviso y se sigue. Los lectores (stats y
  * app) ya saltaban líneas malas. */
+/** Parte 136 (chat 136 de la app, 30/10/2026): GitHub RECHAZA el push de un archivo de más de 100 MiB, y el
+ * archivo de kills de un día de Américas ya llegó a 67 MB (sábado 18/10). Si un día lo pasara, el push del
+ * repo mensual fallaría en cada vuelta, los commits se quedarían en el runner y se perderían al terminar la
+ * corrida. Por eso, cuando el archivo del día llega a `TOPE_ARCHIVO_DIA`, lo que sigue va a
+ * `<día>.2.ndjson` (y después `.3`, ...). Mientras no se llega al tope todo queda EXACTAMENTE igual: mismo
+ * archivo, mismas posiciones, y los lectores viejos (app 2.58/2.60/2.61) no notan nada. Si alguna vez se
+ * llega, la app vieja no ve las líneas de la parte 2 en la búsqueda (no se pierden: están en el repo), y las
+ * estadísticas y las Functions sí las leen. */
+const TOPE_ARCHIVO_DIA = Number(process.env.TOPE_ARCHIVO_DIA) > 0 ? Number(process.env.TOPE_ARCHIVO_DIA) : 90_000_000;
+
+/** Ruta de la parte `n` (1 = el archivo de siempre). Solo los `.ndjson`. */
+function rutaParte(filePath, n) {
+  return n <= 1 ? filePath : filePath.replace(/\.ndjson$/, `.${n}.ndjson`);
+}
+
+/** Las partes que existen de un archivo de día, en orden; siempre empieza por el archivo de siempre. */
+async function partesDe(filePath) {
+  const out = [filePath];
+  if (!filePath.endsWith('.ndjson')) return out;
+  for (let n = 2; ; n++) {
+    const p = rutaParte(filePath, n);
+    try {
+      await fs.access(p);
+    } catch {
+      break;
+    }
+    out.push(p);
+  }
+  return out;
+}
+
+async function tamanoDe(filePath) {
+  try {
+    return (await fs.stat(filePath)).size;
+  } catch {
+    return 0;
+  }
+}
+
+/** Lee el archivo del día y, si las hay, sus partes `.2`, `.3`... (ver `TOPE_ARCHIVO_DIA`). */
 async function readNdjson(filePath) {
+  // Sin `push(...lista)`: con las ~150.000 líneas de un día de Américas eso pasa el tope de argumentos de V8.
+  let out = [];
+  for (const p of await partesDe(filePath)) out = out.length === 0 ? await readNdjsonArchivo(p) : out.concat(await readNdjsonArchivo(p));
+  return out;
+}
+
+async function readNdjsonArchivo(filePath) {
   let raw;
   try {
     raw = await fs.readFile(filePath, 'utf8');
@@ -254,10 +302,17 @@ async function appendUniqueNdjson(filePath, newEntries, idKey) {
     toAppend.push(e);
   }
   if (toAppend.length === 0) return [];
+  // Parte 136: se agrega a la última parte; si ya llegó al tope, se abre la siguiente (ver `TOPE_ARCHIVO_DIA`).
+  const partes = await partesDe(filePath);
+  let destino = partes[partes.length - 1];
+  if (destino.endsWith('.ndjson') && (await tamanoDe(destino)) >= TOPE_ARCHIVO_DIA) {
+    destino = rutaParte(filePath, partes.length + 1);
+    console.warn(`::warning::${path.basename(filePath)} llegó a ${TOPE_ARCHIVO_DIA} bytes: lo nuevo va a ${path.basename(destino)}`);
+  }
   // Si una escritura anterior quedó cortada (sin salto final), la línea nueva no se pega a la rota.
-  const prefijo = (await terminaEnSalto(filePath)) ? '' : '\n';
+  const prefijo = (await terminaEnSalto(destino)) ? '' : '\n';
   const lines = prefijo + toAppend.map((e) => JSON.stringify(e)).join('\n') + '\n';
-  await fs.appendFile(filePath, lines, 'utf8');
+  await fs.appendFile(destino, lines, 'utf8');
   return toAppend;
 }
 
@@ -381,6 +436,7 @@ async function scrapeRegion(region, lastEventId) {
   const battleEntries = battles.map(extractBattleEntry);
 
   const newKills = await appendUniqueNdjson(killsPath, kills, 'eventId');
+  anotarMuertos(muertosDeLaVuelta, region, newKills);
   const newBattles = await appendUniqueNdjson(rutaDeDia('battles', region, date), battleEntries, 'battleId');
   // Equipo de asesino y víctima en un archivo APARTE (los teléfonos bajan `kills` al buscar un
   // jugador y no deben cargar esto): lo usa la Cloud Function de Meta Armory para estadísticas de
@@ -615,7 +671,8 @@ async function fechaDeGuardado(region, fecha) {
     /* hay que habilitarlo */
   }
   try {
-    await execFileP('git', ['-C', repo, 'sparse-checkout', 'add', `/kills/${fecha}.ndjson`, `/equipment/${fecha}.ndjson`], { timeout: 60_000 });
+    // Parte 136: también las partes `.2`, `.3`... del día (ver `TOPE_ARCHIVO_DIA`).
+    await execFileP('git', ['-C', repo, 'sparse-checkout', 'add', `/kills/${fecha}.ndjson`, `/equipment/${fecha}.ndjson`, `/kills/${fecha}.*.ndjson`, `/equipment/${fecha}.*.ndjson`], { timeout: 60_000 });
     console.log(`[${region}] ${fecha} habilitado en el checkout para guardar kills recuperadas`);
     return fecha;
   } catch (err) {
@@ -641,6 +698,7 @@ async function guardarRecuperadas(region, events) {
     const evs = [...mapa.values()];
     const nuevas = await appendUniqueNdjson(rutaDeDia('kills', region, fecha), evs.map(toKillLine), 'eventId');
     if (nuevas.length === 0) continue;
+    anotarMuertos(muertosRecuperados, region, nuevas);
     nuevasTotal += nuevas.length;
     const ids = new Set(nuevas.map((k) => k.eventId));
     await appendUniqueNdjson(rutaDeDia('equipment', region, fecha), evs.filter((e) => ids.has(e.EventId)).map((e) => extractEquipment(e, valores)), 'e');
@@ -913,6 +971,120 @@ async function writeFileAtomic(file, data) {
  * Si el repo se vuelve pesado con el tiempo, revisar entonces — no reintroducir esto sin que el
  * usuario lo pida. */
 
+/** 2026-10-30 (app, parte 136; costos v3 §2.3): aviso de muerte a los donadores de la app. En cada vuelta se le
+ * pasan a la función `donorDeathFeed` de Firebase los muertos nuevos (servidor, id de la kill, id y nombre de la
+ * víctima, asesino y hora: todo dato público de Albion), firmados con HMAC-SHA256. La función tiene la lista de
+ * donadores (privada) y manda el aviso: así cuesta lo mismo con 30 que con 3.000 donadores.
+ *
+ * Invariante, igual que con `DATA_REPOS_DIR`: sin `DONOR_FEED_SECRET` (o sin URL) no se manda nada y el scraper
+ * hace exactamente lo de siempre. Y el aviso NUNCA frena ni tumba la captura:
+ * - el envío arranca cuando termina la captura normal y corre EN PARALELO con el relleno de huecos;
+ * - tiene tiempo límite de 8 s y no se reintenta dentro de la vuelta;
+ * - cualquier error se registra y se sigue.
+ * Lo que no se entregó queda en `.donor-feed/outbox.json` (fuera de `data/`: nunca se commitea) y va en el
+ * paquete de la vuelta siguiente, como mucho 20 min y 3.500 muertos (cabe en el tope de 1 MB de la función). Si algo se tiene que descartar, el paquete
+ * siguiente lo dice (`outboxDropped`) y la función vuelve a revisar a los donadores por la API de Albion.
+ * El registro solo dice cuántos muertos se entregaron y el código HTTP: la respuesta no dice quién es donador. */
+const DONOR_FEED_URL = process.env.DONOR_FEED_URL || '';
+const DONOR_FEED_SECRET = process.env.DONOR_FEED_SECRET || '';
+const DONOR_FEED_TIMEOUT_MS = 8_000;
+const DONOR_FEED_OUTBOX = path.join('.donor-feed', 'outbox.json');
+const DONOR_FEED_OUTBOX_MAX_AGE_MS = 20 * 60_000;
+const DONOR_FEED_OUTBOX_MAX = 3_500;
+/** Mismos topes que valida la función (más largo, se recorta acá y no se rechaza el paquete entero). */
+const DONOR_FEED_NAME_MAX = 64;
+
+const muertosDeLaVuelta = [];
+const muertosRecuperados = [];
+
+/** Muertos de las líneas de kill recién guardadas (las que no estaban en el archivo). */
+function anotarMuertos(destino, region, lineas) {
+  if (!DONOR_FEED_URL || !DONOR_FEED_SECRET) return;
+  for (const k of lineas) {
+    if (!Number.isSafeInteger(k.eventId) || k.eventId <= 0 || typeof k.victimName !== 'string' || !k.victimName) continue;
+    const t = Date.parse(k.timestamp);
+    if (!Number.isFinite(t)) continue;
+    destino.push({
+      region,
+      eventId: k.eventId,
+      victimId: String(k.victimId ?? '').slice(0, DONOR_FEED_NAME_MAX),
+      victimName: k.victimName.slice(0, DONOR_FEED_NAME_MAX),
+      killerName: String(k.killerName ?? '').slice(0, DONOR_FEED_NAME_MAX),
+      // La función exige ISO con Z: la API a veces manda 7 decimales, se normaliza.
+      timestamp: new Date(t).toISOString(),
+    });
+  }
+}
+
+/** Junta lo pendiente con lo nuevo, sin repetir y sin lo viejo. `descartado` si algo no entró. */
+function armarBandeja(pendientes, nuevos, ahora) {
+  const visto = new Set();
+  const out = [];
+  let descartado = false;
+  for (const e of [...pendientes, ...nuevos.map((d) => ({ at: ahora, d }))]) {
+    if (!e?.d || ahora - e.at > DONOR_FEED_OUTBOX_MAX_AGE_MS) {
+      descartado = true;
+      continue;
+    }
+    const clave = `${e.d.region}:${e.d.eventId}`;
+    if (visto.has(clave)) continue;
+    visto.add(clave);
+    out.push(e);
+  }
+  if (out.length > DONOR_FEED_OUTBOX_MAX) {
+    descartado = true;
+    return { bandeja: out.slice(-DONOR_FEED_OUTBOX_MAX), descartado };
+  }
+  return { bandeja: out, descartado };
+}
+
+async function leerBandeja() {
+  const b = await readJson(DONOR_FEED_OUTBOX, null);
+  return { pendientes: Array.isArray(b?.pendientes) ? b.pendientes : [], descartado: b?.descartado === true };
+}
+
+async function guardarBandeja(pendientes, descartado) {
+  await fs.mkdir(path.dirname(DONOR_FEED_OUTBOX), { recursive: true });
+  const tmp = `${DONOR_FEED_OUTBOX}.tmp`;
+  await fs.writeFile(tmp, JSON.stringify({ pendientes, descartado }));
+  await fs.rename(tmp, DONOR_FEED_OUTBOX);
+}
+
+/** Manda el paquete. Nunca lanza: devuelve lo que quedó sin entregar. */
+async function enviarADonadores(estadoRegiones) {
+  const ahora = Date.now();
+  const previo = await leerBandeja().catch(() => ({ pendientes: [], descartado: true }));
+  const { bandeja, descartado } = armarBandeja(previo.pendientes, muertosDeLaVuelta, ahora);
+  const marcaDescarte = previo.descartado || descartado;
+  const cuerpo = JSON.stringify({ v: 1, batchId: randomUUID(), regions: estadoRegiones, outboxDropped: marcaDescarte, deaths: bandeja.map((e) => e.d) });
+  const marca = String(Date.now());
+  const firma = `v1=${createHmac('sha256', DONOR_FEED_SECRET).update(`v1:${marca}:`).update(cuerpo).digest('hex')}`;
+  const inicio = Date.now();
+  try {
+    const res = await fetch(DONOR_FEED_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Donor-Feed-Timestamp': marca, 'X-Donor-Feed-Signature': firma },
+      body: cuerpo,
+      signal: AbortSignal.timeout(DONOR_FEED_TIMEOUT_MS),
+    });
+    await res.arrayBuffer().catch(() => undefined);
+    const ms = Date.now() - inicio;
+    // 409 = ese paquete ya había llegado. Un 400 o 413 nunca se va a aceptar: se suelta y se marca el descarte.
+    if (res.ok || res.status === 409) {
+      console.log(`aviso a donadores: ${bandeja.length} muertos entregados (${res.status}, ${ms} ms)`);
+      return { pendientes: [], descartado: false };
+    }
+    if (res.status === 400 || res.status === 413) {
+      console.error(`aviso a donadores: la función rechazó el paquete (${res.status}); se descarta`);
+      return { pendientes: [], descartado: true };
+    }
+    console.warn(`aviso a donadores: respondió ${res.status} en ${ms} ms; ${bandeja.length} muertos quedan para la vuelta siguiente`);
+  } catch (err) {
+    console.warn(`aviso a donadores: sin respuesta (${String(err?.name || err?.message || err).slice(0, 80)}); ${bandeja.length} muertos quedan para la vuelta siguiente`);
+  }
+  return { pendientes: bandeja, descartado: marcaDescarte };
+}
+
 async function main() {
   const inicioVuelta = Date.now();
   const state = await readJson(STATE_PATH, {});
@@ -959,6 +1131,14 @@ async function main() {
       results[region].gold = { ok: false, error: String(err.message).slice(0, 200) };
     }
   }
+  // Aviso a donadores: arranca ya y corre en paralelo con el relleno (ver `enviarADonadores`).
+  const avisoDonadores = DONOR_FEED_URL && DONOR_FEED_SECRET
+    ? enviarADonadores(Object.fromEntries(Object.keys(REGION_HOSTS).map((region) => {
+        const k = results[region]?.kills;
+        return [region, { ok: k?.ok === true, lostWindow: k?.ok === true && k.data?.lostWindow === true }];
+      }))).catch(() => ({ pendientes: [], descartado: true }))
+    : null;
+
   // Relleno de huecos, con lo que sobra de la vuelta (presupuesto total, se corta en el primer 429).
   const hastaMs = Date.now() + GAP_RUN_BUDGET_MS;
   // Tope absoluto de TODO pedido del relleno (peleas, lista de peleas, ids): la vuelta nunca pasa de ~95 s.
@@ -1030,6 +1210,17 @@ async function main() {
     await writeStatus(results);
   } catch (err) {
     console.error('status.json no se pudo escribir:', err.message);
+  }
+
+  // Lo que no se entregó y las kills recuperadas del relleno van en el paquete de la vuelta siguiente.
+  if (avisoDonadores) {
+    try {
+      const r = await avisoDonadores;
+      const { bandeja, descartado } = armarBandeja(r.pendientes, muertosRecuperados, Date.now());
+      await guardarBandeja(bandeja, r.descartado || descartado);
+    } catch (err) {
+      console.warn('aviso a donadores: no se pudo guardar la bandeja:', err.message);
+    }
   }
 
   // `lastEventIds` se guarda en cada vuelta (corte de respaldo de `fetchNewEvents`); `lastSlowRun`

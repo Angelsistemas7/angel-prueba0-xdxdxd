@@ -1,9 +1,13 @@
 name: scrape
 on:
   schedule:
-    # Red de seguridad, NO el mecanismo principal — ver abajo. Cada 4h por si la cadena de
-    # auto-relanzamiento se corta (fallo de red al re-disparar, runner caído, etc.).
-    - cron: '0 */4 * * *'
+    # Red de seguridad, NO el mecanismo principal — ver abajo. Por si la cadena de auto-relanzamiento se
+    # corta (fallo de red al re-disparar, runner caído, etc.).
+    # Parte 136 (app): cada 30 min en vez de cada 4 h. Con la guardia (parte 127) una corrida programada que
+    # encuentra otra en curso o en cola solo mira y termina en segundos; si la cadena se cortó, el escáner
+    # vuelve en <= 30 min (antes, hasta 4 h sin kills). Minutos 7 y 37 para no caer en la hora en punto, cuando
+    # GitHub más atrasa los cron.
+    - cron: '7,37 * * * *'
   workflow_dispatch: {}
 
 # Parte 127: la `concurrency` va en el trabajo `scrape`, no en todo el workflow. Así la corrida del cron de respaldo
@@ -92,6 +96,10 @@ jobs:
           DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
           # Auditoría p92 H6: el nombre de rama por env, no pegado en el script (se expandía antes de bash).
           REF_NAME: ${{ github.ref_name }}
+          # 2026-10-30 (app, parte 136): aviso de muerte a los donadores (ver `enviarADonadores` en scrape.js).
+          # Sin el secreto no se manda nada y todo sigue igual. GitHub tapa el secreto en los registros.
+          DONOR_FEED_SECRET: ${{ secrets.DONOR_FEED_SECRET }}
+          DONOR_FEED_URL: ${{ vars.DONOR_FEED_URL || 'https://us-central1-albion-world.cloudfunctions.net/donorDeathFeed' }}
         run: |
           END=$((SECONDS + 20400))
           LAST_PUSH=$SECONDS
@@ -128,6 +136,22 @@ jobs:
             MES_HOY=$(date -u +%Y-%m)
             if [ "$MES_HOY" = "$MES_CLONADO" ]; then return 0; fi
             if [ -z "$DATA_REPO_TOKEN" ]; then return 1; fi
+            # Parte 136: cambio de mes con el clon del mes anterior en el disco (una corrida que cruza la medianoche
+            # del día 1). Antes se borraba sin subir: se perdían los últimos ~15 min del último día del mes en las
+            # tres regiones (y el estado ya había avanzado, así que no se volvían a pedir). Ahora se sube primero y,
+            # si el push falla, el clon se aparta a `datarepos-pendientes/` y se reintenta en cada ciclo.
+            if [ -n "$MES_CLONADO" ]; then
+              push_datarepos
+              for R in $REGIONES; do
+                [ -d "datarepos/$R" ] || continue
+                if [ -n "$(git -C "datarepos/$R" status --porcelain)" ] || [ -n "$(git -C "datarepos/$R" log --oneline '@{u}..' 2>/dev/null)" ]; then
+                  mkdir -p datarepos-pendientes
+                  rm -rf "datarepos-pendientes/$R-$MES_CLONADO"
+                  mv "datarepos/$R" "datarepos-pendientes/$R-$MES_CLONADO"
+                  echo "::warning::$R $MES_CLONADO: quedó sin subir al cambiar de mes; se reintenta en cada ciclo"
+                fi
+              done
+            fi
             for R in $REGIONES; do
               REPO="albion-data-$R-$MES_HOY"
               rm -rf "datarepos/$R"
@@ -168,16 +192,26 @@ jobs:
             AYER=$(date -u -d "$HOY -1 day" +%Y-%m-%d)
             PATRONES="/README.md"
             for T in kills battles equipment; do
-              PATRONES="$PATRONES /$T/$HOY.ndjson /$T/$AYER.ndjson"
+              # Parte 136: también las partes `.2`, `.3`... de un día que pasó el tope (`TOPE_ARCHIVO_DIA` en scrape.js).
+              PATRONES="$PATRONES /$T/$HOY.ndjson /$T/$AYER.ndjson /$T/$HOY.*.ndjson /$T/$AYER.*.ndjson"
             done
             for R in $REGIONES; do
               [ -d "datarepos/$R" ] || continue
-              git -C "datarepos/$R" sparse-checkout set --no-cone $PATRONES || echo "::warning::sparse-checkout de $R falló"
+              ( set -f; git -C "datarepos/$R" sparse-checkout set --no-cone $PATRONES ) || echo "::warning::sparse-checkout de $R falló"
             done
             DIAS_AJUSTADOS="$HOY"
           }
 
           push_datarepos() {
+            # Parte 136: los clones de un mes anterior que no se pudieron subir al cambiar de mes (ver `preparar_repos`).
+            for D in datarepos-pendientes/*; do
+              [ -d "$D" ] || continue
+              if [ -n "$(git -C "$D" status --porcelain)" ]; then
+                git -C "$D" add --sparse -A
+                git -C "$D" diff --cached --quiet || git -C "$D" commit -q -m "Datos $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
+              fi
+              if git -C "$D" push -q origin HEAD; then rm -rf "$D"; echo "pendiente $D subido"; else echo "::warning::push de $D falló, se reintenta"; fi
+            done
             if [ -z "$MES_CLONADO" ]; then return 0; fi
             for R in $REGIONES; do
               [ -d "datarepos/$R" ] || continue
@@ -194,6 +228,10 @@ jobs:
                   echo "::warning::$R: cambios fuera del checkout sin subir: $(git -C "datarepos/$R" status --porcelain | head -3 | tr '\n' ' ')"
                   continue
                 fi
+                # Parte 136: aviso temprano si un archivo se acerca a los 100 MiB que GitHub rechaza (el escáner
+                # abre la parte `.2` a los 90 MB; esto avisa antes, a los 80 MB, para verlo venir en el panel).
+                GRANDES=$(find "datarepos/$R" -path "datarepos/$R/.git" -prune -o -type f -size +80M -print 2>/dev/null | head -3 | tr '\n' ' ')
+                [ -n "$GRANDES" ] && echo "::warning::$R: archivos de más de 80 MB: $GRANDES"
                 git -C "datarepos/$R" commit -q -m "Datos $(date -u +%Y-%m-%dT%H:%M:%SZ)"
                 git -C "datarepos/$R" push -q origin HEAD || echo "push de $R falló, se reintenta en el próximo ciclo"
               fi
@@ -256,8 +294,11 @@ jobs:
             fi
             npm start || echo "scrape falló esta vuelta, se sigue con la siguiente"
             if [ $((SECONDS - LAST_PUSH)) -ge 900 ]; then
-              push_if_dirty
+              # Parte 136: primero los datos y después el estado. Si el runner se cae entre los dos, el estado
+              # queda ATRÁS de los datos (la próxima corrida vuelve a pedir esas kills y las descarta por id) y no
+              # adelante (con el estado adelante, las kills no subidas no se volvían a pedir nunca).
               push_datarepos
+              push_if_dirty
               LAST_PUSH=$SECONDS
             fi
             ELAPSED=$((SECONDS - START_ITER))
@@ -266,8 +307,8 @@ jobs:
               sleep "$SLEEP_FOR"
             fi
           done
-          push_if_dirty
           push_datarepos
+          push_if_dirty
 
       # Re-dispara este mismo workflow antes de que el runner llegue al límite de 6h, para
       # continuidad 24/7 sin depender del cron de GitHub. `always()` para que la cadena no se
