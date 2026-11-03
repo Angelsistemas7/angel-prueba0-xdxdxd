@@ -770,14 +770,16 @@ const RESCATE_REVISAR_MS = 30 * 60_000;
 const RESCATE_ETIQUETA = /^rescate-(europe|americas|asia)-/;
 const rescateCache = new Map();
 
-/** Assets `.ndjson.gz` de las releases `rescate-*` de este repo (una consulta cada 30 min, sin token: 60 por hora
- * alcanzan). Si GitHub no responde se usa la lista anterior. */
+/** Assets `.ndjson.gz` de las releases `rescate-*` de este repo: una consulta cada 30 min (48 por día), con el token del
+ * workflow si está (cupo de 1.000 por hora del repo; sin token, 60 por hora por IP). Si GitHub no responde se usa la
+ * lista anterior. */
 async function rescatesPublicados(state) {
   const prev = state.rescatesLista ?? { at: null, items: [] };
   const repo = process.env.GITHUB_REPOSITORY;
   if (!repo || (prev.at && Date.now() - Date.parse(prev.at) < RESCATE_REVISAR_MS)) return prev.items;
   try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50`, { headers: { Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(15_000) });
+    const headers = { Accept: 'application/vnd.github+json', ...(process.env.GH_TOKEN ? { Authorization: `Bearer ${process.env.GH_TOKEN}` } : {}) };
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50`, { headers, signal: AbortSignal.timeout(15_000) });
     if (!res.ok) throw new Error(`releases respondió ${res.status}`);
     const items = [];
     for (const rel of await res.json()) {
