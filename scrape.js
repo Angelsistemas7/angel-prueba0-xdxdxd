@@ -577,8 +577,11 @@ const GAP_RUN_MAX_MS = 95_000;
 /** Un pedido cada 333 ms (3 por segundo: medido sin 429) y hasta 96 esperando respuesta: un id que
  * Albion calcula en su origen tarda 20-50 s (medido) y no debe frenar a los demás. 2026-11-03 (chat 155 de la app, con
  * el sí del dueño): con 8 el relleno de Américas iba a ~17-20 ids/min (8 esperando ~30 s cada uno); con 96 el límite
- * pasa a ser el ritmo de 3 por segundo de siempre, no la espera. El ritmo de pedidos a Albion no cambia. */
-const GAP_PROBE_SPACING_MS = 333;
+ * pasa a ser el ritmo, no la espera. Medido ese día contra la API real de Américas (otra IP, una vuelta por minuto): el
+ * límite de Albion es de pedidos por minuto, no de pedidos en espera. A 333 ms (85 por vuelta) dio 3 vueltas limpias y
+ * después 429 en cadena; a 500 ms (57 por vuelta) 4 de 4 limpias, ~47 ids/min. Se usa 500 ms: la captura normal, que
+ * comparte el mismo límite, va primero. Producción lo confirma en status.json (`gapLimitedAt`). */
+const GAP_PROBE_SPACING_MS = 500;
 const GAP_PROBE_MAX_IN_FLIGHT = 96;
 /** Tope de ids de UN hueco: si es más grande, solo se barren los más nuevos (ver scrapeRegion). 2026-11-03 (chat 155):
  * 200.000 → 1.300.000 (igual al tope total): al volver Américas el hueco de la caída se cortó en 200.000 en silencio. */
