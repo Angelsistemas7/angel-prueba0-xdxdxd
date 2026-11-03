@@ -498,7 +498,21 @@ async function scrapeRegion(region, lastEventId) {
       console.error(`[${region}] hueco ${desde} → ${hasta}: sus peleas se listan en el relleno`);
     }
   }
-  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada, maxEventId, gapWindow, gapRange };
+  // 2026-11-03 (chat 154 de la app): `ok` no basta para saber si Albion manda datos. Del 2-nov 19:16 UTC en adelante la
+  // lista de Américas quedó congelada: algunas vueltas respondían «ok» sin una sola kill nueva. La hora de la kill más
+  // nueva guardada es lo que miran el vigía de Firebase y el Mapa de la app («Albion no manda kills desde …»).
+  const newestKillAt = horaDeLaKillMasNueva(todays, ayerKills, kills);
+  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada, maxEventId, gapWindow, gapRange, ...(newestKillAt ? { newestKillAt } : {}) };
+}
+
+/** Hora (ISO) de la kill más nueva entre las guardadas hoy, ayer y las de esta vuelta; null si no hay ninguna. */
+function horaDeLaKillMasNueva(...listas) {
+  let max = -Infinity;
+  for (const lista of listas) for (const k of lista) {
+    const ms = Date.parse(k?.timestamp ?? '');
+    if (Number.isFinite(ms) && ms > max) max = ms;
+  }
+  return Number.isFinite(max) ? new Date(max).toISOString() : null;
 }
 
 /** Línea de kill del NDJSON a partir de un evento de la API. */
