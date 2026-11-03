@@ -604,9 +604,9 @@ async function fetchRelleno(url, timeoutMs = FETCH_TIMEOUT_MS, cancelar = null) 
   return res;
 }
 
-/** Tope de ids pendientes por región (auditoría p60: la lista crecía sin cota en sobrecarga). A ~90 ids
- * por vuelta son ~2 días de barrido; más viejo que eso no se llega a rellenar a tiempo. */
-const GAP_PENDING_MAX_IDS = 900_000;
+/** Tope de ids pendientes por región (auditoría p60: la lista crecía sin cota en sobrecarga). 2026-11-03 (chat 155 de
+ * la app): 900.000 → 1.300.000 para que entre entero el hueco de Américas del 1 al 3 de noviembre (~1,15 millones). */
+const GAP_PENDING_MAX_IDS = 1_300_000;
 
 /** Une rangos que se tocan, ordena del más nuevo al más viejo y descarta (con aviso) lo que pase del tope. */
 function topearRangos(region, rangos) {
@@ -1139,6 +1139,14 @@ async function main() {
     gapRanges.americas = topearRangos('americas', [...(gapRanges.americas ?? []), [1473735177, 1474376412]]);
     state.rellenoExtra = 'p154-americas';
     console.error('[americas] relleno: se agregó el tramo viejo del hueco del 1-2 nov (1473735177…1474376412)');
+  }
+  // 2026-11-03 (chat 155 de la app): al volver Albion, el hueco de la caída (2-nov 19:16 → 3-nov 11:09) pasó del tope de
+  // un hueco (200.000 ids) y el tope total de 900.000 recortó la punta vieja del tramo de arriba. Se encolan UNA vez los
+  // dos pedazos que quedaron fuera; lo que ya estaba guardado no se duplica (appendUniqueNdjson por id).
+  if (state.rellenoExtra2 !== 'p155-americas') {
+    gapRanges.americas = topearRangos('americas', [...(gapRanges.americas ?? []), [1474635538, 1474729791], [1473735177, 1473895155]]);
+    state.rellenoExtra2 = 'p155-americas';
+    console.error('[americas] relleno: se agregaron los tramos recortados por los topes (1474635538…1474729791 y 1473735177…1473895155)');
   }
   for (const region of Object.keys(REGION_HOSTS)) {
     results[region] = {};
