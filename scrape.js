@@ -487,6 +487,7 @@ async function scrapeRegion(region, lastEventId) {
       const total = minLeido - 1 - maxConocido;
       gapRange = [Math.max(maxConocido + 1, minLeido - GAP_RANGE_MAX_IDS), minLeido - 1];
       if (total > GAP_RANGE_MAX_IDS) {
+        idsDescartados[region] = (idsDescartados[region] ?? 0) + total - GAP_RANGE_MAX_IDS;
         console.error(`[${region}] hueco por id de ${total} ids: se barren los ${GAP_RANGE_MAX_IDS} más nuevos; ${total - GAP_RANGE_MAX_IDS} más viejos quedan sin barrer`);
       }
       console.error(`[${region}] hueco por id: ${gapRange[0]}…${gapRange[1]} (${gapRange[1] - gapRange[0] + 1} ids a revisar)`);
@@ -573,12 +574,17 @@ const GAP_RUN_BUDGET_MS = 30_000;
 /** Si la captura normal ya tardó esto, la vuelta no rellena; y ninguna vuelta pasa de GAP_RUN_MAX_MS. */
 const GAP_SKIP_IF_CAPTURE_MS = 30_000;
 const GAP_RUN_MAX_MS = 95_000;
-/** Un pedido cada 333 ms (3 por segundo: medido sin 429) y hasta 8 esperando respuesta: un id que
- * Albion calcula en su origen tarda 20-50 s (medido) y no debe frenar a los demás. */
+/** Un pedido cada 333 ms (3 por segundo: medido sin 429) y hasta 96 esperando respuesta: un id que
+ * Albion calcula en su origen tarda 20-50 s (medido) y no debe frenar a los demás. 2026-11-03 (chat 155 de la app, con
+ * el sí del dueño): con 8 el relleno de Américas iba a ~17-20 ids/min (8 esperando ~30 s cada uno); con 96 el límite
+ * pasa a ser el ritmo de 3 por segundo de siempre, no la espera. El ritmo de pedidos a Albion no cambia. */
 const GAP_PROBE_SPACING_MS = 333;
-const GAP_PROBE_MAX_IN_FLIGHT = 8;
-/** Tope de ids de UN hueco: si es más grande, solo se barren los más nuevos (ver scrapeRegion). */
-const GAP_RANGE_MAX_IDS = 200_000;
+const GAP_PROBE_MAX_IN_FLIGHT = 96;
+/** Tope de ids de UN hueco: si es más grande, solo se barren los más nuevos (ver scrapeRegion). 2026-11-03 (chat 155):
+ * 200.000 → 1.300.000 (igual al tope total): al volver Américas el hueco de la caída se cortó en 200.000 en silencio. */
+const GAP_RANGE_MAX_IDS = 1_300_000;
+/** Ids descartados por los topes en ESTA vuelta, por región: van a status.json (`gapIdsDropped`) para que se vean. */
+const idsDescartados = {};
 class LimitadoPorAlbion extends Error {}
 /** Se acabó el tiempo de la vuelta para el relleno: no es un fallo de Albion, se sigue la próxima. */
 class SinTiempo extends Error {}
@@ -629,6 +635,7 @@ function topearRangos(region, rangos) {
     total += cabe;
   }
   const todos = unidos.reduce((n, [lo, hi]) => n + hi - lo + 1, 0);
+  if (todos > total) idsDescartados[region] = (idsDescartados[region] ?? 0) + todos - total;
   if (todos > total) console.error(`[${region}] relleno: más de ${GAP_PENDING_MAX_IDS} ids pendientes; se descartan ${todos - total} de los más viejos`);
   return out;
 }
@@ -1247,6 +1254,9 @@ async function main() {
         gapRecovered: recuperadas,
         gapQueue: (gapQueue[region] ?? []).length,
         gapIdsPending: (gapRanges[region] ?? []).reduce((n, [lo, hi]) => n + hi - lo + 1, 0),
+        // Chat 155: quedan en status.json (se conservan entre vueltas) para ver desde afuera si el relleno choca con
+        // el límite de Albion o si un tope descartó ids.
+        ...(limitado ? { gapLimitedAt: new Date().toISOString() } : {}),
       });
     }
   }
@@ -1255,6 +1265,11 @@ async function main() {
     // salir para que la captura normal de la vuelta siguiente nunca arranque castigada.
     console.warn('relleno: Albion pidió esperar (429); sigue la próxima vuelta');
     await sleep(5000);
+  }
+
+  // Descartes por los topes (en la captura o al encolar): para TODA región, aunque el relleno no haya llegado a ella.
+  for (const [region, n] of Object.entries(idsDescartados)) {
+    if (n > 0 && results[region]?.kills?.ok) Object.assign(results[region].kills.data, { gapIdsDropped: n, gapDroppedAt: new Date().toISOString() });
   }
 
   try {
