@@ -1,0 +1,102 @@
+name: rescate
+# Chat 156 de la app (3-nov-2026): rescate rápido de un hueco de kills (caída de la API de Albion) repartido en varias
+# máquinas, cada una con su IP y su propio cupo de Albion (el límite es por IP y por minuto). Ver `rescate.mjs`.
+# Lo pide solo `scrape.js` cuando una región vuelve con un hueco grande (`pedirRescate`); también se puede correr a mano.
+# Cada máquina sube su parte a la MISMA release `rescate-<región>-…`; `scrape.js` las descubre y las carga sin duplicar.
+# Gratis: repo público (GitHub no cobra Actions en repos públicos).
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'Servidor'
+        required: true
+        type: choice
+        options: [americas, europe, asia]
+      desde:
+        description: 'Comienzo del hueco (ISO, UTC), p. ej. 2026-11-01T02:30:00Z'
+        required: true
+        type: string
+      hasta:
+        description: 'Fin del hueco (ISO, UTC)'
+        required: true
+        type: string
+      maquinas:
+        description: 'Cuántas máquinas (1-12)'
+        required: false
+        default: '8'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      partes: ${{ steps.p.outputs.partes }}
+      tag: ${{ steps.p.outputs.tag }}
+    steps:
+      - id: p
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGION: ${{ inputs.region }}
+          DESDE: ${{ inputs.desde }}
+          HASTA: ${{ inputs.hasta }}
+          MAQUINAS: ${{ inputs.maquinas }}
+        run: |
+          case "$REGION" in americas|europe|asia) ;; *) echo "región inválida: $REGION"; exit 1 ;; esac
+          d=$(date -u -d "$DESDE" +%s) && h=$(date -u -d "$HASTA" +%s) || { echo "fechas inválidas"; exit 1; }
+          [ "$h" -gt "$d" ] || { echo "'hasta' tiene que ser después de 'desde'"; exit 1; }
+          # Más de 10 días no tiene sentido: la ventana de 1.051 kills de cada gremio no llega tan atrás.
+          [ $((h - d)) -le 864000 ] || { echo "hueco de más de 10 días: usar varios rescates"; exit 1; }
+          n="$MAQUINAS"
+          [[ "$n" =~ ^[0-9]+$ ]] || n=8
+          [ "$n" -ge 1 ] || n=1
+          [ "$n" -le 12 ] || n=12
+          echo "partes=[$(seq -s, 0 $((n - 1)))]" >> "$GITHUB_OUTPUT"
+          tag="rescate-$REGION-$(date -u -d "$DESDE" +%Y%m%dT%H%M)-$GITHUB_RUN_ID"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --latest=false \
+            --title "Rescate $REGION $DESDE → $HASTA" \
+            --notes "Kills rescatadas por gremio y por jugador del hueco $DESDE → $HASTA ($REGION), en $n partes. Las carga scrape.js sin duplicar. Corrida $GITHUB_RUN_ID."
+
+  barrer:
+    needs: preparar
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: ${{ fromJSON(needs.preparar.outputs.partes) }}
+    steps:
+      # Solo los archivos de la raíz (rescate.mjs y scrape.js, de donde salen las funciones de las líneas).
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0 (fijada por SHA, como scrape.yml)
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            .github
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 20
+      - name: Rescatar
+        env:
+          REGION: ${{ inputs.region }}
+          DESDE: ${{ inputs.desde }}
+          HASTA: ${{ inputs.hasta }}
+          SHARD: ${{ matrix.parte }}
+          SHARDS: ${{ strategy.job-total }}
+          PRESUPUESTO_MIN: '320'
+        run: |
+          OUT="rescate-$REGION-parte$SHARD.ndjson.gz" node rescate.mjs
+      - name: Subir a la release
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.preparar.outputs.tag }}
+        run: |
+          shopt -s nullglob
+          f=(rescate-*.ndjson.gz rescate-*.json)
+          if [ ${#f[@]} -eq 0 ]; then echo "::warning::esta parte no dejó archivos"; exit 0; fi
+          gh release upload "$TAG" "${f[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+          cat rescate-*.json >> "$GITHUB_STEP_SUMMARY" || true

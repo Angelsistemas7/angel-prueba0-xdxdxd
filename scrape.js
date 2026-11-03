@@ -1,8 +1,10 @@
 import { execFile } from 'child_process';
 import { createHmac, randomUUID } from 'crypto';
 import { promises as fs } from 'fs';
+import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
+import { gunzipSync } from 'zlib';
 
 const execFileP = promisify(execFile);
 
@@ -474,6 +476,7 @@ async function scrapeRegion(region, lastEventId) {
   // perdieron. Las peleas de ese rato van a la cola de relleno (state.json) y se procesan de a poco.
   let gapWindow = null;
   let gapRange = null;
+  let gapHasta = null; // chat 156: la kill más vieja leída, aunque no se sepa dónde empezó el hueco (caída de >2 días)
   if (eventsResult.agotada && events.length > 0) {
     // Rango exacto de ids perdidos: después de la kill guardada más nueva y antes de la más vieja leída.
     // Recorrido simple: Math.max(...ids) revienta con las ~140.000 kills diarias de Europa.
@@ -494,6 +497,7 @@ async function scrapeRegion(region, lastEventId) {
     }
     const desde = ultimaKillGuardada(todays, ayerKills);
     const hasta = events.reduce((min, e) => (e.TimeStamp < min ? e.TimeStamp : min), events[0].TimeStamp);
+    gapHasta = hasta;
     if (desde && desde < hasta) {
       gapWindow = [desde, hasta];
       console.error(`[${region}] hueco ${desde} → ${hasta}: sus peleas se listan en el relleno`);
@@ -503,7 +507,7 @@ async function scrapeRegion(region, lastEventId) {
   // lista de Américas quedó congelada: algunas vueltas respondían «ok» sin una sola kill nueva. La hora de la kill más
   // nueva guardada es lo que miran el vigía de Firebase y el Mapa de la app («Albion no manda kills desde …»).
   const newestKillAt = horaDeLaKillMasNueva(todays, ayerKills, kills);
-  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada, maxEventId, gapWindow, gapRange, ...(newestKillAt ? { newestKillAt } : {}) };
+  return { newKills: newKills.length, newBattles: newBattles.length, pages: eventsResult.paginas, lostWindow: eventsResult.agotada, maxEventId, gapWindow, gapRange, gapHasta, ...(newestKillAt ? { newestKillAt } : {}) };
 }
 
 /** Hora (ISO) de la kill más nueva entre las guardadas hoy, ayer y las de esta vuelta; null si no hay ninguna. */
@@ -750,6 +754,138 @@ async function guardarRecuperadas(region, events) {
     await appendUniqueNdjson(rutaDeDia('equipment', region, fecha), evs.filter((e) => ids.has(e.EventId)).map((e) => extractEquipment(e, valores)), 'e');
   }
   return nuevasTotal;
+}
+
+/** 2026-11-03 (chat 156 de la app): rescate rápido de huecos grandes (caída de la API de Albion en Américas, 1-nov 02:33 →
+ * 3-nov 11:10 UTC). Medido: `/events?guildId=G` trae las kills cuyo ASESINO es de G, 51 por pedido en <1 s y días
+ * atrás, y `/players/{id}/kills` las de los asesinos sin gremio; el barrido por id da ~41 ids/min y solo 1 de cada ~6
+ * es una kill. `rescate.mjs` (workflow `rescate.yml`, varias máquinas = varias IP, sin gastar el límite de Albion de
+ * este escáner) publica releases `rescate-<región>-…` con las líneas ya armadas con las MISMAS funciones de este
+ * archivo y sin los ids que ya estaban en cualquier día (stats-builder solo quita repetidos dentro de un día).
+ * Acá cada asset se agrega al día de cada kill con `appendUniqueNdjson` (sin duplicar, también entre máquinas: una
+ * kill tiene un solo día), de a RESCATE_LOTE por vuelta, con el avance en state.json. El barrido por id sigue igual:
+ * completa lo que ninguna vía alcanzó. No avisa a donadores: son muertes de hace días. */
+const RESCATE_LOTE = 4000;
+const RESCATE_REVISAR_MS = 30 * 60_000;
+const RESCATE_ETIQUETA = /^rescate-(europe|americas|asia)-/;
+const rescateCache = new Map();
+
+/** Assets `.ndjson.gz` de las releases `rescate-*` de este repo (una consulta cada 30 min, sin token: 60 por hora
+ * alcanzan). Si GitHub no responde se usa la lista anterior. */
+async function rescatesPublicados(state) {
+  const prev = state.rescatesLista ?? { at: null, items: [] };
+  const repo = process.env.GITHUB_REPOSITORY;
+  if (!repo || (prev.at && Date.now() - Date.parse(prev.at) < RESCATE_REVISAR_MS)) return prev.items;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50`, { headers: { Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) throw new Error(`releases respondió ${res.status}`);
+    const items = [];
+    for (const rel of await res.json()) {
+      const m = RESCATE_ETIQUETA.exec(rel?.tag_name ?? '');
+      if (!m) continue;
+      for (const a of rel.assets ?? []) {
+        if (a?.state === 'uploaded' && String(a.name).endsWith('.ndjson.gz')) items.push({ id: `${rel.tag_name}/${a.name}`, region: m[1], url: a.browser_download_url });
+      }
+    }
+    state.rescatesLista = { at: new Date().toISOString(), items };
+    return items;
+  } catch (err) {
+    console.error(`rescate: no se pudo leer la lista de releases (${String(err.message).slice(0, 120)}); sigue la anterior`);
+    state.rescatesLista = { at: new Date().toISOString(), items: prev.items };
+    return prev.items;
+  }
+}
+async function lineasDeRescate(r) {
+  if (rescateCache.has(r.id)) return rescateCache.get(r.id);
+  // Una bajada por corrida (5 h 40 min): queda en el disco del runner.
+  const local = path.join(os.tmpdir(), `rescate-${r.id.replace(/[^\w.-]/g, '_')}`);
+  let buf;
+  try {
+    buf = await fs.readFile(local);
+  } catch {
+    const res = await fetch(r.url, { signal: AbortSignal.timeout(120_000) });
+    if (!res.ok) throw new Error(`rescate ${r.id}: la descarga respondió ${res.status}`);
+    buf = Buffer.from(await res.arrayBuffer());
+    await fs.writeFile(local, buf);
+  }
+  const lineas = gunzipSync(buf).toString('utf8').split('\n').filter(Boolean);
+  rescateCache.set(r.id, lineas);
+  return lineas;
+}
+
+/** Agrega UN lote (RESCATE_LOTE líneas) del primer rescate publicado que no terminó; así la vuelta no se alarga.
+ * Devuelve el avance por región para status.json. */
+async function cargarRescates(state) {
+  const avance = {};
+  const hechos = { ...(state.rescates ?? {}) };
+  const publicados = await rescatesPublicados(state);
+  for (const r of publicados) {
+    const prev = hechos[r.id] ?? { n: 0, nuevas: 0 };
+    if (prev.hecho) continue;
+    try {
+      const lineas = await lineasDeRescate(r);
+      const lote = lineas.slice(prev.n, prev.n + RESCATE_LOTE).map((l) => JSON.parse(l));
+      const porDia = new Map();
+      for (const x of lote) {
+        if (!x?.k || !Number.isFinite(x.k.eventId) || !/^\d{4}-\d{2}-\d{2}$/.test(String(x.d))) continue;
+        const fecha = await fechaDeGuardado(r.region, x.d);
+        if (!porDia.has(fecha)) porDia.set(fecha, []);
+        porDia.get(fecha).push(x);
+      }
+      let nuevas = 0;
+      for (const [fecha, xs] of porDia) {
+        const agregadas = await appendUniqueNdjson(rutaDeDia('kills', r.region, fecha), xs.map((x) => x.k), 'eventId');
+        if (agregadas.length === 0) continue;
+        nuevas += agregadas.length;
+        const ids = new Set(agregadas.map((k) => k.eventId));
+        await appendUniqueNdjson(rutaDeDia('equipment', r.region, fecha), xs.filter((x) => x.q && ids.has(x.k.eventId)).map((x) => x.q), 'e');
+      }
+      const n = prev.n + lote.length;
+      hechos[r.id] = { n, total: lineas.length, nuevas: prev.nuevas + nuevas, ...(n >= lineas.length ? { hecho: new Date().toISOString() } : {}) };
+      avance[r.region] = { rescate: r.id, rescateN: n, rescateTotal: lineas.length, rescateNuevas: prev.nuevas + nuevas };
+      console.log(`[${r.region}] rescate ${r.id}: ${n}/${lineas.length} (+${nuevas} kills nuevas en esta vuelta)`);
+      if (n >= lineas.length) rescateCache.delete(r.id);
+    } catch (err) {
+      // Nunca frena la captura: se reintenta la vuelta siguiente desde el mismo punto. Un asset roto o borrado no traba
+      // a los demás para siempre: a los 10 fallos seguidos se deja (queda anotado en state.json y en el registro).
+      const fallos = (prev.fallos ?? 0) + 1;
+      hechos[r.id] = { ...prev, fallos, ...(fallos >= 10 ? { hecho: new Date().toISOString(), error: String(err.message).slice(0, 200) } : {}) };
+      console.error(`[${r.region}] rescate ${r.id}: ${String(err.message).slice(0, 200)}${fallos >= 10 ? ' (10 fallos: se deja)' : ''}`);
+    }
+    break; // un lote por vuelta
+  }
+  // Lo que falta, para ver desde afuera cuánto queda. Siempre se escribe (también 0): status.json conserva los campos
+  // de la vuelta anterior y un número viejo quedaría pegado.
+  for (const region of Object.keys(REGION_HOSTS)) {
+    avance[region] = { ...(avance[region] ?? {}), rescatesPendientes: publicados.filter((r) => r.region === region && !hechos[r.id]?.hecho).length };
+  }
+  state.rescates = hechos;
+  return avance;
+}
+
+/** Pedido automático de rescate (workflow `rescate.yml`) cuando una región vuelve con un hueco de al menos
+ * RESCATE_MIN_IDS ids (~1 h de Américas). Lo manda el bucle de `scrape.yml` (este proceso no tiene token): acá solo se
+ * escribe `rescate-pedidos.ndjson`. No se repite una ventana ya cubierta por otro pedido; tope de 6 por región y día
+ * contra un error que pida sin parar (cuando Albion vuelve a medias hay varios huecos seguidos y cada uno vale). */
+const RESCATE_MIN_IDS = 20_000;
+const RESCATE_MAQUINAS = 8;
+const RESCATE_PEDIDOS_PATH = 'rescate-pedidos.ndjson';
+async function pedirRescate(state, region, desde, hasta) {
+  const ahora = Date.now();
+  const previos = (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < 86_400_000);
+  const deRegion = previos.filter((p) => p.region === region);
+  // 5 min de margen a cada lado: lo repetido se descarta por id al cargar.
+  const pedido = { region, desde: new Date(Date.parse(desde) - 300_000).toISOString(), hasta: new Date(Date.parse(hasta) + 300_000).toISOString(), maquinas: String(RESCATE_MAQUINAS) };
+  const cubierto = deRegion.some((p) => p.desde <= pedido.desde && p.hasta >= pedido.hasta);
+  if (cubierto || deRegion.length >= 6) {
+    console.error(`[${region}] rescate: no se pide otro (${cubierto ? 'esa ventana ya se pidió' : 'tope de 6 por día'}); el barrido por id sigue con el hueco ${desde} → ${hasta}`);
+    state.rescatesPedidos = previos;
+    return false;
+  }
+  await fs.appendFile(RESCATE_PEDIDOS_PATH, JSON.stringify(pedido) + '\n', 'utf8');
+  state.rescatesPedidos = [...previos, { ...pedido, at: new Date(ahora).toISOString() }];
+  console.error(`[${region}] rescate: hueco grande ${pedido.desde} → ${pedido.hasta}; se pide el rescate por gremio`);
+  return true;
 }
 
 /** Un evento por id: el evento, `null` si no existe (404: ese id no es una kill), o lanza si falla
@@ -1172,8 +1308,20 @@ async function main() {
         gapWindows[region] = ventanas.slice(-20);
       }
       if (r.gapRange) gapRanges[region] = topearRangos(region, [r.gapRange, ...(gapRanges[region] ?? [])]); // el más nuevo primero
+      // Chat 156: hueco grande → rescate rápido por gremio en otras máquinas (ver `pedirRescate`). El comienzo sale de la
+      // última kill guardada; si la caída pasó de 2 días no está en los archivos de hoy/ayer y se usa la anotada en el estado.
+      if (r.gapRange && r.gapRange[1] - r.gapRange[0] + 1 >= RESCATE_MIN_IDS) {
+        const desde = r.gapWindow?.[0] ?? state.ultimaKillAt?.[region] ?? null;
+        if (desde && r.gapHasta && desde < r.gapHasta) {
+          if (await pedirRescate(state, region, desde, r.gapHasta)) r.rescatePedidoAt = new Date().toISOString();
+        } else {
+          console.error(`[${region}] rescate: hueco grande sin hora de comienzo conocida; queda para el barrido por id`);
+        }
+      }
+      if (r.newestKillAt && !(state.ultimaKillAt?.[region] > r.newestKillAt)) state.ultimaKillAt = { ...(state.ultimaKillAt ?? {}), [region]: r.newestKillAt };
       delete r.gapWindow;
       delete r.gapRange;
+      delete r.gapHasta;
       r.originRefetches = cacheRefetches - antes;
       results[region].kills = { ok: true, data: r };
       // Siempre se escribe (también null): antes el aviso quedaba pegado en status.json aunque ya no pasara.
@@ -1273,6 +1421,11 @@ async function main() {
   // Descartes por los topes (en la captura o al encolar): para TODA región, aunque el relleno no haya llegado a ella.
   for (const [region, n] of Object.entries(idsDescartados)) {
     if (n > 0 && results[region]?.kills?.ok) Object.assign(results[region].kills.data, { gapIdsDropped: n, gapDroppedAt: new Date().toISOString() });
+  }
+
+  // Chat 156: lotes de kills rescatadas por gremio (ver `RESCATES`), después de la captura y del relleno.
+  for (const [region, a] of Object.entries(await cargarRescates(state))) {
+    if (results[region]?.kills?.ok) Object.assign(results[region].kills.data, a);
   }
 
   try {

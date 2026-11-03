@@ -100,6 +100,8 @@ jobs:
           # Sin el secreto no se manda nada y todo sigue igual. GitHub tapa el secreto en los registros.
           DONOR_FEED_SECRET: ${{ secrets.DONOR_FEED_SECRET }}
           DONOR_FEED_URL: ${{ vars.DONOR_FEED_URL || 'https://us-central1-albion-world.cloudfunctions.net/donorDeathFeed' }}
+          # Chat 156 (app): para pedir `rescate.yml` cuando scrape.js deja un pedido (hueco grande al volver Albion).
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           END=$((SECONDS + 20400))
           LAST_PUSH=$SECONDS
@@ -293,6 +295,24 @@ jobs:
               unset DATA_REPOS_DIR
             fi
             npm start || echo "scrape falló esta vuelta, se sigue con la siguiente"
+            # Chat 156 (app): pedidos de rescate rápido que dejó scrape.js (`pedirRescate`). Cada línea es el JSON de los
+            # inputs de `rescate.yml`. Lo que no se pudo mandar se reintenta en la vuelta siguiente (como mucho 20 líneas).
+            if [ -s rescate-pedidos.ndjson ]; then
+              : > rescate-pedidos.pendientes
+              while IFS= read -r PEDIDO; do
+                [ -n "$PEDIDO" ] || continue
+                if curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+                  "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/rescate.yml/dispatches" \
+                  -d "{\"ref\":\"$REF_NAME\",\"inputs\":$PEDIDO}"; then
+                  echo "rescate pedido: $PEDIDO"
+                else
+                  echo "::warning::no se pudo pedir el rescate ($PEDIDO); se reintenta"
+                  echo "$PEDIDO" >> rescate-pedidos.pendientes
+                fi
+              done < rescate-pedidos.ndjson
+              tail -n 20 rescate-pedidos.pendientes > rescate-pedidos.ndjson
+              rm -f rescate-pedidos.pendientes
+            fi
             if [ $((SECONDS - LAST_PUSH)) -ge 900 ]; then
               # Parte 136: primero los datos y después el estado. Si el runner se cae entre los dos, el estado
               # queda ATRÁS de los datos (la próxima corrida vuelve a pedir esas kills y las descarta por id) y no
