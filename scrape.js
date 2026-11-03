@@ -374,7 +374,20 @@ async function fetchNewEvents(base, region, knownIds, lastEventId) {
   let minSnapshot = 0;
   for (let i = 0; i < offsets.length; i += 1) {
     const url = `${base}/api/gameinfo/events?limit=${EVENTS_LIMIT}&offset=${offsets[i]}`;
-    let { data: page, snapshot, fromOrigin } = await fetchFreshJson(url, 60, minSnapshot);
+    let page;
+    let snapshot;
+    let fromOrigin;
+    try {
+      ({ data: page, snapshot, fromOrigin } = await fetchFreshJson(url, 60, minSnapshot));
+    } catch (err) {
+      // 2026-11-03 (chat 153 de la app): Américas respondió 502 en la página 2 durante ~40 h y cada vuelta tiraba
+      // también lo ya leído: con un hueco grande no se guardó NADA aunque Albion respondía a medias (la muestra de
+      // Meta sí juntó 282 kills en esas horas). Lo leído se guarda y lo que falta queda como hueco: mismo camino que
+      // la ventana agotada (relleno por peleas y por id). Sin nada leído, la vuelta falla como siempre.
+      if (i === 0 || nuevos.length === 0) throw err;
+      console.error(`[${region}] la página ${i + 1} de eventos falló (${err?.message ?? err}): se guardan las ${nuevos.length} kills leídas y lo que falta va al relleno`);
+      return { nuevos, agotada: true, paginas: i, cortada: true };
+    }
     // 2026-10-03: el `Age` no alcanza para saber si la copia está trabada. Cada servidor de caché
     // tiene la suya y una copia vieja puede llegar con `Age` bajo (la corrida de GitHub recibió la
     // página de Europa de las 01:56 sin nada raro en el encabezado, mientras el origen ya tenía hasta
@@ -424,10 +437,19 @@ async function scrapeRegion(region, lastEventId) {
 
   const [eventsResult, battles] = await Promise.all([
     fetchNewEvents(base, region, knownIds, lastEventId),
-    fetchFreshJson(`${base}/api/gameinfo/battles?range=day&limit=${BATTLES_LIMIT}&offset=0&sort=recent`, 300).then((r) => r.data),
+    fetchFreshJson(`${base}/api/gameinfo/battles?range=day&limit=${BATTLES_LIMIT}&offset=0&sort=recent`, 300)
+      .then((r) => r.data)
+      // 2026-11-03: un 502 de la lista de peleas tumbaba también las kills de esa vuelta (van juntas). Sin peleas, las
+      // kills se guardan igual; las peleas se toman en la vuelta siguiente o en el relleno.
+      .catch((err) => {
+        console.error(`[${region}] la lista de peleas falló (${err?.message ?? err}): se guardan las kills igual`);
+        return [];
+      }),
   ]);
   const events = eventsResult.nuevos;
-  if (eventsResult.agotada) {
+  if (eventsResult.cortada) {
+    console.error(`[${region}] AVISO: la API cortó la lectura en la página ${eventsResult.paginas + 1}; lo que falta pasa al relleno`);
+  } else if (eventsResult.agotada) {
     console.error(`[${region}] AVISO: se agotó la ventana de la API (~${EVENTS_MAX_OFFSET + EVENTS_LIMIT} eventos) sin reencontrar nada conocido — se PERDIERON kills. Bajar el intervalo del ciclo.`);
   }
 
