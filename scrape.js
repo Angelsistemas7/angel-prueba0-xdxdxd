@@ -606,7 +606,7 @@ async function fetchRelleno(url, timeoutMs = FETCH_TIMEOUT_MS, cancelar = null) 
 
 /** Tope de ids pendientes por región (auditoría p60: la lista crecía sin cota en sobrecarga). A ~90 ids
  * por vuelta son ~2 días de barrido; más viejo que eso no se llega a rellenar a tiempo. */
-const GAP_PENDING_MAX_IDS = 300_000;
+const GAP_PENDING_MAX_IDS = 900_000;
 
 /** Une rangos que se tocan, ordena del más nuevo al más viejo y descarta (con aviso) lo que pase del tope. */
 function topearRangos(region, rangos) {
@@ -1133,6 +1133,13 @@ async function main() {
   const gapRanges = { ...(state.gapRanges ?? {}) };
   const gapFails = { ...(state.gapFails ?? {}) };
   const gapWindows = { ...(state.gapWindows ?? {}) };
+  // 2026-11-03 (chat 154 de la app, con el sí del dueño): el hueco de Américas del 1 al 2 de noviembre pasó del tope de
+  // 200.000 ids y su parte vieja (~641 mil ids) no se encoló. Se agrega UNA vez, al mismo ritmo suave de siempre (~6 días).
+  if (state.rellenoExtra !== 'p154-americas') {
+    gapRanges.americas = topearRangos('americas', [...(gapRanges.americas ?? []), [1473735177, 1474376412]]);
+    state.rellenoExtra = 'p154-americas';
+    console.error('[americas] relleno: se agregó el tramo viejo del hueco del 1-2 nov (1473735177…1474376412)');
+  }
   for (const region of Object.keys(REGION_HOSTS)) {
     results[region] = {};
     try {
