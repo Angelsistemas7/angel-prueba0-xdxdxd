@@ -105,8 +105,8 @@ jobs:
     timeout-minutes: 345
     strategy:
       fail-fast: false
-      # Revisión p207: nunca más de 4 a la vez en el modo ids (el escáner encadenado no puede quedar en cola).
-      max-parallel: ${{ inputs.modo == 'ids' && 4 || 12 }}
+      # Revisión p207: en el modo ids «preparar» ya da como mucho 4 partes (el escáner encadenado no puede quedar en cola).
+      # Sin `max-parallel` con expresión: GitHub rechazó el archivo (corrida 43635107106, «workflow file issue»).
       matrix:
         parte: ${{ fromJSON(needs.preparar.outputs.partes) }}
     steps:
