@@ -51,15 +51,24 @@ const HASTA = Date.parse(process.env.HASTA ?? '');
 const SHARD = Number(process.env.SHARD ?? 0);
 const SHARDS = Math.max(1, Number(process.env.SHARDS ?? 1));
 const OUT = process.env.OUT ?? `rescate-${REGION}-${SHARD}.ndjson.gz`;
-const SPACING_MS = Number(process.env.SPACING_MS ?? 1100);
+// Revisión p207: el modo ids va a 1.300 ms (46 pedidos/min), con margen bajo los ~55-60 por minuto y por IP de Albion.
+const SPACING_MS = Number(process.env.SPACING_MS ?? (MODO === 'ids' ? 1300 : 1100));
+// Modo ids: la kill guardada más nueva (la manda scrape.js). Se pide al empezar y al terminar; ningún 404 de un id
+// igual o más nuevo se da por visto.
+const CANARIO = Number(process.env.CANARIO ?? 0);
+// Modo ids: tasa mínima de kills entre los ids con respuesta (lo normal es ~1 de 6). Si sale por debajo, no se confirma nada.
+const TASA_MIN = Number(process.env.TASA_MIN ?? 0.03);
+const MIN_PARA_CONFIRMAR = 30;
+// Solo para las pruebas (test/rescate.test.mjs): un Albion y un GitHub de mentira.
+const RAW_BASE = process.env.RAW_BASE ?? 'https://raw.githubusercontent.com';
 const PRESUPUESTO_MS = Number(process.env.PRESUPUESTO_MIN ?? 320) * 60_000;
 const DATA_OWNER = process.env.DATA_OWNER ?? (process.env.GITHUB_REPOSITORY ?? 'Angelsistemas7/x').split('/')[0];
 const PRIMER_DIA_REPOS_MENSUALES = '2026-10-01';
-const BASE = `${HOSTS[REGION]}/api/gameinfo`;
+const BASE = `${process.env.ALBION_BASE ?? HOSTS[REGION]}/api/gameinfo`;
 const fechasMal = !Number.isFinite(DESDE) || !Number.isFinite(HASTA) || HASTA <= DESDE;
-if (!HOSTS[REGION] || (MODO === 'ids' ? RANGOS.length === 0 : fechasMal) || SHARD < 0 || SHARD >= SHARDS) {
+if (!HOSTS[REGION] || (MODO === 'ids' ? RANGOS.length === 0 || !(CANARIO > 0) : fechasMal) || SHARD < 0 || SHARD >= SHARDS) {
   console.error('uso: REGION=americas DESDE=<iso> HASTA=<iso> [SHARD=0 SHARDS=1] node rescate.mjs');
-  console.error('  o: REGION=americas MODO=ids RANGOS=lo-hi,lo-hi [SHARD=0 SHARDS=1] node rescate.mjs');
+  console.error('  o: REGION=americas MODO=ids RANGOS=lo-hi,lo-hi CANARIO=<id de una kill publicada> [SHARD=0 SHARDS=1] node rescate.mjs');
   process.exit(2);
 }
 const inicio = Date.now();
@@ -127,7 +136,7 @@ async function cargarGuardados(desdeMs, hastaMs) {
   for (let d = desdeMs - 86_400_000; dia(d) <= dia(hastaMs + 86_400_000) && dia(d) <= hoy; d += 86_400_000) diasLista.push(dia(d));
   for (const d of diasLista) {
     if (d < PRIMER_DIA_REPOS_MENSUALES) continue;
-    const repo = `https://raw.githubusercontent.com/${DATA_OWNER}/albion-data-${REGION}-${d.slice(0, 7)}/main/kills`;
+    const repo = `${RAW_BASE}/${DATA_OWNER}/albion-data-${REGION}-${d.slice(0, 7)}/main/kills`;
     for (let parte = 1; ; parte++) {
       const t = await texto(`${repo}/${d}${parte > 1 ? `.${parte}` : ''}.ndjson`);
       if (t === null) break;
@@ -229,8 +238,30 @@ for (const [lista, campo] of [[misJugadores, 'jugadores'], [victimasSinGremio, '
 const IDS_EN_VUELO = Number(process.env.IDS_EN_VUELO ?? 24);
 const misRangos = MODO === 'ids' ? parteDeRangos(RANGOS, SHARD, SHARDS) : [];
 const confirmados = [];
-const deIds = { ids: contarIds(misRangos), kills: 0, reintentos: 0 };
+const deIds = { ids: contarIds(misRangos), kills: 0, reintentos: 0, no: 0, canarioInicio: null, canarioFin: null, confirma: false, motivo: null };
+/** ¿Albion sirve la kill conocida? Varios intentos (los 502 vienen a rachas). */
+async function canarioVivo(intentos, esperaMs) {
+  for (let i = 0; i < intentos; i++) {
+    try {
+      cuenta.pedidos++;
+      const res = await fetch(`${BASE}/events/${CANARIO}`, { signal: AbortSignal.timeout(60_000) });
+      if (res.ok && (await res.json())?.EventId === CANARIO) return true;
+      if (res.status === 404) return false; // la kill conocida da 404: Albion no está sirviendo bien
+    } catch {
+      /* reintento */
+    }
+    await sleep(esperaMs);
+  }
+  return false;
+}
 if (MODO === 'ids') {
+  deIds.canarioInicio = await canarioVivo(10, Number(process.env.CANARIO_ESPERA_MS ?? 30_000));
+  if (!deIds.canarioInicio) {
+    console.error(`canario ${CANARIO}: no responde 200 al empezar; no se barre nada`);
+    misRangos.length = 0;
+  }
+}
+if (MODO === 'ids' && misRangos.length > 0) {
   console.log(`[${REGION} ${SHARD + 1}/${SHARDS}] barrido por id: ${deIds.ids} ids (${misRangos.at(-1)?.[0]}…${misRangos[0]?.[1]})`);
   // Del más nuevo al más viejo, rango por rango.
   let ri = 0;
@@ -271,7 +302,9 @@ if (MODO === 'ids') {
     cuenta.pedidos++;
     const p = pedirId(id)
       .then((ev) => {
-        confirmados.push(id);
+        if (!ev) deIds.no++;
+        // Un 404 de un id igual o más nuevo que la última kill publicada puede ser una kill sin publicar: no se confirma.
+        if (ev || id < CANARIO) confirmados.push(id);
         if (ev && !rescatados.has(ev.EventId)) {
           rescatados.set(ev.EventId, recortar(ev));
           deIds.kills++;
@@ -305,7 +338,24 @@ if (MODO === 'ids') {
       tMax = Math.max(tMax, t);
     }
   }
-  if (Number.isFinite(tMin)) await cargarGuardados(tMin, tMax);
+  // Revisión p207: si raw.githubusercontent falla después de 5 h de barrido, se sube igual (scrape.js no duplica dentro
+  // del día; lo que se pierde es solo el filtro entre días).
+  if (Number.isFinite(tMin)) {
+    try {
+      await cargarGuardados(tMin, tMax);
+    } catch (err) {
+      console.error(`no se pudieron leer los ids ya guardados (${String(err.message).slice(0, 120)}); se sube igual`);
+      deIds.sinFiltroGuardados = true;
+    }
+  }
+  // Guardas antes de confirmar: la kill conocida tiene que seguir dando 200 y la tasa de kills tiene que ser normal.
+  deIds.canarioFin = await canarioVivo(6, Number(process.env.CANARIO_ESPERA_MS ?? 10_000));
+  const tasa = confirmados.length > 0 ? deIds.kills / confirmados.length : 0;
+  if (!deIds.canarioFin) deIds.motivo = 'el canario no dio 200 al terminar';
+  else if (confirmados.length < MIN_PARA_CONFIRMAR) deIds.motivo = `muy pocos ids con respuesta (${confirmados.length})`;
+  else if (tasa < TASA_MIN) deIds.motivo = `tasa de kills ${(tasa * 100).toFixed(2)} % < ${(TASA_MIN * 100).toFixed(1)} %`;
+  else deIds.confirma = true;
+  if (!deIds.confirma) console.error(`barrido: NO se confirma ningún id (${deIds.motivo}); las kills encontradas se suben igual`);
 }
 avance('fin del barrido');
 
@@ -328,7 +378,7 @@ const { toKillLine, extractEquipment } = new Function([
   'return { toKillLine, extractEquipment };',
 ].join('\n'))();
 let valores = null;
-try {
+if (process.env.RESCATE_SIN_VALORES !== '1') try {
   const url = tomar("const VALORES_URL = '", "';").match(/'([^']+)'/)[1];
   const j = JSON.parse(await texto(`${url}/values-${REGION}.json`));
   if (j?.v === 1 && j.region === REGION && j.p) valores = j.p;
@@ -340,17 +390,26 @@ const gz = zlib.createGzip();
 const fin = new Promise((r) => gz.pipe(fs.createWriteStream(OUT)).on('finish', r));
 const porDia = {};
 let yaEstaban = 0;
+const sinConfirmar = new Set();
 for (const e of [...rescatados.values()].sort((a, b) => a.EventId - b.EventId)) {
   // PRUEBA_INCLUIR_GUARDADAS=1 solo para comparar con las líneas que ya escribió scrape.js (nunca en el workflow).
   if (yaGuardados.has(e.EventId) && process.env.PRUEBA_INCLUIR_GUARDADAS !== '1') { yaEstaban++; continue; }
-  const d = dia(Date.parse(e.TimeStamp));
+  // Revisión p207: un TimeStamp raro no tumba la máquina; esa kill no se confirma (sigue en la cola del escáner).
+  const t = Date.parse(e?.TimeStamp ?? '');
+  if (!Number.isFinite(t)) {
+    cuenta.raros = (cuenta.raros ?? 0) + 1;
+    sinConfirmar.add(e.EventId);
+    continue;
+  }
+  const d = dia(t);
   porDia[d] = (porDia[d] ?? 0) + 1;
   gz.write(JSON.stringify({ d, k: toKillLine(e), q: extractEquipment(e, valores) }) + '\n');
 }
 // Parte 207: última línea = ids confirmados (kill o 404). scrape.js la aplica al terminar de cargar este archivo.
-if (MODO === 'ids' && confirmados.length > 0) gz.write(JSON.stringify({ barrido: idsARangos(confirmados) }) + '\n');
+const aConfirmar = deIds.confirma ? confirmados.filter((id) => !sinConfirmar.has(id)) : [];
+if (MODO === 'ids' && aConfirmar.length > 0) gz.write(JSON.stringify({ barrido: idsARangos(aConfirmar) }) + '\n');
 gz.end();
 await fin;
-const final = { region: REGION, modo: MODO, shard: SHARD, shards: SHARDS, ...(MODO === 'ids' ? { ...deIds, confirmados: confirmados.length } : { desde: new Date(DESDE).toISOString(), hasta: new Date(HASTA).toISOString() }), rescatadas: rescatados.size, yaEstaban, nuevas: rescatados.size - yaEstaban, porDia, valores: Boolean(valores), ...resumen, ...cuenta, minutos: Math.round((Date.now() - inicio) / 60000) };
+const final = { region: REGION, modo: MODO, shard: SHARD, shards: SHARDS, ...(MODO === 'ids' ? { ...deIds, canario: CANARIO, conRespuesta: confirmados.length, confirmados: aConfirmar.length } : { desde: new Date(DESDE).toISOString(), hasta: new Date(HASTA).toISOString() }), rescatadas: rescatados.size, yaEstaban, nuevas: rescatados.size - yaEstaban, porDia, valores: Boolean(valores), ...resumen, ...cuenta, minutos: Math.round((Date.now() - inicio) / 60000) };
 fs.writeFileSync(OUT.replace(/\.ndjson\.gz$/, '.json'), JSON.stringify(final, null, 1));
 console.log('RESUMEN', JSON.stringify(final));

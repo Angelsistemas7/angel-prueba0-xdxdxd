@@ -906,12 +906,22 @@ async function pedirRescate(state, region, desde, hasta, { repaso = false } = {}
   }
   return alguno;
 }
+/** Revisión p207: GitHub Free deja 20 trabajos simultáneos POR CUENTA. El escáner encadenado (1) nunca debe quedar en
+ * cola (Europa guarda ~10 min de kills): rescates + barridos de las últimas 6 h (lo que dura una corrida) suman como
+ * mucho MAQUINAS_TOPE, y queda margen para el escáner, la guardia, los «preparar» y otras repos del dueño. */
+const MAQUINAS_TOPE = 12;
+const CORRIDA_MS = 6 * 3_600_000;
+function maquinasOcupadas(state, ahora = Date.now()) {
+  return (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < CORRIDA_MS).reduce((n, p) => n + (Number(p.maquinas) || 0), 0);
+}
 async function pedirRescateTramo(state, region, desde, hasta, repaso) {
   const ahora = Date.now();
   const previos = (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < 86_400_000);
   const deRegion = previos.filter((p) => p.region === region && p.modo !== 'ids');
+  // Lo que queda del tope (al menos 2: un rescate con menos máquinas tarda más, pero no se deja de pedir).
+  const maquinas = Math.max(2, Math.min(RESCATE_MAQUINAS, MAQUINAS_TOPE - maquinasOcupadas(state, ahora)));
   // 5 min de margen a cada lado: lo repetido se descarta por id al cargar.
-  const pedido = { region, desde: new Date(Date.parse(desde) - 300_000).toISOString(), hasta: new Date(Date.parse(hasta) + 300_000).toISOString(), maquinas: String(RESCATE_MAQUINAS) };
+  const pedido = { region, desde: new Date(Date.parse(desde) - 300_000).toISOString(), hasta: new Date(Date.parse(hasta) + 300_000).toISOString(), maquinas: String(maquinas) };
   const cubierto = !repaso && deRegion.some((p) => p.desde <= pedido.desde && p.hasta >= pedido.hasta);
   if (cubierto || deRegion.length >= 6) {
     if (!repaso) console.error(`[${region}] rescate: no se pide otro (${cubierto ? 'esa ventana ya se pidió' : 'tope de 6 por día'}); el barrido por id sigue con el hueco ${desde} → ${hasta}`);
@@ -946,21 +956,38 @@ async function pedirRepasos(state) {
  * mil barridos), así que lo viejo no se barría nunca. Cada tanda manda los BARRIDO_TANDA_IDS ids MÁS VIEJOS (los que el
  * escáner no alcanza; nunca los que están en espera) a BARRIDO_MAQUINAS máquinas, cada una con su IP y su cupo de Albion.
  * `cargarRescates` agrega las kills y, al terminar cada archivo, saca de la cola los ids que esa máquina confirmó. */
+// Revisión p207: 4 máquinas (no 12) para no acercarse al tope de 20 trabajos de la cuenta; a 1.300 ms por pedido cada
+// una barre ~14.000 ids en 320 min. Más lento, pero la captura y la cuenta primero.
 const BARRIDO_MIN_IDS = 100_000;
-const BARRIDO_TANDA_IDS = 180_000;
-const BARRIDO_MAQUINAS = 12;
+const BARRIDO_MAQUINAS = 4;
+const BARRIDO_TANDA_IDS = 56_000;
+const BARRIDO_TANDA_MIN_IDS = 10_000; // una tanda de ids sueltos no vale 4 máquinas
+const BARRIDO_MAX_PARES = 2_000; // ~42.000 caracteres: cabe en los 65.535 de los inputs de workflow_dispatch
 const BARRIDO_CADA_MS = 6 * 3_600_000;
-async function pedirBarrido(state, region, listos) {
-  if (!REGIONES_P207.has(region) || contarIds(listos) < BARRIDO_MIN_IDS) return false;
+async function pedirBarrido(state, region, listos, canario = Number(state.lastEventIds?.[region]) || 0) {
+  if (!REGIONES_P207.has(region) || contarIds(listos) < BARRIDO_MIN_IDS || !(canario > 0)) return false;
   const ahora = Date.now();
   const previos = (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < 86_400_000);
   const barridos = previos.filter((p) => p.region === region && p.modo === 'ids');
   if (barridos.some((p) => ahora - Date.parse(p.at) < BARRIDO_CADA_MS)) return false;
+  // Nada de barrido mientras corre un rescate por gremio (cualquier región) o con un repaso por salir en < 6 h.
+  if (previos.some((p) => p.modo !== 'ids' && ahora - Date.parse(p.at) < CORRIDA_MS)) return false;
+  if ((state.rescatesRepaso ?? []).some((r) => Date.parse(r.cuando) - ahora < CORRIDA_MS)) return false;
+  if (maquinasOcupadas(state, ahora) + BARRIDO_MAQUINAS > MAQUINAS_TOPE) return false;
   // Lo pedido en las últimas 24 h y todavía sin cargar no se vuelve a pedir.
   const yaPedido = barridos.flatMap((p) => String(p.rangos ?? '').split(',').filter(Boolean).map((x) => x.split('-').map(Number)));
-  const tanda = tomarMasViejos(restarRangos(listos, yaPedido), BARRIDO_TANDA_IDS);
-  if (contarIds(tanda) === 0) return false;
-  const pedido = { region, modo: 'ids', rangos: rangosATexto(tanda), maquinas: String(BARRIDO_MAQUINAS) };
+  // Nunca ids más nuevos que la última kill publicada (`canario`): ahí un 404 puede ser una kill sin publicar.
+  const candidatos = restarRangos(listos, [...yaPedido, [canario, Number.MAX_SAFE_INTEGER]]);
+  // Revisión p207: los ids sueltos (fallos de otras tandas) no deben llenar la tanda. La mitad de los pares va a lo más
+  // viejo tal cual; si eso no llena la tanda, el resto sale de rangos de al menos 100 ids.
+  let tanda = tomarMasViejos(candidatos, BARRIDO_TANDA_IDS, BARRIDO_MAX_PARES / 2);
+  if (contarIds(tanda) < BARRIDO_TANDA_IDS) {
+    const grandes = restarRangos(candidatos, tanda).filter(([lo, hi]) => hi - lo + 1 >= 100);
+    tanda = normalizarRangos([...tanda, ...tomarMasViejos(grandes, BARRIDO_TANDA_IDS - contarIds(tanda), BARRIDO_MAX_PARES / 2)]);
+  }
+  if (contarIds(tanda) < BARRIDO_TANDA_MIN_IDS) return false;
+  // `canario`: la kill guardada más nueva; cada máquina la pide al empezar y al terminar (ver rescate.mjs).
+  const pedido = { region, modo: 'ids', rangos: rangosATexto(tanda), canario: String(canario), maquinas: String(BARRIDO_MAQUINAS) };
   await fs.appendFile(RESCATE_PEDIDOS_PATH, JSON.stringify(pedido) + '\n', 'utf8');
   state.rescatesPedidos = [...previos, { ...pedido, at: new Date(ahora).toISOString() }];
   console.error(`[${region}] barrido en máquinas: ${contarIds(tanda)} ids (${tanda.at(-1)[0]}…${tanda[0][1]}) en ${BARRIDO_MAQUINAS} máquinas`);
@@ -1072,6 +1099,31 @@ async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_
   const quedan = pendientes.reduce((n, [lo, hi]) => n + hi - lo + 1, 0);
   if (orden.length > 0) console.log(`[${region}] barrido por id: ${orden.length} pedidos, ${avanzados} confirmados, ${halladas.length} kills encontradas, +${recuperadas} nuevas (quedan ${quedan} ids)${limitado ? ' · Albion pidió esperar (429)' : ''}`);
   return { rangos: pendientes, recuperadas, fallos, limitado, saltados: idsSaltados };
+}
+
+/** Paso c) del relleno de `main`: barrido por id de UNA región. Cambia `gapRanges`, `gapEspera` y `gapFails` en el
+ * lugar. Parte 207: lo que está en espera (hueco recién nacido, ids saltados) no se barre todavía; sin esperas es el
+ * mismo camino de siempre (`listos` = la cola entera). `barrer` se inyecta solo en las pruebas. */
+async function pasoBarrido({ region, gapRanges, gapEspera, gapFails, hastaMs, limiteRespuestaMs, barrer = barrerIds, ahora = Date.now() }) {
+  const sep = separarEnEspera(gapRanges[region] ?? [], gapEspera[region], ahora);
+  if ((gapEspera[region] ?? []).length > 0) gapEspera[region] = sep.esperas;
+  const listos = sep.retenidos.length > 0 ? sep.listos : gapRanges[region] ?? [];
+  if (!(listos.length > 0 && Date.now() < hastaMs)) return { recuperadas: 0, limitado: false };
+  // Los fallos seguidos cuentan para el MISMO id de la cabeza (auditoría p60: antes era un número
+  // por región y, si llegaba un rango nuevo adelante, sumaba fallos de ids distintos).
+  const cabeza = listos[0]?.[1] ?? null;
+  const previo = gapFails[region];
+  const fallosPrevios = previo && typeof previo === 'object' && previo.id === cabeza ? Number(previo.n) || 0 : 0;
+  const bar = await barrer(region, listos, fallosPrevios, hastaMs, limiteRespuestaMs);
+  gapRanges[region] = sep.retenidos.length > 0 ? topearRangos(region, [...bar.rangos, ...sep.retenidos]) : bar.rangos;
+  gapFails[region] = { id: bar.rangos[0]?.[1] ?? null, n: bar.fallos };
+  // Parte 207: con Albion dando 502 a rachas (medido el 14-nov: ~1 de cada 2 pedidos por id), un id saltado tras
+  // GAP_PROBE_MAX_FAILS vueltas se perdía. En Américas vuelve a la cola, en espera de GAP_SALTADO_ESPERA_MS.
+  if (REGIONES_P207.has(region) && (bar.saltados ?? []).length > 0) {
+    gapRanges[region] = topearRangos(region, [...gapRanges[region], ...bar.saltados.map((id) => [id, id])]);
+    gapEspera[region] = [...(gapEspera[region] ?? []), ...bar.saltados.map((id) => [id, id, ahora + GAP_SALTADO_ESPERA_MS])];
+  }
+  return { recuperadas: bar.recuperadas, limitado: bar.limitado };
 }
 
 /** Procesa hasta GAP_BATTLES_PER_RUN peleas de la cola: agrega las kills que falten (y su equipo) al
@@ -1384,7 +1436,12 @@ async function main() {
     console.error('[americas] relleno: se volvió a encolar el tramo descartado por el tope (1473735177…1474248393)');
   }
   const gapEspera = { ...(state.gapEspera ?? {}) };
-  await pedirRepasos(state);
+  // Revisión p207: un fallo acá no debe tumbar la captura de las tres regiones.
+  try {
+    await pedirRepasos(state);
+  } catch (err) {
+    console.error(`rescate: no se pudieron pedir los repasos (${String(err.message).slice(0, 120)}); sigue la próxima vuelta`);
+  }
   for (const region of Object.keys(REGION_HOSTS)) {
     results[region] = {};
     try {
@@ -1480,26 +1537,9 @@ async function main() {
         recuperadas += rel.recuperadas;
         limitado = rel.limitado;
       }
-      // c) Barrido por id (completa las sueltas).
-      // Parte 207: lo que está en espera (hueco recién nacido) no se barre todavía; sin esperas, `listos` = la cola entera.
-      const sep = separarEnEspera(gapRanges[region] ?? [], gapEspera[region]);
-      if ((gapEspera[region] ?? []).length > 0) gapEspera[region] = sep.esperas;
-      const listos = sep.retenidos.length > 0 ? sep.listos : gapRanges[region] ?? [];
-      if (!limitado && listos.length > 0 && Date.now() < hastaMs) {
-        // Los fallos seguidos cuentan para el MISMO id de la cabeza (auditoría p60: antes era un número
-        // por región y, si llegaba un rango nuevo adelante, sumaba fallos de ids distintos).
-        const cabeza = listos[0]?.[1] ?? null;
-        const previo = gapFails[region];
-        const fallosPrevios = previo && typeof previo === 'object' && previo.id === cabeza ? Number(previo.n) || 0 : 0;
-        const bar = await barrerIds(region, listos, fallosPrevios, hastaMs, limiteRespuestaMs);
-        gapRanges[region] = sep.retenidos.length > 0 ? topearRangos(region, [...bar.rangos, ...sep.retenidos]) : bar.rangos;
-        gapFails[region] = { id: bar.rangos[0]?.[1] ?? null, n: bar.fallos };
-        // Parte 207: con Albion dando 502 a rachas (medido el 14-nov: ~1 de cada 2 pedidos por id), un id saltado tras
-        // GAP_PROBE_MAX_FAILS vueltas se perdía. En Américas vuelve a la cola, en espera de GAP_SALTADO_ESPERA_MS.
-        if (REGIONES_P207.has(region) && bar.saltados.length > 0) {
-          gapRanges[region] = topearRangos(region, [...gapRanges[region], ...bar.saltados.map((id) => [id, id])]);
-          gapEspera[region] = [...(gapEspera[region] ?? []), ...bar.saltados.map((id) => [id, id, Date.now() + GAP_SALTADO_ESPERA_MS])];
-        }
+      // c) Barrido por id (completa las sueltas). Ver `pasoBarrido`.
+      if (!limitado) {
+        const bar = await pasoBarrido({ region, gapRanges, gapEspera, gapFails, hastaMs, limiteRespuestaMs });
         recuperadas += bar.recuperadas;
         limitado = bar.limitado;
       }
@@ -1541,7 +1581,10 @@ async function main() {
   for (const region of REGIONES_P207) {
     if ((barridosHechos[region] ?? []).length > 0) {
       const antes = contarIds(gapRanges[region] ?? []);
-      gapRanges[region] = restarRangos(gapRanges[region] ?? [], barridosHechos[region]);
+      // Defensa extra: nada más nuevo que la última kill publicada se da por visto.
+      const tope = Number(lastEventIds[region]) || 0;
+      const validos = barridosHechos[region].map(([lo, hi]) => [lo, Math.min(hi, tope - 1)]).filter(([lo, hi]) => hi >= lo);
+      gapRanges[region] = restarRangos(gapRanges[region] ?? [], validos);
       console.log(`[${region}] barrido en máquinas: ${antes - contarIds(gapRanges[region])} ids confirmados salen de la cola`);
     }
     try {
@@ -1617,4 +1660,4 @@ if (process.argv[2] === '--probar-ids') {
 }
 
 // Parte 207: para `test/` (importar este archivo ya no arranca el escáner).
-export { topearRangos, topeDeRegion, pedirRescate, pedirBarrido, idsDescartados, GAP_RANGE_MAX_IDS, GAP_PENDING_MAX_IDS };
+export { topearRangos, topeDeRegion, pedirRescate, pedirRepasos, pedirBarrido, pasoBarrido, cargarRescates, maquinasOcupadas, idsDescartados, GAP_RANGE_MAX_IDS, GAP_PENDING_MAX_IDS, BARRIDO_TANDA_IDS, BARRIDO_MAQUINAS, MAQUINAS_TOPE };

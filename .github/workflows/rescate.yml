@@ -40,6 +40,11 @@ on:
         required: false
         default: ''
         type: string
+      canario:
+        description: 'Modo ids: id de una kill publicada (tiene que dar 200 al empezar y al terminar)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -61,15 +66,19 @@ jobs:
           MAQUINAS: ${{ inputs.maquinas }}
           MODO: ${{ inputs.modo }}
           RANGOS: ${{ inputs.rangos }}
+          CANARIO: ${{ inputs.canario }}
         run: |
           case "$REGION" in americas|europe|asia) ;; *) echo "región inválida: $REGION"; exit 1 ;; esac
           n="$MAQUINAS"
           [[ "$n" =~ ^[0-9]+$ ]] || n=8
           [ "$n" -ge 1 ] || n=1
           [ "$n" -le 12 ] || n=12
-          echo "partes=[$(seq -s, 0 $((n - 1)))]" >> "$GITHUB_OUTPUT"
           if [ "$MODO" = "ids" ]; then
             [[ "$RANGOS" =~ ^[0-9]+-[0-9]+(,[0-9]+-[0-9]+)*$ ]] || { echo "rangos inválidos"; exit 1; }
+            [[ "$CANARIO" =~ ^[0-9]+$ ]] || { echo "modo ids: falta 'canario'"; exit 1; }
+            # Revisión p207: el barrido nunca pasa de 4 máquinas (tope de 20 trabajos simultáneos de la cuenta).
+            [ "$n" -le 4 ] || n=4
+            echo "partes=[$(seq -s, 0 $((n - 1)))]" >> "$GITHUB_OUTPUT"
             primero="${RANGOS%%,*}"
             tag="rescate-$REGION-ids-${primero}-$GITHUB_RUN_ID"
             echo "tag=$tag" >> "$GITHUB_OUTPUT"
@@ -78,6 +87,7 @@ jobs:
               --notes "Barrido por id de $REGION en $n partes (parte 207). Rangos: ${RANGOS:0:2000}. Las carga scrape.js sin duplicar y saca de su cola los ids confirmados. Corrida $GITHUB_RUN_ID."
             exit 0
           fi
+          echo "partes=[$(seq -s, 0 $((n - 1)))]" >> "$GITHUB_OUTPUT"
           [ -n "$DESDE" ] && [ -n "$HASTA" ] || { echo "modo gremios: faltan 'desde' y 'hasta'"; exit 1; }
           d=$(date -u -d "$DESDE" +%s) && h=$(date -u -d "$HASTA" +%s) || { echo "fechas inválidas"; exit 1; }
           [ "$h" -gt "$d" ] || { echo "'hasta' tiene que ser después de 'desde'"; exit 1; }
@@ -95,6 +105,8 @@ jobs:
     timeout-minutes: 345
     strategy:
       fail-fast: false
+      # Revisión p207: nunca más de 4 a la vez en el modo ids (el escáner encadenado no puede quedar en cola).
+      max-parallel: ${{ inputs.modo == 'ids' && 4 || 12 }}
       matrix:
         parte: ${{ fromJSON(needs.preparar.outputs.partes) }}
     steps:
@@ -107,6 +119,8 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 20
+      - name: IP de esta máquina (el límite de Albion es por IP)
+        run: echo "IP pública: $(curl -s --max-time 10 https://api.ipify.org || echo desconocida)"
       - name: Rescatar
         env:
           REGION: ${{ inputs.region }}
@@ -117,6 +131,7 @@ jobs:
           PRESUPUESTO_MIN: '320'
           MODO: ${{ inputs.modo }}
           RANGOS: ${{ inputs.rangos }}
+          CANARIO: ${{ inputs.canario }}
         run: |
           OUT="rescate-$REGION-parte$SHARD.ndjson.gz" node rescate.mjs
       - name: Subir a la release
