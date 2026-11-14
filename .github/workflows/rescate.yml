@@ -120,7 +120,8 @@ jobs:
         with:
           node-version: 20
       - name: IP de esta máquina (el límite de Albion es por IP)
-        run: echo "IP pública: $(curl -s --max-time 10 https://api.ipify.org || echo desconocida)"
+        run: |
+          echo "IP pública de esta máquina = $(curl -s --max-time 10 https://api.ipify.org || echo desconocida)"
       - name: Rescatar
         env:
           REGION: ${{ inputs.region }}
