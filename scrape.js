@@ -5,6 +5,8 @@ import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
 import { gunzipSync } from 'zlib';
+import { fileURLToPath } from 'url';
+import { contarIds, normalizarRangos, partirVentana, rangoDelHueco, rangosATexto, restarRangos, separarEnEspera, tomarMasViejos } from './rangos.mjs';
 
 const execFileP = promisify(execFile);
 
@@ -483,15 +485,17 @@ async function scrapeRegion(region, lastEventId) {
     let maxConocido = lastEventId || 0;
     for (const id of knownIds) if (Number.isFinite(id) && id > maxConocido) maxConocido = id;
     const minLeido = events.reduce((min, e) => Math.min(min, e.EventId), Infinity);
-    if (maxConocido > 0 && minLeido - 1 > maxConocido) {
-      // 2026-10-04 (auditoría p64 H3): un hueco más grande que el tope (escáner caído ~4,5 h en hora pico
-      // de Europa, o estado viejo) antes se abandonaba ENTERO y sin aviso. Ahora se barren los
-      // GAP_RANGE_MAX_IDS ids más nuevos (lo más valioso y lo que alcanza a rellenarse) y se avisa del resto.
-      const total = minLeido - 1 - maxConocido;
-      gapRange = [Math.max(maxConocido + 1, minLeido - GAP_RANGE_MAX_IDS), minLeido - 1];
-      if (total > GAP_RANGE_MAX_IDS) {
-        idsDescartados[region] = (idsDescartados[region] ?? 0) + total - GAP_RANGE_MAX_IDS;
-        console.error(`[${region}] hueco por id de ${total} ids: se barren los ${GAP_RANGE_MAX_IDS} más nuevos; ${total - GAP_RANGE_MAX_IDS} más viejos quedan sin barrer`);
+    // 2026-10-04 (auditoría p64 H3): un hueco más grande que el tope (escáner caído ~4,5 h en hora pico
+    // de Europa, o estado viejo) antes se abandonaba ENTERO y sin aviso. Ahora se barren los
+    // ids más nuevos hasta el tope (lo más valioso y lo que alcanza a rellenarse) y se avisa del resto.
+    // Parte 207: el tope es por región (`topeDeRegion`); Américas lo tiene mucho más alto.
+    const tope = topeDeRegion(region, GAP_RANGE_MAX_IDS);
+    const hueco = rangoDelHueco(maxConocido, minLeido, tope);
+    if (hueco) {
+      gapRange = hueco.rango;
+      if (hueco.descartados > 0) {
+        idsDescartados[region] = (idsDescartados[region] ?? 0) + hueco.descartados;
+        console.error(`[${region}] hueco por id de ${hueco.total} ids: se barren los ${tope} más nuevos; ${hueco.descartados} más viejos quedan sin barrer`);
       }
       console.error(`[${region}] hueco por id: ${gapRange[0]}…${gapRange[1]} (${gapRange[1] - gapRange[0] + 1} ids a revisar)`);
     }
@@ -621,29 +625,36 @@ async function fetchRelleno(url, timeoutMs = FETCH_TIMEOUT_MS, cancelar = null) 
  * la app): 900.000 → 1.300.000 para que entre entero el hueco de Américas del 1 al 3 de noviembre (~1,15 millones). */
 const GAP_PENDING_MAX_IDS = 1_300_000;
 
+/** Parte 207 (14-nov-2026): topes POR REGIÓN. Medido en state.json: desde el 4-nov la cola de Américas vivía pegada a
+ * 1.300.000 y cada hueco chico nuevo empujaba afuera la punta vieja: el hueco del 1-3 nov perdió 513.217 ids sin barrer
+ * (1473735177…1474248393) y, al volver Albion de la caída del 12-nov, el hueco nuevo (~16.300 ids/h) habría tirado
+ * ENTERO lo pendiente. Un rango es un par [lo, hi] en state.json (1.110 pares = 41 KB): subir el tope cuesta tiempo de
+ * barrido, no memoria. 8 M ≈ 20 días de ids de Américas. Europa y Asia siguen con los topes de siempre. */
+const GAP_TOPES_REGION = { americas: 8_000_000 };
+function topeDeRegion(region, general) {
+  return GAP_TOPES_REGION[region] ?? general;
+}
+/** Regiones con las protecciones de la parte 207 (espera del hueco nuevo, repaso del rescate, barrido en máquinas). */
+const REGIONES_P207 = new Set(['americas']);
+/** Cuánto espera el barrido por id un hueco grande recién nacido (ver `main`). El barrido tarda semanas: 24 h no cuestan. */
+const GAP_ESPERA_MS = 24 * 3_600_000;
+const GAP_SALTADO_ESPERA_MS = 6 * 3_600_000;
+
 /** Une rangos que se tocan, ordena del más nuevo al más viejo y descarta (con aviso) lo que pase del tope. */
 function topearRangos(region, rangos) {
-  const orden = rangos
-    .filter((r) => Array.isArray(r) && Number.isFinite(r[0]) && Number.isFinite(r[1]) && r[1] >= r[0])
-    .map(([lo, hi]) => [lo, hi])
-    .sort((a, b) => b[1] - a[1]);
-  const unidos = [];
-  for (const [lo, hi] of orden) {
-    const ult = unidos[unidos.length - 1];
-    if (ult && hi >= ult[0] - 1) ult[0] = Math.min(ult[0], lo);
-    else unidos.push([lo, hi]);
-  }
+  const unidos = normalizarRangos(rangos);
+  const tope = topeDeRegion(region, GAP_PENDING_MAX_IDS);
   const out = [];
   let total = 0;
   for (const [lo, hi] of unidos) {
-    const cabe = Math.min(hi - lo + 1, GAP_PENDING_MAX_IDS - total);
+    const cabe = Math.min(hi - lo + 1, tope - total);
     if (cabe <= 0) break;
     out.push([hi - cabe + 1, hi]); // se queda con la parte más nueva del rango
     total += cabe;
   }
   const todos = unidos.reduce((n, [lo, hi]) => n + hi - lo + 1, 0);
   if (todos > total) idsDescartados[region] = (idsDescartados[region] ?? 0) + todos - total;
-  if (todos > total) console.error(`[${region}] relleno: más de ${GAP_PENDING_MAX_IDS} ids pendientes; se descartan ${todos - total} de los más viejos`);
+  if (todos > total) console.error(`[${region}] relleno: más de ${tope} ids pendientes; se descartan ${todos - total} de los más viejos`);
   return out;
 }
 
@@ -817,7 +828,7 @@ async function lineasDeRescate(r) {
 
 /** Agrega UN lote (RESCATE_LOTE líneas) del primer rescate publicado que no terminó; así la vuelta no se alarga.
  * Devuelve el avance por región para status.json. */
-async function cargarRescates(state) {
+async function cargarRescates(state, barridos = {}) {
   const avance = {};
   const hechos = { ...(state.rescates ?? {}) };
   const publicados = await rescatesPublicados(state);
@@ -828,7 +839,9 @@ async function cargarRescates(state) {
       const lineas = await lineasDeRescate(r);
       const lote = lineas.slice(prev.n, prev.n + RESCATE_LOTE).map((l) => JSON.parse(l));
       const porDia = new Map();
+      const confirmados = []; // parte 207: última línea de un barrido por id = los ids que esa máquina confirmó
       for (const x of lote) {
+        if (Array.isArray(x?.barrido)) confirmados.push(...x.barrido);
         if (!x?.k || !Number.isFinite(x.k.eventId) || !/^\d{4}-\d{2}-\d{2}$/.test(String(x.d))) continue;
         const fecha = await fechaDeGuardado(r.region, x.d);
         if (!porDia.has(fecha)) porDia.set(fecha, []);
@@ -843,6 +856,8 @@ async function cargarRescates(state) {
         await appendUniqueNdjson(rutaDeDia('equipment', r.region, fecha), xs.filter((x) => x.q && ids.has(x.k.eventId)).map((x) => x.q), 'e');
       }
       const n = prev.n + lote.length;
+      // Las kills de este lote ya están escritas: recién ahora se sacan esos ids de la cola del barrido (ver `main`).
+      if (confirmados.length > 0) barridos[r.region] = [...(barridos[r.region] ?? []), ...confirmados];
       hechos[r.id] = { n, total: lineas.length, nuevas: prev.nuevas + nuevas, ...(n >= lineas.length ? { hecho: new Date().toISOString() } : {}) };
       avance[r.region] = { rescate: r.id, rescateN: n, rescateTotal: lineas.length, rescateNuevas: prev.nuevas + nuevas };
       console.log(`[${r.region}] rescate ${r.id}: ${n}/${lineas.length} (+${nuevas} kills nuevas en esta vuelta)`);
@@ -872,21 +887,83 @@ async function cargarRescates(state) {
 const RESCATE_MIN_IDS = 20_000;
 const RESCATE_MAQUINAS = 8;
 const RESCATE_PEDIDOS_PATH = 'rescate-pedidos.ndjson';
-async function pedirRescate(state, region, desde, hasta) {
+async function pedirRescate(state, region, desde, hasta, { repaso = false } = {}) {
+  // Parte 207: rescate.yml rechaza ventanas de más de 10 días; en las regiones de la p207 una caída más larga se pide en
+  // tramos de 9 días (antes el pedido entero fallaba en «preparar» y no se rescataba nada).
+  const d = Date.parse(desde);
+  const h = Date.parse(hasta);
+  const tramos = REGIONES_P207.has(region) ? partirVentana(d, h, RESCATE_TRAMO_MAX_MS) : [[d, h]];
+  let alguno = false;
+  for (const [a, b] of tramos) {
+    if (await pedirRescateTramo(state, region, new Date(a).toISOString(), new Date(b).toISOString(), repaso)) alguno = true;
+  }
+  // Parte 207: si Albion vuelve publicando a medias, en el primer rescate faltan kills que todavía daban 404 o no estaban
+  // en la lista de su gremio. Un hueco grande se vuelve a rescatar RESCATE_REPASO_MS después (las ya guardadas se
+  // descartan por id). Solo una vez por pedido.
+  if (alguno && !repaso && REGIONES_P207.has(region) && h - d >= RESCATE_REPASO_MIN_MS) {
+    state.rescatesRepaso = [...(state.rescatesRepaso ?? []), { region, desde, hasta, cuando: new Date(Date.now() + RESCATE_REPASO_MS).toISOString() }];
+    console.error(`[${region}] rescate: repaso del hueco ${desde} → ${hasta} programado para ${state.rescatesRepaso.at(-1).cuando}`);
+  }
+  return alguno;
+}
+async function pedirRescateTramo(state, region, desde, hasta, repaso) {
   const ahora = Date.now();
   const previos = (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < 86_400_000);
-  const deRegion = previos.filter((p) => p.region === region);
+  const deRegion = previos.filter((p) => p.region === region && p.modo !== 'ids');
   // 5 min de margen a cada lado: lo repetido se descarta por id al cargar.
   const pedido = { region, desde: new Date(Date.parse(desde) - 300_000).toISOString(), hasta: new Date(Date.parse(hasta) + 300_000).toISOString(), maquinas: String(RESCATE_MAQUINAS) };
-  const cubierto = deRegion.some((p) => p.desde <= pedido.desde && p.hasta >= pedido.hasta);
+  const cubierto = !repaso && deRegion.some((p) => p.desde <= pedido.desde && p.hasta >= pedido.hasta);
   if (cubierto || deRegion.length >= 6) {
-    console.error(`[${region}] rescate: no se pide otro (${cubierto ? 'esa ventana ya se pidió' : 'tope de 6 por día'}); el barrido por id sigue con el hueco ${desde} → ${hasta}`);
+    if (!repaso) console.error(`[${region}] rescate: no se pide otro (${cubierto ? 'esa ventana ya se pidió' : 'tope de 6 por día'}); el barrido por id sigue con el hueco ${desde} → ${hasta}`);
     state.rescatesPedidos = previos;
     return false;
   }
   await fs.appendFile(RESCATE_PEDIDOS_PATH, JSON.stringify(pedido) + '\n', 'utf8');
+  state.rescatesPedidos = [...previos, { ...pedido, at: new Date(ahora).toISOString(), ...(repaso ? { repaso: true } : {}) }];
+  console.error(`[${region}] rescate${repaso ? ' (repaso)' : ''}: hueco grande ${pedido.desde} → ${pedido.hasta}; se pide el rescate por gremio`);
+  return true;
+}
+const RESCATE_TRAMO_MAX_MS = 9 * 86_400_000;
+const RESCATE_REPASO_MIN_MS = 6 * 3_600_000;
+const RESCATE_REPASO_MS = 12 * 3_600_000;
+
+/** Repasos vencidos (ver `pedirRescate`). Si el tope diario no deja, se reintenta la vuelta siguiente. */
+async function pedirRepasos(state) {
+  const quedan = [];
+  for (const r of state.rescatesRepaso ?? []) {
+    // Uno que no se pudo pedir en 3 días (tope diario, fechas rotas) se deja, con aviso.
+    if (!(Date.now() - Date.parse(r.cuando) < 3 * 86_400_000)) {
+      console.error(`[${r.region}] rescate: el repaso ${r.desde} → ${r.hasta} no se pudo pedir en 3 días; se deja`);
+      continue;
+    }
+    if (Date.parse(r.cuando) > Date.now() || !(await pedirRescate(state, r.region, r.desde, r.hasta, { repaso: true }))) quedan.push(r);
+  }
+  if (quedan.length > 0 || state.rescatesRepaso) state.rescatesRepaso = quedan;
+}
+
+/** Parte 207: barrido por id en máquinas de `rescate.yml` (modo `ids`). El escáner barre ~45 ids/min del más nuevo hacia
+ * atrás y en Américas le entran más huecos de los que alcanza (state.json, 4→12 nov: ~130 mil ids/día nuevos contra ~65
+ * mil barridos), así que lo viejo no se barría nunca. Cada tanda manda los BARRIDO_TANDA_IDS ids MÁS VIEJOS (los que el
+ * escáner no alcanza; nunca los que están en espera) a BARRIDO_MAQUINAS máquinas, cada una con su IP y su cupo de Albion.
+ * `cargarRescates` agrega las kills y, al terminar cada archivo, saca de la cola los ids que esa máquina confirmó. */
+const BARRIDO_MIN_IDS = 100_000;
+const BARRIDO_TANDA_IDS = 180_000;
+const BARRIDO_MAQUINAS = 12;
+const BARRIDO_CADA_MS = 6 * 3_600_000;
+async function pedirBarrido(state, region, listos) {
+  if (!REGIONES_P207.has(region) || contarIds(listos) < BARRIDO_MIN_IDS) return false;
+  const ahora = Date.now();
+  const previos = (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < 86_400_000);
+  const barridos = previos.filter((p) => p.region === region && p.modo === 'ids');
+  if (barridos.some((p) => ahora - Date.parse(p.at) < BARRIDO_CADA_MS)) return false;
+  // Lo pedido en las últimas 24 h y todavía sin cargar no se vuelve a pedir.
+  const yaPedido = barridos.flatMap((p) => String(p.rangos ?? '').split(',').filter(Boolean).map((x) => x.split('-').map(Number)));
+  const tanda = tomarMasViejos(restarRangos(listos, yaPedido), BARRIDO_TANDA_IDS);
+  if (contarIds(tanda) === 0) return false;
+  const pedido = { region, modo: 'ids', rangos: rangosATexto(tanda), maquinas: String(BARRIDO_MAQUINAS) };
+  await fs.appendFile(RESCATE_PEDIDOS_PATH, JSON.stringify(pedido) + '\n', 'utf8');
   state.rescatesPedidos = [...previos, { ...pedido, at: new Date(ahora).toISOString() }];
-  console.error(`[${region}] rescate: hueco grande ${pedido.desde} → ${pedido.hasta}; se pide el rescate por gremio`);
+  console.error(`[${region}] barrido en máquinas: ${contarIds(tanda)} ids (${tanda.at(-1)[0]}…${tanda[0][1]}) en ${BARRIDO_MAQUINAS} máquinas`);
   return true;
 }
 
@@ -919,6 +996,7 @@ async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_
     return null;
   };
   const resultado = new Map(); // id → 'kill' | 'no' | 'limite' | 'error'
+  const idsSaltados = [];
   const halladas = [];
   const enVuelo = new Set();
   // Al primer 429 se cortan los que esperaban (auditoría p60): seguir esperándolos solo alargaba la
@@ -967,6 +1045,7 @@ async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_
       fallos += 1;
       if (fallos >= GAP_PROBE_MAX_FAILS) {
         console.error(`[${region}] barrido: el id ${id} falló ${fallos} vueltas seguidas; se salta`);
+        idsSaltados.push(id); // parte 207: en Américas vuelve a la cola en espera (ver `main`), no se pierde
         fallos = 0;
         paroPorError = false;
         avanzados += 1;
@@ -992,7 +1071,7 @@ async function barrerIds(region, rangos, fallos = 0, hastaMs = Date.now() + GAP_
   const recuperadas = halladas.length > 0 ? await guardarRecuperadas(region, halladas) : 0;
   const quedan = pendientes.reduce((n, [lo, hi]) => n + hi - lo + 1, 0);
   if (orden.length > 0) console.log(`[${region}] barrido por id: ${orden.length} pedidos, ${avanzados} confirmados, ${halladas.length} kills encontradas, +${recuperadas} nuevas (quedan ${quedan} ids)${limitado ? ' · Albion pidió esperar (429)' : ''}`);
-  return { rangos: pendientes, recuperadas, fallos, limitado };
+  return { rangos: pendientes, recuperadas, fallos, limitado, saltados: idsSaltados };
 }
 
 /** Procesa hasta GAP_BATTLES_PER_RUN peleas de la cola: agrega las kills que falten (y su equipo) al
@@ -1296,6 +1375,16 @@ async function main() {
     state.rellenoExtra2 = 'p155-americas';
     console.error('[americas] relleno: se agregaron los tramos recortados por los topes (1474635538…1474729791 y 1473735177…1473895155)');
   }
+  // Parte 207: con la cola pegada al tope de 1.300.000, del 4 al 12 de noviembre los huecos chicos nuevos empujaron
+  // afuera la punta vieja del hueco del 1-3 nov (medido en el historial de state.json: el piso subió de 1473735177 a
+  // 1474248394 sin barrerse). Con el tope nuevo de Américas se vuelve a encolar UNA vez; lo ya guardado no se duplica.
+  if (state.rellenoExtra3 !== 'p207-americas') {
+    gapRanges.americas = topearRangos('americas', [...(gapRanges.americas ?? []), [1473735177, 1474248393]]);
+    state.rellenoExtra3 = 'p207-americas';
+    console.error('[americas] relleno: se volvió a encolar el tramo descartado por el tope (1473735177…1474248393)');
+  }
+  const gapEspera = { ...(state.gapEspera ?? {}) };
+  await pedirRepasos(state);
   for (const region of Object.keys(REGION_HOSTS)) {
     results[region] = {};
     try {
@@ -1310,6 +1399,13 @@ async function main() {
         gapWindows[region] = ventanas.slice(-20);
       }
       if (r.gapRange) gapRanges[region] = topearRangos(region, [r.gapRange, ...(gapRanges[region] ?? [])]); // el más nuevo primero
+      // Parte 207: un hueco grande nace cuando Albion vuelve de una caída. Si vuelve publicando a medias, un id del hueco
+      // que todavía no publicó da 404 igual que un id que no es kill (medido el 14-nov: /events/1479500000 → 404) y el
+      // barrido lo daría por visto. Ese tramo espera GAP_ESPERA_MS antes de barrerse; mientras, se barre lo viejo.
+      if (r.gapRange && REGIONES_P207.has(region) && r.gapRange[1] - r.gapRange[0] + 1 >= RESCATE_MIN_IDS) {
+        gapEspera[region] = [...(gapEspera[region] ?? []), [r.gapRange[0], r.gapRange[1], Date.now() + GAP_ESPERA_MS]];
+        console.error(`[${region}] hueco ${r.gapRange[0]}…${r.gapRange[1]}: el barrido por id lo toma desde ${new Date(Date.now() + GAP_ESPERA_MS).toISOString()}`);
+      }
       // Chat 156: hueco grande → rescate rápido por gremio en otras máquinas (ver `pedirRescate`). El comienzo sale de la
       // última kill guardada; si la caída pasó de 2 días no está en los archivos de hoy/ayer y se usa la anotada en el estado.
       if (r.gapRange && r.gapRange[1] - r.gapRange[0] + 1 >= RESCATE_MIN_IDS) {
@@ -1385,15 +1481,25 @@ async function main() {
         limitado = rel.limitado;
       }
       // c) Barrido por id (completa las sueltas).
-      if (!limitado && (gapRanges[region] ?? []).length > 0 && Date.now() < hastaMs) {
+      // Parte 207: lo que está en espera (hueco recién nacido) no se barre todavía; sin esperas, `listos` = la cola entera.
+      const sep = separarEnEspera(gapRanges[region] ?? [], gapEspera[region]);
+      if ((gapEspera[region] ?? []).length > 0) gapEspera[region] = sep.esperas;
+      const listos = sep.retenidos.length > 0 ? sep.listos : gapRanges[region] ?? [];
+      if (!limitado && listos.length > 0 && Date.now() < hastaMs) {
         // Los fallos seguidos cuentan para el MISMO id de la cabeza (auditoría p60: antes era un número
         // por región y, si llegaba un rango nuevo adelante, sumaba fallos de ids distintos).
-        const cabeza = gapRanges[region][0]?.[1] ?? null;
+        const cabeza = listos[0]?.[1] ?? null;
         const previo = gapFails[region];
         const fallosPrevios = previo && typeof previo === 'object' && previo.id === cabeza ? Number(previo.n) || 0 : 0;
-        const bar = await barrerIds(region, gapRanges[region], fallosPrevios, hastaMs, limiteRespuestaMs);
-        gapRanges[region] = bar.rangos;
+        const bar = await barrerIds(region, listos, fallosPrevios, hastaMs, limiteRespuestaMs);
+        gapRanges[region] = sep.retenidos.length > 0 ? topearRangos(region, [...bar.rangos, ...sep.retenidos]) : bar.rangos;
         gapFails[region] = { id: bar.rangos[0]?.[1] ?? null, n: bar.fallos };
+        // Parte 207: con Albion dando 502 a rachas (medido el 14-nov: ~1 de cada 2 pedidos por id), un id saltado tras
+        // GAP_PROBE_MAX_FAILS vueltas se perdía. En Américas vuelve a la cola, en espera de GAP_SALTADO_ESPERA_MS.
+        if (REGIONES_P207.has(region) && bar.saltados.length > 0) {
+          gapRanges[region] = topearRangos(region, [...gapRanges[region], ...bar.saltados.map((id) => [id, id])]);
+          gapEspera[region] = [...(gapEspera[region] ?? []), ...bar.saltados.map((id) => [id, id, Date.now() + GAP_SALTADO_ESPERA_MS])];
+        }
         recuperadas += bar.recuperadas;
         limitado = bar.limitado;
       }
@@ -1426,8 +1532,30 @@ async function main() {
   }
 
   // Chat 156: lotes de kills rescatadas por gremio (ver `RESCATES`), después de la captura y del relleno.
-  for (const [region, a] of Object.entries(await cargarRescates(state))) {
+  const barridosHechos = {};
+  for (const [region, a] of Object.entries(await cargarRescates(state, barridosHechos))) {
     if (results[region]?.kills?.ok) Object.assign(results[region].kills.data, a);
+  }
+  // Parte 207: ids que una máquina de `rescate.yml` (modo ids) ya barrió: salen de la cola; y, si la cola de la región es
+  // grande, se pide la tanda siguiente (ver `pedirBarrido`).
+  for (const region of REGIONES_P207) {
+    if ((barridosHechos[region] ?? []).length > 0) {
+      const antes = contarIds(gapRanges[region] ?? []);
+      gapRanges[region] = restarRangos(gapRanges[region] ?? [], barridosHechos[region]);
+      console.log(`[${region}] barrido en máquinas: ${antes - contarIds(gapRanges[region])} ids confirmados salen de la cola`);
+    }
+    try {
+      const { listos } = separarEnEspera(gapRanges[region] ?? [], gapEspera[region]);
+      await pedirBarrido(state, region, listos);
+    } catch (err) {
+      console.error(`[${region}] barrido en máquinas: no se pudo pedir (${String(err.message).slice(0, 120)})`);
+    }
+    if (results[region]?.kills?.ok) {
+      Object.assign(results[region].kills.data, {
+        gapIdsPending: contarIds(gapRanges[region] ?? []),
+        gapIdsEnEspera: contarIds(separarEnEspera(gapRanges[region] ?? [], gapEspera[region]).retenidos),
+      });
+    }
   }
 
   try {
@@ -1450,7 +1578,7 @@ async function main() {
   // `lastEventIds` se guarda en cada vuelta (corte de respaldo de `fetchNewEvents`); `lastSlowRun`
   // solo cuando corrió el oro.
   await fs.mkdir(DATA_DIR, { recursive: true });
-  await writeFileAtomic(STATE_PATH, JSON.stringify({ ...state, lastEventIds, gapQueue, gapRanges, gapFails, gapWindows, ...(tocaLento ? { lastSlowRun: new Date(ahora).toISOString() } : {}) }));
+  await writeFileAtomic(STATE_PATH, JSON.stringify({ ...state, lastEventIds, gapQueue, gapRanges, gapFails, gapWindows, gapEspera, ...(tocaLento ? { lastSlowRun: new Date(ahora).toISOString() } : {}) }));
   if (!tocaLento) {
     console.log('Oro se saltea esta vuelta (cadencia horaria).');
   }
@@ -1484,6 +1612,9 @@ if (process.argv[2] === '--probar-ids') {
       console.error(err);
       process.exit(1);
     });
-} else {
+} else if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().then(() => process.exit(0));
 }
+
+// Parte 207: para `test/` (importar este archivo ya no arranca el escáner).
+export { topearRangos, topeDeRegion, pedirRescate, pedirBarrido, idsDescartados, GAP_RANGE_MAX_IDS, GAP_PENDING_MAX_IDS };

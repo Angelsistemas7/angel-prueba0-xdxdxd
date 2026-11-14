@@ -25,11 +25,18 @@
  *
  * Variables: REGION, DESDE, HASTA (ISO), SHARD, SHARDS, OUT (archivo .ndjson.gz), SPACING_MS, PRESUPUESTO_MIN,
  * DATA_OWNER (dueño de los repos mensuales; por defecto el de este repo).
+ *
+ * Parte 207 (14-nov-2026): MODO=ids + RANGOS="lo-hi,lo-hi,…" = barrido por id repartido en máquinas (el mismo de
+ * `barrerIds` en scrape.js, pero con el cupo entero de una IP). Cada máquina toma su pedazo contiguo de los rangos,
+ * pide `/events/{id}` a ritmo fijo con varios en vuelo, y al final del archivo deja una línea `{"barrido":[[lo,hi],…]}`
+ * con los ids que tuvieron respuesta clara (kill o 404): scrape.js los saca de su cola al terminar de cargar el archivo.
+ * Lo que falló o no alcanzó el tiempo no va en esa línea y sigue en la cola del escáner.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { contarIds, idsARangos, parteDeRangos, textoARangos } from './rangos.mjs';
 
 const HOSTS = {
   europe: 'https://gameinfo-ams.albiononline.com',
@@ -37,6 +44,8 @@ const HOSTS = {
   asia: 'https://gameinfo-sgp.albiononline.com',
 };
 const REGION = process.env.REGION;
+const MODO = process.env.MODO === 'ids' ? 'ids' : 'gremios';
+const RANGOS = MODO === 'ids' ? textoARangos(process.env.RANGOS) : [];
 const DESDE = Date.parse(process.env.DESDE ?? '');
 const HASTA = Date.parse(process.env.HASTA ?? '');
 const SHARD = Number(process.env.SHARD ?? 0);
@@ -47,8 +56,10 @@ const PRESUPUESTO_MS = Number(process.env.PRESUPUESTO_MIN ?? 320) * 60_000;
 const DATA_OWNER = process.env.DATA_OWNER ?? (process.env.GITHUB_REPOSITORY ?? 'Angelsistemas7/x').split('/')[0];
 const PRIMER_DIA_REPOS_MENSUALES = '2026-10-01';
 const BASE = `${HOSTS[REGION]}/api/gameinfo`;
-if (!HOSTS[REGION] || !Number.isFinite(DESDE) || !Number.isFinite(HASTA) || HASTA <= DESDE || SHARD < 0 || SHARD >= SHARDS) {
+const fechasMal = !Number.isFinite(DESDE) || !Number.isFinite(HASTA) || HASTA <= DESDE;
+if (!HOSTS[REGION] || (MODO === 'ids' ? RANGOS.length === 0 : fechasMal) || SHARD < 0 || SHARD >= SHARDS) {
   console.error('uso: REGION=americas DESDE=<iso> HASTA=<iso> [SHARD=0 SHARDS=1] node rescate.mjs');
+  console.error('  o: REGION=americas MODO=ids RANGOS=lo-hi,lo-hi [SHARD=0 SHARDS=1] node rescate.mjs');
   process.exit(2);
 }
 const inicio = Date.now();
@@ -111,28 +122,32 @@ const yaGuardados = new Set();
 const gremios = new Map(); // id → kills como atacante
 const sinGremio = new Map(); // id de asesino sin gremio → kills
 const diasLista = [];
-for (let d = DESDE - 86_400_000; dia(d) <= dia(HASTA + 86_400_000) && dia(d) <= hoy; d += 86_400_000) diasLista.push(dia(d));
-for (const d of diasLista) {
-  if (d < PRIMER_DIA_REPOS_MENSUALES) continue;
-  const repo = `https://raw.githubusercontent.com/${DATA_OWNER}/albion-data-${REGION}-${d.slice(0, 7)}/main/kills`;
-  for (let parte = 1; ; parte++) {
-    const t = await texto(`${repo}/${d}${parte > 1 ? `.${parte}` : ''}.ndjson`);
-    if (t === null) break;
-    for (const l of t.split('\n')) {
-      if (!l) continue;
-      let k;
-      try { k = JSON.parse(l); } catch { continue; }
-      yaGuardados.add(k.eventId);
-      for (const p of k.participants ?? []) {
-        if (p?.guildId) gremios.set(p.guildId, (gremios.get(p.guildId) ?? 0) + 1);
-        else if (p?.id && p.name === k.killerName) sinGremio.set(p.id, (sinGremio.get(p.id) ?? 0) + 1);
+async function cargarGuardados(desdeMs, hastaMs) {
+  // Parte 207: función para que el modo ids la llame con los días de lo que encontró.
+  for (let d = desdeMs - 86_400_000; dia(d) <= dia(hastaMs + 86_400_000) && dia(d) <= hoy; d += 86_400_000) diasLista.push(dia(d));
+  for (const d of diasLista) {
+    if (d < PRIMER_DIA_REPOS_MENSUALES) continue;
+    const repo = `https://raw.githubusercontent.com/${DATA_OWNER}/albion-data-${REGION}-${d.slice(0, 7)}/main/kills`;
+    for (let parte = 1; ; parte++) {
+      const t = await texto(`${repo}/${d}${parte > 1 ? `.${parte}` : ''}.ndjson`);
+      if (t === null) break;
+      for (const l of t.split('\n')) {
+        if (!l) continue;
+        let k;
+        try { k = JSON.parse(l); } catch { continue; }
+        yaGuardados.add(k.eventId);
+        for (const p of k.participants ?? []) {
+          if (p?.guildId) gremios.set(p.guildId, (gremios.get(p.guildId) ?? 0) + 1);
+          else if (p?.id && p.name === k.killerName) sinGremio.set(p.id, (sinGremio.get(p.id) ?? 0) + 1);
+        }
       }
     }
   }
 }
+if (MODO === 'gremios') await cargarGuardados(DESDE, HASTA);
 const porActividad = (m) => [...m].sort((a, b) => b[1] - a[1]).map(([id]) => id);
-const misGremios = porActividad(gremios).filter((_, i) => i % SHARDS === SHARD);
-const misJugadores = porActividad(sinGremio).filter((_, i) => i % SHARDS === SHARD);
+const misGremios = MODO === 'ids' ? [] : porActividad(gremios).filter((_, i) => i % SHARDS === SHARD);
+const misJugadores = MODO === 'ids' ? [] : porActividad(sinGremio).filter((_, i) => i % SHARDS === SHARD);
 console.log(`[${REGION} ${SHARD + 1}/${SHARDS}] días ${diasLista.join(',')} · ya guardados ${yaGuardados.size} · gremios ${misGremios.length}/${gremios.size} · sin gremio ${misJugadores.length}/${sinGremio.size}`);
 
 // ---- 2-4. Rescate ----
@@ -210,6 +225,88 @@ for (const [lista, campo] of [[misJugadores, 'jugadores'], [victimasSinGremio, '
     if (++resumen[campo] % 100 === 0) avance(`${campo} ${resumen[campo]}/${lista.length}`);
   }
 }
+// ---- Parte 207: barrido por id (MODO=ids) ----
+const IDS_EN_VUELO = Number(process.env.IDS_EN_VUELO ?? 24);
+const misRangos = MODO === 'ids' ? parteDeRangos(RANGOS, SHARD, SHARDS) : [];
+const confirmados = [];
+const deIds = { ids: contarIds(misRangos), kills: 0, reintentos: 0 };
+if (MODO === 'ids') {
+  console.log(`[${REGION} ${SHARD + 1}/${SHARDS}] barrido por id: ${deIds.ids} ids (${misRangos.at(-1)?.[0]}…${misRangos[0]?.[1]})`);
+  // Del más nuevo al más viejo, rango por rango.
+  let ri = 0;
+  let cursor = misRangos[0]?.[1];
+  const siguiente = () => {
+    while (ri < misRangos.length) {
+      if (cursor >= misRangos[ri][0]) return cursor--;
+      ri += 1;
+      cursor = misRangos[ri]?.[1];
+    }
+    return null;
+  };
+  const intentos = new Map();
+  const reintentar = [];
+  const enVuelo = new Set();
+  let pausaHasta = 0;
+  let ultimoId = 0;
+  const pedirId = async (id) => {
+    const res = await fetch(`${BASE}/events/${id}`, { signal: AbortSignal.timeout(60_000) });
+    if (res.status === 429) throw Object.assign(new Error('429'), { r429: true });
+    if (res.status === 404) return null; // no es una kill (el hueco ya esperó GAP_ESPERA_MS en scrape.js)
+    if (!res.ok) throw new Error(`http ${res.status}`);
+    const ev = await res.json();
+    if (ev?.EventId !== id) throw new Error(`respuesta de otro id (${ev?.EventId})`);
+    return ev;
+  };
+  while (!sinTiempo()) {
+    const id = reintentar.length > 0 ? reintentar.shift() : siguiente();
+    if (id === null) {
+      if (enVuelo.size === 0) break;
+      await Promise.race(enVuelo);
+      continue;
+    }
+    while (enVuelo.size >= IDS_EN_VUELO) await Promise.race(enVuelo);
+    const espera = Math.max(pausaHasta, ultimoId + SPACING_MS) - Date.now();
+    if (espera > 0) await sleep(espera);
+    ultimoId = Date.now();
+    cuenta.pedidos++;
+    const p = pedirId(id)
+      .then((ev) => {
+        confirmados.push(id);
+        if (ev && !rescatados.has(ev.EventId)) {
+          rescatados.set(ev.EventId, recortar(ev));
+          deIds.kills++;
+        }
+      })
+      .catch((err) => {
+        if (err?.r429) {
+          cuenta.r429++;
+          pausaHasta = Date.now() + 65_000;
+        } else cuenta.errores++;
+        const n = (intentos.get(id) ?? 0) + 1;
+        intentos.set(id, n);
+        if (n < 6) {
+          reintentar.push(id);
+          deIds.reintentos++;
+        } else cuenta.perdidos++; // sin respuesta clara: no va en `barrido`, sigue en la cola del escáner
+      })
+      .finally(() => enVuelo.delete(p));
+    enVuelo.add(p);
+    if (cuenta.pedidos % 2000 === 0) avance(`ids ${confirmados.length}/${deIds.ids}`);
+  }
+  await Promise.allSettled([...enVuelo]);
+  if (sinTiempo()) resumen.cortadoPorTiempo = true;
+  // Los ids ya guardados de los días de lo encontrado (±1), para no duplicar entre días.
+  let tMin = Infinity;
+  let tMax = -Infinity;
+  for (const e of rescatados.values()) {
+    const t = Date.parse(e.TimeStamp);
+    if (Number.isFinite(t)) {
+      tMin = Math.min(tMin, t);
+      tMax = Math.max(tMax, t);
+    }
+  }
+  if (Number.isFinite(tMin)) await cargarGuardados(tMin, tMax);
+}
 avance('fin del barrido');
 
 // ---- 5. Líneas con las funciones de scrape.js ----
@@ -250,8 +347,10 @@ for (const e of [...rescatados.values()].sort((a, b) => a.EventId - b.EventId)) 
   porDia[d] = (porDia[d] ?? 0) + 1;
   gz.write(JSON.stringify({ d, k: toKillLine(e), q: extractEquipment(e, valores) }) + '\n');
 }
+// Parte 207: última línea = ids confirmados (kill o 404). scrape.js la aplica al terminar de cargar este archivo.
+if (MODO === 'ids' && confirmados.length > 0) gz.write(JSON.stringify({ barrido: idsARangos(confirmados) }) + '\n');
 gz.end();
 await fin;
-const final = { region: REGION, shard: SHARD, shards: SHARDS, desde: new Date(DESDE).toISOString(), hasta: new Date(HASTA).toISOString(), rescatadas: rescatados.size, yaEstaban, nuevas: rescatados.size - yaEstaban, porDia, valores: Boolean(valores), ...resumen, ...cuenta, minutos: Math.round((Date.now() - inicio) / 60000) };
+const final = { region: REGION, modo: MODO, shard: SHARD, shards: SHARDS, ...(MODO === 'ids' ? { ...deIds, confirmados: confirmados.length } : { desde: new Date(DESDE).toISOString(), hasta: new Date(HASTA).toISOString() }), rescatadas: rescatados.size, yaEstaban, nuevas: rescatados.size - yaEstaban, porDia, valores: Boolean(valores), ...resumen, ...cuenta, minutos: Math.round((Date.now() - inicio) / 60000) };
 fs.writeFileSync(OUT.replace(/\.ndjson\.gz$/, '.json'), JSON.stringify(final, null, 1));
 console.log('RESUMEN', JSON.stringify(final));

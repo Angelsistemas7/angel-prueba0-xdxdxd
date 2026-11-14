@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node scrape.js"
+    "start": "node scrape.js",
+    "test": "node --test \"test/*.test.mjs\""
   }
 }

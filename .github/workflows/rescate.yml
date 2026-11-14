@@ -12,18 +12,33 @@ on:
         required: true
         type: choice
         options: [americas, europe, asia]
+      # Parte 207: `desde`/`hasta` ya no son obligatorios en el formulario (el modo `ids` no los usa); el modo `gremios`
+      # los sigue exigiendo en el paso «preparar».
       desde:
-        description: 'Comienzo del hueco (ISO, UTC), p. ej. 2026-11-01T02:30:00Z'
-        required: true
+        description: 'Comienzo del hueco (ISO, UTC), p. ej. 2026-11-01T02:30:00Z (modo gremios)'
+        required: false
+        default: ''
         type: string
       hasta:
-        description: 'Fin del hueco (ISO, UTC)'
-        required: true
+        description: 'Fin del hueco (ISO, UTC) (modo gremios)'
+        required: false
+        default: ''
         type: string
       maquinas:
         description: 'Cuántas máquinas (1-12)'
         required: false
         default: '8'
+        type: string
+      # Parte 207: `ids` = barrido por id repartido en máquinas (lo pide solo scrape.js con `pedirBarrido`).
+      modo:
+        description: 'gremios (por ventana de tiempo) o ids (barrido por id de los rangos)'
+        required: false
+        default: 'gremios'
+        type: string
+      rangos:
+        description: 'Modo ids: lo-hi,lo-hi,… (ids de evento)'
+        required: false
+        default: ''
         type: string
 
 permissions:
@@ -44,17 +59,30 @@ jobs:
           DESDE: ${{ inputs.desde }}
           HASTA: ${{ inputs.hasta }}
           MAQUINAS: ${{ inputs.maquinas }}
+          MODO: ${{ inputs.modo }}
+          RANGOS: ${{ inputs.rangos }}
         run: |
           case "$REGION" in americas|europe|asia) ;; *) echo "región inválida: $REGION"; exit 1 ;; esac
-          d=$(date -u -d "$DESDE" +%s) && h=$(date -u -d "$HASTA" +%s) || { echo "fechas inválidas"; exit 1; }
-          [ "$h" -gt "$d" ] || { echo "'hasta' tiene que ser después de 'desde'"; exit 1; }
-          # Más de 10 días no tiene sentido: la ventana de 1.051 kills de cada gremio no llega tan atrás.
-          [ $((h - d)) -le 864000 ] || { echo "hueco de más de 10 días: usar varios rescates"; exit 1; }
           n="$MAQUINAS"
           [[ "$n" =~ ^[0-9]+$ ]] || n=8
           [ "$n" -ge 1 ] || n=1
           [ "$n" -le 12 ] || n=12
           echo "partes=[$(seq -s, 0 $((n - 1)))]" >> "$GITHUB_OUTPUT"
+          if [ "$MODO" = "ids" ]; then
+            [[ "$RANGOS" =~ ^[0-9]+-[0-9]+(,[0-9]+-[0-9]+)*$ ]] || { echo "rangos inválidos"; exit 1; }
+            primero="${RANGOS%%,*}"
+            tag="rescate-$REGION-ids-${primero}-$GITHUB_RUN_ID"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --latest=false \
+              --title "Barrido por id $REGION ($(echo "$RANGOS" | tr ',' '\n' | wc -l) rangos)" \
+              --notes "Barrido por id de $REGION en $n partes (parte 207). Rangos: ${RANGOS:0:2000}. Las carga scrape.js sin duplicar y saca de su cola los ids confirmados. Corrida $GITHUB_RUN_ID."
+            exit 0
+          fi
+          [ -n "$DESDE" ] && [ -n "$HASTA" ] || { echo "modo gremios: faltan 'desde' y 'hasta'"; exit 1; }
+          d=$(date -u -d "$DESDE" +%s) && h=$(date -u -d "$HASTA" +%s) || { echo "fechas inválidas"; exit 1; }
+          [ "$h" -gt "$d" ] || { echo "'hasta' tiene que ser después de 'desde'"; exit 1; }
+          # Más de 10 días no tiene sentido: la ventana de 1.051 kills de cada gremio no llega tan atrás.
+          [ $((h - d)) -le 864000 ] || { echo "hueco de más de 10 días: usar varios rescates"; exit 1; }
           tag="rescate-$REGION-$(date -u -d "$DESDE" +%Y%m%dT%H%M)-$GITHUB_RUN_ID"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           gh release create "$tag" --repo "$GITHUB_REPOSITORY" --latest=false \
@@ -87,6 +115,8 @@ jobs:
           SHARD: ${{ matrix.parte }}
           SHARDS: ${{ strategy.job-total }}
           PRESUPUESTO_MIN: '320'
+          MODO: ${{ inputs.modo }}
+          RANGOS: ${{ inputs.rangos }}
         run: |
           OUT="rescate-$REGION-parte$SHARD.ndjson.gz" node rescate.mjs
       - name: Subir a la release
