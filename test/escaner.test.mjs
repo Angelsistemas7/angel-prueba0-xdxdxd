@@ -217,3 +217,162 @@ test('cargarRescates: escribe las kills y devuelve los ids de la línea `barrido
   const escrito = readFileSync(path.join('data', 'kills', 'americas', '2026-11-01.ndjson'), 'utf8');
   assert.match(escrito, /1473735300/);
 });
+
+// ---- Parte 210: estado del barrido por id para el panel de admin (status.json) ----
+// Resúmenes con los números reales de la corrida 43636128519 (14-nov, 4 máquinas, 56.000 ids); la parte 3 cambiada
+// para probar un canario que falla al terminar.
+const RESUMENES_REALES = [
+  { shard: 0, shards: 4, ids: 14000, kills: 1192, conRespuesta: 6056, confirmados: 6056, rescatadas: 1192, yaEstaban: 1078, nuevas: 114, porDia: { '2026-11-01': 114 }, r429: 0, errores: 8710, pedidos: 14768, perdidos: 35, minutos: 321, cortadoPorTiempo: true, canarioInicio: true, canarioFin: true, confirma: true, motivo: null },
+  { shard: 1, shards: 4, ids: 14000, kills: 1102, conRespuesta: 6200, confirmados: 6200, rescatadas: 1102, yaEstaban: 990, nuevas: 112, porDia: { '2026-11-01': 112 }, r429: 0, errores: 8500, pedidos: 14770, perdidos: 30, minutos: 321, cortadoPorTiempo: true, canarioInicio: true, canarioFin: true, confirma: true, motivo: null },
+  { shard: 2, shards: 4, ids: 14000, kills: 950, conRespuesta: 6100, confirmados: 6100, rescatadas: 950, yaEstaban: 840, nuevas: 110, porDia: { '2026-11-01': 100, '2026-11-02': 10 }, r429: 0, errores: 8600, pedidos: 14760, perdidos: 40, minutos: 321, cortadoPorTiempo: true, canarioInicio: true, canarioFin: true, confirma: true, motivo: null },
+  { shard: 3, shards: 4, ids: 14000, kills: 921, conRespuesta: 6044, confirmados: 0, rescatadas: 921, yaEstaban: 800, nuevas: 121, porDia: { '2026-11-01': 121 }, r429: 2, errores: 8800, pedidos: 14750, perdidos: 33, minutos: 320, cortadoPorTiempo: true, canarioInicio: true, canarioFin: false, confirma: false, motivo: 'el canario no dio 200 al terminar', tramo: [1473735177, 1473749176] },
+];
+const TAG_REAL = 'rescate-americas-ids-1473735177-1473791176-43636128519';
+const TAG_PRUEBA = 'rescate-americas-ids-1474300100-1474300160-43635292011';
+function estadoConBarrido(ahora) {
+  const url = (n) => `https://github.com/x/y/releases/download/${TAG_REAL}/rescate-americas-parte${n}.json`;
+  return {
+    lastEventIds: { americas: ULTIMA_KILL },
+    rescatesPedidos: [{ region: 'americas', modo: 'ids', rangos: '1473735177-1473791176', canario: String(ULTIMA_KILL), maquinas: '4', at: new Date(ahora - 5.5 * 3_600_000).toISOString() }],
+    rescatesLista: {
+      at: new Date(ahora).toISOString(),
+      items: [],
+      barridos: [
+        { tag: TAG_REAL, region: 'americas', primero: [1473735177, 1473791176], runId: '43636128519', at: new Date(ahora - 5.4 * 3_600_000).toISOString(), resumenes: [0, 1, 2, 3].map((n) => ({ name: `rescate-americas-parte${n}.json`, url: url(n), at: new Date(ahora - 60_000).toISOString() })) },
+        { tag: TAG_PRUEBA, region: 'americas', primero: [1474300100, 1474300160], runId: '43635292011', at: new Date(ahora - 5.6 * 3_600_000).toISOString(), resumenes: [] },
+        { tag: 'rescate-europe-ids-1-2-3', region: 'europe', primero: [1, 2], runId: '3', at: new Date(ahora).toISOString(), resumenes: [] },
+      ],
+    },
+    rescates: { [`${TAG_REAL}/rescate-americas-parte0.ndjson.gz`]: { n: 1, total: 1, hecho: 'x' }, [`${TAG_REAL}/rescate-americas-parte1.ndjson.gz`]: { n: 1, total: 9 } },
+    barridoResumenes: { 'rescate-viejo-que-ya-no-esta': { 'a.json': {} } },
+  };
+}
+const bajarReal = (bajados) => async (u) => {
+  bajados.push(u);
+  return RESUMENES_REALES[Number(/parte(\d)/.exec(u)[1])];
+};
+
+test('estadoBarrido: suma las 4 máquinas, guarda el tramo y no vuelve a bajar los resúmenes', async () => {
+  const ahora = Date.parse('2026-11-15T01:40:00Z');
+  const state = estadoConBarrido(ahora);
+  const bajados = [];
+  const bajar = bajarReal(bajados);
+  const cola = [[1_473_791_177, 1_475_500_000]];
+  const e = await esc.estadoBarrido(state, 'americas', { listos: cola, enEspera: 3, cola: contarIds(cola) + 3, canario: ULTIMA_KILL, ahora, bajar });
+  assert.equal(bajados.length, 4);
+  assert.equal(e.corridas.length, 2); // solo Américas, la más nueva primero
+  const c = e.corridas[0];
+  assert.equal(c.tag, TAG_REAL);
+  assert.equal(c.maquinas, 4);
+  assert.equal(c.partes, 4);
+  assert.equal(c.enCurso, false);
+  assert.deepEqual(c.tramo, [1473735177, 1473791176]);
+  assert.equal(c.tramoParcial, false);
+  assert.equal(c.idsPedidos, 56000);
+  assert.equal(c.ids, 56000);
+  assert.equal(c.kills, 1192 + 1102 + 950 + 921);
+  assert.equal(c.nuevas, 457);
+  assert.deepEqual(c.porDia, { '2026-11-01': 447, '2026-11-02': 10 });
+  assert.equal(c.r429, 2);
+  assert.equal(c.errores, 8710 + 8500 + 8600 + 8800);
+  assert.equal(c.pedidos, 14768 + 14770 + 14760 + 14750);
+  assert.equal(c.cortadas, 4);
+  assert.equal(c.canarioInicio, 4);
+  assert.equal(c.canarioFin, 3);
+  assert.equal(c.confirman, 3);
+  assert.deepEqual(c.motivos, ['el canario no dio 200 al terminar']);
+  assert.equal(c.cargadas, 1); // solo la parte 0 terminó de cargarse
+  assert.equal(c.fin, new Date(ahora - 60_000).toISOString());
+  // La de prueba sin resúmenes, de hace 5,6 h: sigue «en curso» hasta 6 h 30 min.
+  assert.equal(e.corridas[1].enCurso, true);
+  assert.equal(e.corridas[1].tramoParcial, true);
+  // Cola y próximo barrido: el último pedido fue hace 5,5 h → toca en 30 min.
+  assert.equal(e.listos, contarIds(cola));
+  assert.equal(e.enEspera, 3);
+  assert.equal(e.proximoAt, new Date(ahora + 0.5 * 3_600_000).toISOString());
+  assert.equal(e.proximoMotivo, 'una tanda cada 6 h');
+  assert.equal(e.pedidoAt, state.rescatesPedidos[0].at);
+  // El tramo y los resúmenes quedan en el estado; lo de releases que ya no están se poda.
+  assert.deepEqual(Object.keys(state.barridoResumenes).sort(), [TAG_REAL, TAG_PRUEBA].sort());
+  assert.equal(state.barridoTramos[TAG_REAL].ids, 56000);
+  // Al día siguiente el pedido ya se podó: el tramo y los números siguen iguales sin bajar nada de nuevo.
+  state.rescatesPedidos = [];
+  const e2 = await esc.estadoBarrido(state, 'americas', { listos: cola, canario: ULTIMA_KILL, ahora: ahora + 86_400_000, bajar });
+  assert.equal(bajados.length, 4);
+  assert.deepEqual(e2.corridas[0].tramo, [1473735177, 1473791176]);
+  assert.equal(e2.corridas[0].kills, c.kills);
+  assert.equal(e2.corridas[1].enCurso, false); // pasó el tiempo de una corrida: ya no está «en curso»
+  assert.equal(e2.proximoAt, new Date(ahora + 86_400_000).toISOString()); // nada frena: toca en la próxima vuelta
+  assert.equal(e2.proximoMotivo, null);
+  // Lo que suma a status.json se mantiene chico.
+  assert.ok(JSON.stringify(e2).length < 3000, `pesa ${JSON.stringify(e2).length}`);
+});
+
+test('estadoBarrido: un resumen que no se puede bajar se reintenta y a los 5 fallos se deja', async () => {
+  const ahora = Date.parse('2026-11-15T01:40:00Z');
+  const state = estadoConBarrido(ahora);
+  let intentos = 0;
+  const bajar = async (u) => {
+    if (/parte2/.test(u)) {
+      intentos += 1;
+      throw new Error('502');
+    }
+    return RESUMENES_REALES[Number(/parte(\d)/.exec(u)[1])];
+  };
+  for (let i = 0; i < 7; i++) await esc.estadoBarrido(state, 'americas', { ahora, bajar });
+  assert.equal(intentos, 5);
+  const e = await esc.estadoBarrido(state, 'americas', { ahora, bajar });
+  assert.equal(e.corridas[0].partes, 3);
+  assert.equal(e.corridas[0].enCurso, true); // falta una parte y no pasó el tiempo de la corrida
+});
+
+test('cuandoBarrido: mismas reglas que pedirBarrido, con la hora en que cada una deja de frenar', () => {
+  const ahora = Date.parse('2026-11-15T01:40:00Z');
+  const cola = [[1, 500_000]];
+  const base = { lastEventIds: { americas: ULTIMA_KILL } };
+  assert.deepEqual(esc.cuandoBarrido(base, 'americas', cola, ULTIMA_KILL, ahora), { bloqueado: false, at: ahora, motivo: null });
+  assert.equal(esc.cuandoBarrido(base, 'europe', cola, ULTIMA_KILL, ahora).bloqueado, true);
+  assert.equal(esc.cuandoBarrido(base, 'americas', [[1, 50_000]], ULTIMA_KILL, ahora).at, null);
+  assert.equal(esc.cuandoBarrido(base, 'americas', cola, 0, ahora).motivo, 'sin kill de referencia (canario)');
+  const conRescate = { ...base, rescatesPedidos: [{ region: 'europe', desde: 'a', hasta: 'b', maquinas: '8', at: new Date(ahora - 3_600_000).toISOString() }] };
+  assert.deepEqual(esc.cuandoBarrido(conRescate, 'americas', cola, ULTIMA_KILL, ahora), { bloqueado: true, at: ahora + 5 * 3_600_000, motivo: 'hay un rescate por gremio corriendo' });
+  const conRepaso = { ...base, rescatesRepaso: [{ region: 'americas', desde: 'a', hasta: 'b', cuando: new Date(ahora + 3_600_000).toISOString() }] };
+  assert.deepEqual(esc.cuandoBarrido(conRepaso, 'americas', cola, ULTIMA_KILL, ahora), { bloqueado: true, at: ahora + 7 * 3_600_000, motivo: 'hay un repaso de rescate en menos de 6 h' });
+  // Un repaso vencido que no pudo salir: frena, pero no se sabe hasta cuándo.
+  const repasoVencido = { ...base, rescatesRepaso: [{ region: 'americas', desde: 'a', hasta: 'b', cuando: new Date(ahora - 7 * 3_600_000).toISOString() }] };
+  assert.deepEqual(esc.cuandoBarrido(repasoVencido, 'americas', cola, ULTIMA_KILL, ahora), { bloqueado: true, at: null, motivo: 'hay un repaso de rescate en menos de 6 h' });
+  // Rescates de 8 y 2 máquinas hace 2 h y 1 h (más un barrido viejo, ya libre): el rescate frena hasta dentro de 5 h.
+  const lleno = { ...base, rescatesPedidos: [
+    { region: 'americas', modo: 'ids', maquinas: '4', at: new Date(ahora - 7 * 3_600_000).toISOString() },
+    { region: 'americas', desde: 'a', hasta: 'b', maquinas: '8', at: new Date(ahora - 2 * 3_600_000).toISOString() },
+    { region: 'europe', desde: 'a', hasta: 'b', maquinas: '2', at: new Date(ahora - 1 * 3_600_000).toISOString() },
+  ] };
+  const r = esc.cuandoBarrido(lleno, 'americas', cola, ULTIMA_KILL, ahora);
+  assert.equal(r.bloqueado, true);
+  assert.equal(r.at, ahora + 5 * 3_600_000);
+});
+
+test('rescatesPublicados (vía cargarRescates): anota las releases del barrido con sus resúmenes', async () => {
+  const fetchViejo = globalThis.fetch;
+  process.env.GITHUB_REPOSITORY = 'x/y';
+  globalThis.fetch = async () => new Response(JSON.stringify([
+    { tag_name: TAG_REAL, published_at: '2026-11-14T20:11:14Z', created_at: '2026-11-14T20:10:06Z', assets: [
+      { name: 'rescate-americas-parte0.json', state: 'uploaded', browser_download_url: 'https://h/p0.json', updated_at: '2026-11-15T01:32:01Z' },
+      { name: 'rescate-americas-parte0.ndjson.gz', state: 'uploaded', browser_download_url: 'https://h/p0.gz', updated_at: '2026-11-15T01:32:01Z' },
+      { name: 'rescate-americas-parte1.json', state: 'starter', browser_download_url: 'https://h/p1.json' },
+    ] },
+    { tag_name: 'rescate-americas-20261104T0251-41809357004', created_at: '2026-11-04T09:41:52Z', assets: [] },
+  ]), { status: 200 });
+  try {
+    const state = { rescates: { [`${TAG_REAL}/rescate-americas-parte0.ndjson.gz`]: { n: 1, total: 1, hecho: 'x' } } };
+    await esc.cargarRescates(state, {});
+    assert.deepEqual(state.rescatesLista.barridos, [{
+      tag: TAG_REAL, region: 'americas', primero: [1473735177, 1473791176], runId: '43636128519', at: '2026-11-14T20:11:14Z',
+      resumenes: [{ name: 'rescate-americas-parte0.json', url: 'https://h/p0.json', at: '2026-11-15T01:32:01Z' }],
+    }]);
+    assert.equal(state.rescatesLista.items.length, 1);
+  } finally {
+    globalThis.fetch = fetchViejo;
+    delete process.env.GITHUB_REPOSITORY;
+  }
+});
