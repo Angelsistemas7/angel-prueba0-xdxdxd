@@ -238,7 +238,8 @@ for (const [lista, campo] of [[misJugadores, 'jugadores'], [victimasSinGremio, '
 const IDS_EN_VUELO = Number(process.env.IDS_EN_VUELO ?? 24);
 const misRangos = MODO === 'ids' ? parteDeRangos(RANGOS, SHARD, SHARDS) : [];
 const confirmados = [];
-const deIds = { ids: contarIds(misRangos), kills: 0, reintentos: 0, no: 0, canarioInicio: null, canarioFin: null, confirma: false, motivo: null };
+// Parte 210: `tramo` (ids más viejo y más nuevo de esta máquina) para el panel de admin.
+const deIds = { ids: contarIds(misRangos), tramo: misRangos.length > 0 ? [misRangos.at(-1)[0], misRangos[0][1]] : null, kills: 0, reintentos: 0, no: 0, canarioInicio: null, canarioFin: null, confirma: false, motivo: null };
 /** ¿Albion sirve la kill conocida? Varios intentos (los 502 vienen a rachas). */
 async function canarioVivo(intentos, esperaMs) {
   for (let i = 0; i < intentos; i++) {
@@ -410,6 +411,6 @@ const aConfirmar = deIds.confirma ? confirmados.filter((id) => !sinConfirmar.has
 if (MODO === 'ids' && aConfirmar.length > 0) gz.write(JSON.stringify({ barrido: idsARangos(aConfirmar) }) + '\n');
 gz.end();
 await fin;
-const final = { region: REGION, modo: MODO, shard: SHARD, shards: SHARDS, ...(MODO === 'ids' ? { ...deIds, canario: CANARIO, conRespuesta: confirmados.length, confirmados: aConfirmar.length } : { desde: new Date(DESDE).toISOString(), hasta: new Date(HASTA).toISOString() }), rescatadas: rescatados.size, yaEstaban, nuevas: rescatados.size - yaEstaban, porDia, valores: Boolean(valores), ...resumen, ...cuenta, minutos: Math.round((Date.now() - inicio) / 60000) };
+const final = { region: REGION, modo: MODO, shard: SHARD, shards: SHARDS, ...(MODO === 'ids' ? { ...deIds, canario: CANARIO, conRespuesta: confirmados.length, confirmados: aConfirmar.length } : { desde: new Date(DESDE).toISOString(), hasta: new Date(HASTA).toISOString() }), rescatadas: rescatados.size, yaEstaban, nuevas: rescatados.size - yaEstaban, porDia, valores: Boolean(valores), ...resumen, ...cuenta, minutos: Math.round((Date.now() - inicio) / 60000), inicio: new Date(inicio).toISOString(), fin: new Date().toISOString() };
 fs.writeFileSync(OUT.replace(/\.ndjson\.gz$/, '.json'), JSON.stringify(final, null, 1));
 console.log('RESUMEN', JSON.stringify(final));

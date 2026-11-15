@@ -779,6 +779,8 @@ async function guardarRecuperadas(region, events) {
 const RESCATE_LOTE = 4000;
 const RESCATE_REVISAR_MS = 30 * 60_000;
 const RESCATE_ETIQUETA = /^rescate-(europe|americas|asia)-/;
+/** Parte 210: `rescate-<región>-ids-<lo>-<hi>-<corrida>` (ver `preparar` en rescate.yml; lo-hi = primer rango, el más nuevo). */
+const BARRIDO_ETIQUETA = /^rescate-(europe|americas|asia)-ids-(\d+)-(\d+)-(\d+)$/;
 const rescateCache = new Map();
 
 /** Assets `.ndjson.gz` de las releases `rescate-*` de este repo: una consulta cada 30 min (48 por día), con el token del
@@ -788,6 +790,7 @@ async function rescatesPublicados(state) {
   const prev = state.rescatesLista ?? { at: null, items: [] };
   const repo = process.env.GITHUB_REPOSITORY;
   if (!repo || (prev.at && Date.now() - Date.parse(prev.at) < RESCATE_REVISAR_MS)) return prev.items;
+  const barridos = [];
   try {
     const headers = { Accept: 'application/vnd.github+json', ...(process.env.GH_TOKEN ? { Authorization: `Bearer ${process.env.GH_TOKEN}` } : {}) };
     const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50`, { headers, signal: AbortSignal.timeout(15_000) });
@@ -796,15 +799,27 @@ async function rescatesPublicados(state) {
     for (const rel of await res.json()) {
       const m = RESCATE_ETIQUETA.exec(rel?.tag_name ?? '');
       if (!m) continue;
+      // Parte 210: las releases del barrido por id con sus resúmenes (.json de ~600 B por máquina) para el panel.
+      const b = BARRIDO_ETIQUETA.exec(rel.tag_name);
+      if (b) {
+        barridos.push({
+          tag: rel.tag_name,
+          region: b[1],
+          primero: [Number(b[2]), Number(b[3])],
+          runId: b[4],
+          at: rel.published_at ?? rel.created_at ?? null,
+          resumenes: (rel.assets ?? []).filter((a) => a?.state === 'uploaded' && /\.json$/.test(String(a.name))).map((a) => ({ name: a.name, url: a.browser_download_url, at: a.updated_at ?? null })),
+        });
+      }
       for (const a of rel.assets ?? []) {
         if (a?.state === 'uploaded' && String(a.name).endsWith('.ndjson.gz')) items.push({ id: `${rel.tag_name}/${a.name}`, region: m[1], url: a.browser_download_url });
       }
     }
-    state.rescatesLista = { at: new Date().toISOString(), items };
+    state.rescatesLista = { at: new Date().toISOString(), items, barridos: barridos.slice(0, BARRIDO_HISTORIAL * 3) };
     return items;
   } catch (err) {
     console.error(`rescate: no se pudo leer la lista de releases (${String(err.message).slice(0, 120)}); sigue la anterior`);
-    state.rescatesLista = { at: new Date().toISOString(), items: prev.items };
+    state.rescatesLista = { at: new Date().toISOString(), items: prev.items, ...(prev.barridos ? { barridos: prev.barridos } : {}) };
     return prev.items;
   }
 }
@@ -964,16 +979,50 @@ const BARRIDO_TANDA_IDS = 56_000;
 const BARRIDO_TANDA_MIN_IDS = 10_000; // una tanda de ids sueltos no vale 4 máquinas
 const BARRIDO_MAX_PARES = 2_000; // ~42.000 caracteres: cabe en los 65.535 de los inputs de workflow_dispatch
 const BARRIDO_CADA_MS = 6 * 3_600_000;
+/** Parte 210: ¿puede salir una tanda de barrido ahora? Si no, desde cuándo (`at`, ms; null = no se sabe) y por qué. Son
+ * las mismas reglas que usaba `pedirBarrido` (que ahora llama a esta) más la hora en que cada una deja de frenar, para
+ * que el panel muestre «próximo barrido». */
+function cuandoBarrido(state, region, listos, canario = Number(state.lastEventIds?.[region]) || 0, ahora = Date.now()) {
+  if (!REGIONES_P207.has(region)) return { bloqueado: true, at: null, motivo: 'esta región no usa el barrido en máquinas' };
+  const frenos = [];
+  if (contarIds(listos) < BARRIDO_MIN_IDS) frenos.push({ at: null, motivo: `la cola lista tiene menos de ${BARRIDO_MIN_IDS} ids` });
+  if (!(canario > 0)) frenos.push({ at: null, motivo: 'sin kill de referencia (canario)' });
+  const previos = (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < 86_400_000);
+  const ultimo = Math.max(-Infinity, ...previos.filter((p) => p.region === region && p.modo === 'ids').map((p) => Date.parse(p.at)));
+  if (ahora - ultimo < BARRIDO_CADA_MS) frenos.push({ at: ultimo + BARRIDO_CADA_MS, motivo: 'una tanda cada 6 h' });
+  // Nada de barrido mientras corre un rescate por gremio (cualquier región) o con un repaso por salir en < 6 h.
+  const rescates = previos.filter((p) => p.modo !== 'ids' && ahora - Date.parse(p.at) < CORRIDA_MS).map((p) => Date.parse(p.at));
+  if (rescates.length > 0) frenos.push({ at: Math.max(...rescates) + CORRIDA_MS, motivo: 'hay un rescate por gremio corriendo' });
+  const repasos = (state.rescatesRepaso ?? []).filter((r) => Date.parse(r.cuando) - ahora < CORRIDA_MS).map((r) => Date.parse(r.cuando));
+  // El repaso sale a su hora y después ocupa máquinas 6 h; si ya venció y sigue sin salir, no se sabe cuándo.
+  if (repasos.length > 0) {
+    const fin = Math.max(...repasos) + CORRIDA_MS;
+    frenos.push({ at: fin > ahora ? fin : null, motivo: 'hay un repaso de rescate en menos de 6 h' });
+  }
+  if (maquinasOcupadas(state, ahora) + BARRIDO_MAQUINAS > MAQUINAS_TOPE) {
+    // Cuándo se liberan las máquinas que faltan (cada pedido ocupa las suyas CORRIDA_MS).
+    let ocupadas = maquinasOcupadas(state, ahora);
+    let libre = null;
+    for (const p of (state.rescatesPedidos ?? []).filter((x) => ahora - Date.parse(x.at) < CORRIDA_MS).sort((a, b) => Date.parse(a.at) - Date.parse(b.at))) {
+      ocupadas -= Number(p.maquinas) || 0;
+      if (ocupadas + BARRIDO_MAQUINAS <= MAQUINAS_TOPE) {
+        libre = Date.parse(p.at) + CORRIDA_MS;
+        break;
+      }
+    }
+    frenos.push({ at: libre, motivo: `no hay ${BARRIDO_MAQUINAS} máquinas libres (tope ${MAQUINAS_TOPE})` });
+  }
+  if (frenos.length === 0) return { bloqueado: false, at: ahora, motivo: null };
+  // El que más tarda manda; uno sin hora conocida, más todavía.
+  const peor = frenos.find((x) => x.at === null) ?? frenos.reduce((a, b) => (b.at > a.at ? b : a));
+  return { bloqueado: true, at: peor.at, motivo: peor.motivo };
+}
+
 async function pedirBarrido(state, region, listos, canario = Number(state.lastEventIds?.[region]) || 0) {
-  if (!REGIONES_P207.has(region) || contarIds(listos) < BARRIDO_MIN_IDS || !(canario > 0)) return false;
   const ahora = Date.now();
+  if (cuandoBarrido(state, region, listos, canario, ahora).bloqueado) return false;
   const previos = (state.rescatesPedidos ?? []).filter((p) => ahora - Date.parse(p.at) < 86_400_000);
   const barridos = previos.filter((p) => p.region === region && p.modo === 'ids');
-  if (barridos.some((p) => ahora - Date.parse(p.at) < BARRIDO_CADA_MS)) return false;
-  // Nada de barrido mientras corre un rescate por gremio (cualquier región) o con un repaso por salir en < 6 h.
-  if (previos.some((p) => p.modo !== 'ids' && ahora - Date.parse(p.at) < CORRIDA_MS)) return false;
-  if ((state.rescatesRepaso ?? []).some((r) => Date.parse(r.cuando) - ahora < CORRIDA_MS)) return false;
-  if (maquinasOcupadas(state, ahora) + BARRIDO_MAQUINAS > MAQUINAS_TOPE) return false;
   // Lo pedido en las últimas 24 h y todavía sin cargar no se vuelve a pedir.
   const yaPedido = barridos.flatMap((p) => String(p.rangos ?? '').split(',').filter(Boolean).map((x) => x.split('-').map(Number)));
   // Nunca ids más nuevos que la última kill publicada (`canario`): ahí un 404 puede ser una kill sin publicar.
@@ -992,6 +1041,110 @@ async function pedirBarrido(state, region, listos, canario = Number(state.lastEv
   state.rescatesPedidos = [...previos, { ...pedido, at: new Date(ahora).toISOString() }];
   console.error(`[${region}] barrido en máquinas: ${contarIds(tanda)} ids (${tanda.at(-1)[0]}…${tanda[0][1]}) en ${BARRIDO_MAQUINAS} máquinas`);
   return true;
+}
+
+/** Parte 210 (14-nov-2026, sí del dueño): estado del barrido por id para el panel de admin, dentro de `status.json` (el
+ * mismo archivo que ya lee la página Escáneres: sin Firebase). Las corridas salen de la lista de releases que
+ * `rescatesPublicados` ya pide cada 30 min; cada resumen (`rescate-<región>-parteN.json`, ~600 B por máquina) se baja UNA
+ * vez y queda en state.json. Lo que no se pudo bajar se reintenta la vuelta siguiente (como mucho 5 veces). */
+const BARRIDO_HISTORIAL = 5;
+const BARRIDO_RESUMENES_POR_VUELTA = 8;
+const CAMPOS_RESUMEN = ['shard', 'shards', 'ids', 'tramo', 'kills', 'conRespuesta', 'confirmados', 'rescatadas', 'yaEstaban', 'nuevas', 'porDia', 'r429', 'errores', 'pedidos', 'perdidos', 'reintentos', 'minutos', 'cortadoPorTiempo', 'canarioInicio', 'canarioFin', 'confirma', 'motivo', 'inicio', 'fin'];
+async function bajarResumen(url) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`resumen respondió ${res.status}`);
+  return res.json();
+}
+function compactarResumen(j, at) {
+  const out = { at };
+  for (const c of CAMPOS_RESUMEN) if (j?.[c] !== undefined) out[c] = j[c];
+  return out;
+}
+const sumar = (xs, c) => xs.reduce((n, x) => n + (Number(x[c]) || 0), 0);
+const contar = (xs, c) => xs.filter((x) => x[c] === true).length;
+async function estadoBarrido(state, region, { listos = [], enEspera = 0, cola = 0, canario, ahora = Date.now(), bajar = bajarResumen } = {}) {
+  const lista = state.rescatesLista?.barridos ?? [];
+  const resumenes = { ...(state.barridoResumenes ?? {}) };
+  const tramos = { ...(state.barridoTramos ?? {}) };
+  const pedidos = (state.rescatesPedidos ?? []).filter((p) => p.region === region && p.modo === 'ids');
+  const releases = lista.filter((r) => r.region === region).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, BARRIDO_HISTORIAL);
+  let bajadas = 0;
+  const corridas = [];
+  for (const rel of releases) {
+    // El tramo pedido sale del pedido (state.rescatesPedidos se poda a las 24 h): se guarda la primera vez que se ve.
+    if (!tramos[rel.tag]) {
+      const p = pedidos.find((x) => String(x.rangos ?? '').split(',')[0] === `${rel.primero[0]}-${rel.primero[1]}`);
+      if (p) {
+        const rangos = String(p.rangos).split(',').filter(Boolean).map((x) => x.split('-').map(Number));
+        tramos[rel.tag] = { lo: Math.min(...rangos.map((r) => r[0])), hi: Math.max(...rangos.map((r) => r[1])), ids: contarIds(rangos), rangos: rangos.length, maquinas: Number(p.maquinas) || null };
+      }
+    }
+    const deTag = { ...(resumenes[rel.tag] ?? {}) };
+    for (const a of rel.resumenes ?? []) {
+      const ya = deTag[a.name];
+      if (ya && !ya.fallos) continue;
+      if ((ya?.fallos ?? 0) >= 5 || bajadas >= BARRIDO_RESUMENES_POR_VUELTA) continue;
+      bajadas += 1;
+      try {
+        deTag[a.name] = compactarResumen(await bajar(a.url), a.at);
+      } catch (err) {
+        deTag[a.name] = { fallos: (ya?.fallos ?? 0) + 1 };
+        console.error(`[${region}] barrido: no se pudo bajar el resumen ${rel.tag}/${a.name} (${String(err.message).slice(0, 80)})`);
+      }
+    }
+    resumenes[rel.tag] = deTag;
+    const partes = Object.entries(deTag).filter(([, x]) => !x.fallos);
+    const xs = partes.map(([, x]) => x);
+    const t = tramos[rel.tag];
+    const maquinas = t?.maquinas ?? (xs.length > 0 ? Math.max(...xs.map((x) => Number(x.shards) || 0)) : null);
+    const inicioMs = Date.parse(rel.at);
+    const enCurso = xs.length < (maquinas ?? 1) && ahora - inicioMs < CORRIDA_MS + 30 * 60_000;
+    const porDia = {};
+    for (const x of xs) for (const [d, n] of Object.entries(x.porDia ?? {})) porDia[d] = (porDia[d] ?? 0) + (Number(n) || 0);
+    const tramosParte = xs.map((x) => x.tramo).filter((r) => Array.isArray(r) && r.length === 2);
+    const tramo = t ? [t.lo, t.hi] : tramosParte.length > 0 ? [Math.min(...tramosParte.map((r) => r[0])), Math.max(...tramosParte.map((r) => r[1]))] : rel.primero;
+    const fines = xs.map((x) => Date.parse(x.fin ?? x.at)).filter(Number.isFinite);
+    corridas.push({
+      tag: rel.tag,
+      runId: rel.runId,
+      inicio: rel.at,
+      fin: enCurso || fines.length === 0 ? null : new Date(Math.max(...fines)).toISOString(),
+      enCurso,
+      maquinas,
+      partes: xs.length,
+      tramo,
+      tramoParcial: !t && tramosParte.length === 0, // solo el primer rango (el tag): el pedido ya no estaba
+      idsPedidos: t?.ids ?? (xs.length > 0 ? sumar(xs, 'ids') : null),
+      ...Object.fromEntries(['ids', 'conRespuesta', 'confirmados', 'kills', 'rescatadas', 'yaEstaban', 'nuevas', 'r429', 'errores', 'pedidos', 'perdidos'].map((c) => [c, sumar(xs, c)])),
+      minutos: xs.length > 0 ? Math.max(...xs.map((x) => Number(x.minutos) || 0)) : null,
+      porDia,
+      cortadas: contar(xs, 'cortadoPorTiempo'),
+      canarioInicio: contar(xs, 'canarioInicio'),
+      canarioFin: contar(xs, 'canarioFin'),
+      confirman: contar(xs, 'confirma'),
+      motivos: [...new Set(xs.map((x) => x.motivo).filter(Boolean))].slice(0, 4),
+      // Partes cuyas kills ya se cargaron y cuyos ids confirmados ya salieron de la cola (ver `cargarRescates`).
+      cargadas: partes.filter(([name]) => state.rescates?.[`${rel.tag}/${name.replace(/\.json$/, '.ndjson.gz')}`]?.hecho).length,
+    });
+  }
+  // Solo se guarda lo de las releases que siguen en la lista (≤ 12 corridas × 4 resúmenes de ~300 B).
+  const vivas = new Set(lista.map((r) => r.tag));
+  state.barridoResumenes = Object.fromEntries(Object.entries(resumenes).filter(([tag]) => vivas.has(tag)));
+  state.barridoTramos = Object.fromEntries(Object.entries(tramos).filter(([tag]) => vivas.has(tag)));
+  const proximo = cuandoBarrido(state, region, listos, canario, ahora);
+  const ultimoPedido = pedidos.map((p) => p.at).sort().at(-1) ?? null;
+  return {
+    at: new Date(ahora).toISOString(),
+    cola,
+    listos: contarIds(listos),
+    enEspera,
+    proximoAt: proximo.at === null ? null : new Date(Math.max(ahora, proximo.at)).toISOString(),
+    proximoMotivo: proximo.motivo,
+    pedidoAt: ultimoPedido,
+    maquinasTanda: BARRIDO_MAQUINAS,
+    idsTanda: BARRIDO_TANDA_IDS,
+    corridas,
+  };
 }
 
 /** Un evento por id: el evento, `null` si no existe (404: ese id no es una kill), o lanza si falla
@@ -1587,8 +1740,8 @@ async function main() {
       gapRanges[region] = restarRangos(gapRanges[region] ?? [], validos);
       console.log(`[${region}] barrido en máquinas: ${antes - contarIds(gapRanges[region])} ids confirmados salen de la cola`);
     }
+    const { listos, retenidos } = separarEnEspera(gapRanges[region] ?? [], gapEspera[region]);
     try {
-      const { listos } = separarEnEspera(gapRanges[region] ?? [], gapEspera[region]);
       await pedirBarrido(state, region, listos);
     } catch (err) {
       console.error(`[${region}] barrido en máquinas: no se pudo pedir (${String(err.message).slice(0, 120)})`);
@@ -1596,8 +1749,19 @@ async function main() {
     if (results[region]?.kills?.ok) {
       Object.assign(results[region].kills.data, {
         gapIdsPending: contarIds(gapRanges[region] ?? []),
-        gapIdsEnEspera: contarIds(separarEnEspera(gapRanges[region] ?? [], gapEspera[region]).retenidos),
+        gapIdsEnEspera: contarIds(retenidos),
       });
+      // Parte 210: el barrido por id en el panel (ver `estadoBarrido`). Si falla, status.json conserva el de antes.
+      try {
+        results[region].kills.data.barrido = await estadoBarrido(state, region, {
+          listos,
+          enEspera: contarIds(retenidos),
+          cola: contarIds(gapRanges[region] ?? []),
+          canario: Number(state.lastEventIds?.[region]) || 0,
+        });
+      } catch (err) {
+        console.error(`[${region}] barrido: no se pudo armar el estado para el panel (${String(err.message).slice(0, 120)})`);
+      }
     }
   }
 
@@ -1660,4 +1824,4 @@ if (process.argv[2] === '--probar-ids') {
 }
 
 // Parte 207: para `test/` (importar este archivo ya no arranca el escáner).
-export { topearRangos, topeDeRegion, pedirRescate, pedirRepasos, pedirBarrido, pasoBarrido, cargarRescates, maquinasOcupadas, idsDescartados, GAP_RANGE_MAX_IDS, GAP_PENDING_MAX_IDS, BARRIDO_TANDA_IDS, BARRIDO_MAQUINAS, MAQUINAS_TOPE };
+export { topearRangos, topeDeRegion, pedirRescate, pedirRepasos, pedirBarrido, cuandoBarrido, estadoBarrido, pasoBarrido, cargarRescates, maquinasOcupadas, idsDescartados, GAP_RANGE_MAX_IDS, GAP_PENDING_MAX_IDS, BARRIDO_TANDA_IDS, BARRIDO_MAQUINAS, MAQUINAS_TOPE };
