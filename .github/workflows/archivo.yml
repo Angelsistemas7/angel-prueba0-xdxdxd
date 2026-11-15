@@ -1,0 +1,135 @@
+name: archivo
+# Chat 212 (app): índice de ARCHIVO por mes, para que la app busque kills y peleas de meses anteriores por nombre.
+#
+# El índice diario (repo de estadísticas, rama `index`) guarda 31 días; pasado eso la app ya no podía buscar a nadie
+# por nombre, aunque los archivos de este escáner se guardan para siempre y la API oficial sigue dando cada kill
+# completa por su id. Este workflow arma UN índice por mes y región (`archivo-indice.mjs`) cuando el mes ya cerró y
+# lo deja en `ni/` del repo de ese mes (`albion-data-<región>-<mes>`). Julio-septiembre viven en el repo legado:
+# su índice va a repos `albion-data-<región>-2026-0X` que solo tienen `ni/` (README lo dice).
+#
+# Costo: cero. Este repo es público (Actions gratis) y la app lee por raw.githubusercontent.com. Corre una vez al mes
+# (~10-20 min por región); un mes de Europa suma ~40 MB a un repo de ~1,5 GB.
+on:
+  schedule:
+    # Día 1, 04:40 UTC: el último día del mes ya quedó subido (el escáner sube cada ~15 min y, si cruzó la
+    # medianoche con el clon viejo, lo reintenta en cada ciclo). El índice diario cubre 31 días: hay margen.
+    - cron: '40 4 1 * *'
+  workflow_dispatch:
+    inputs:
+      mes:
+        description: 'Mes AAAA-MM (vacío = el mes anterior)'
+        required: false
+        default: ''
+      rehacer:
+        description: 'si = rearmar aunque ya exista'
+        required: false
+        default: 'no'
+
+permissions:
+  contents: read
+
+jobs:
+  archivo:
+    strategy:
+      fail-fast: false
+      matrix:
+        region: [europe, americas, asia]
+    concurrency:
+      group: archivo-${{ matrix.region }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      # Solo el script: el checkout completo bajaría los 4,2 GB del histórico.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            archivo-indice.mjs
+            test/archivo-indice.test.mjs
+          sparse-checkout-cone-mode: false
+          filter: blob:none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --test test/archivo-indice.test.mjs
+      - name: Armar y subir el índice del mes
+        env:
+          DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Auditoría p92 H6: las entradas del dispatch van por env, nunca pegadas dentro del script.
+          MES_INPUT: ${{ github.event.inputs.mes }}
+          REHACER: ${{ github.event.inputs.rehacer }}
+          R: ${{ matrix.region }}
+          OWNER: ${{ github.repository_owner }}
+          LEGADO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DATA_REPO_TOKEN:-}" ]; then echo "::error::falta DATA_REPO_TOKEN"; exit 1; fi
+          MES="${MES_INPUT:-}"
+          [ -z "$MES" ] && MES=$(date -u -d "$(date -u +%Y-%m-01) -1 month" +%Y-%m)
+          if ! [[ "$MES" =~ ^20[0-9]{2}-(0[1-9]|1[0-2])$ ]]; then echo "::error::mes inválido: $MES"; exit 1; fi
+          # Solo meses cerrados (1 h de margen): un mes abierto todavía recibe líneas y el índice quedaría corto.
+          FIN=$(date -u -d "$MES-01 +1 month" +%s)
+          if [ "$(date -u +%s)" -lt $((FIN + 3600)) ]; then echo "::error::$MES todavía no cerró"; exit 1; fi
+          if [[ "$MES" < "2026-07" ]]; then echo "::error::no hay datos antes de 2026-07"; exit 1; fi
+
+          REPO="albion-data-$R-$MES"
+          RAW="https://raw.githubusercontent.com"
+          if [ "$REHACER" != "si" ] && curl -sf "$RAW/$OWNER/$REPO/main/ni/archivos.json" | grep -q '"v":1'; then
+            echo "$REPO ya tiene su índice de archivo"; exit 0
+          fi
+
+          # De dónde salen los archivos del mes. Hasta el 30-09 en el repo legado con Europa y América CRUZADOS
+          # (misma regla que `carpetaLegado` en la app, las Functions y stats-builder).
+          if [[ "$MES" < "2026-10" ]]; then
+            case "$R" in europe) C=americas ;; americas) C=europe ;; *) C=$R ;; esac
+            SRC_REPO="$LEGADO"; K_PATH="data/kills/$C"; B_PATH="data/battles/$C"
+          else
+            SRC_REPO="$OWNER/$REPO"; K_PATH="kills"; B_PATH="battles"
+          fi
+
+          bajar() { # $1 ruta en el repo, $2 carpeta local
+            mkdir -p "$2"
+            gh api "repos/$SRC_REPO/contents/$1?ref=main" --jq '.[].name' | { grep -E "^$MES-[0-9]{2}(\.[0-9]+)?\.ndjson$" || true; } | while read -r f; do
+              curl -sf --retry 5 --retry-delay 5 -o "$2/$f" "$RAW/$SRC_REPO/main/$1/$f"
+            done
+          }
+          bajar "$K_PATH" dl/kills
+          bajar "$B_PATH" dl/battles
+          du -sh dl/kills dl/battles
+
+          node archivo-indice.mjs --region "$R" --mes "$MES" \
+            --kills dl/kills --kills-url "$RAW/$SRC_REPO/main/$K_PATH" \
+            --battles dl/battles --battles-url "$RAW/$SRC_REPO/main/$B_PATH" \
+            --out out/ni
+          rm -rf dl
+
+          URL="https://x-access-token:$DATA_REPO_TOKEN@github.com/$OWNER/$REPO.git"
+          if ! git clone --depth 1 --filter=blob:none --sparse -q "$URL" destino; then
+            # Solo pasa con julio-septiembre (los meses nuevos ya tienen su repo): se crea público con un commit.
+            curl -s -o /dev/null -w "crear $REPO: %{http_code}\n" -X POST \
+              -H "Authorization: Bearer $DATA_REPO_TOKEN" -H "Accept: application/vnd.github+json" \
+              https://api.github.com/user/repos \
+              -d "{\"name\":\"$REPO\",\"private\":false,\"auto_init\":true,\"description\":\"Albion World: índice de archivo de $R, $MES\"}"
+            sleep 5
+            git clone --depth 1 --filter=blob:none --sparse -q "$URL" destino
+          fi
+          cd destino
+          git sparse-checkout set ni
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          rm -rf ni && cp -r ../out/ni ni
+          # Cono de sparse-checkout: los archivos de la raíz (README) siempre están.
+          if [[ "$MES" < "2026-10" ]]; then
+            printf '# %s\n\nAlbion World — **solo el índice de archivo** de %s, %s (`ni/`). Los datos de ese mes están en\n[`%s`](https://github.com/%s), carpetas `%s` y `%s`.\nLo arma `.github/workflows/archivo.yml` de ese repo.\n' \
+              "$REPO" "$R" "$MES" "$LEGADO" "$LEGADO" "$K_PATH" "$B_PATH" > README.md
+            git add README.md
+          fi
+          git add -A ni
+          if git diff --cached --quiet; then echo "sin cambios"; exit 0; fi
+          git commit -q -m "archivo: índice de $R $MES"
+          for i in 1 2 3 4 5; do
+            git push -q origin HEAD:main && { echo "subido $REPO/ni"; exit 0; }
+            echo "push rechazado; reintento $i"; sleep $((i * 10)); git pull -q --rebase origin main
+          done
+          echo "::error::no se pudo subir $REPO/ni"; exit 1
